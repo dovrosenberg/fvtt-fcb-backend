@@ -1,26 +1,46 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const axios = require('axios');
-const { Storage } = require('@google-cloud/storage');
-import { loadOpenAI } from './src/services/openai';
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
 
-const PORT = process.envPORT || 8080;
+import { loadOpenAI } from '@/services/openai';
+import { loadStorage } from '@/services/storage';
+import { authenticate } from '@/middleware';
+import routes from '@/routes';
 
-const app = express();
-app.use(express.json());
-app.use(cors());
-
+const PORT = Number(process.env.PORT) || 8080;
 
 void (async () => {
+	const app = express();
+	app.use(helmet());  // security best practices
+
+	// have to allow all origins, but try to lock it down a bit
+	app.use(cors({
+		origin: '*',
+		methods: ['GET', 'POST'],  
+		allowedHeaders: ['Content-Type', 'Authorization']
+	}));
+
+	// parse JSON, URL encoded data
+	app.use(express.json());  
+	app.use(express.urlencoded({ extended: true }));
+
+	// authenticate all routes
+	app.use(authenticate);
+
+	// attach routes
+	app.use('/api', routes);
+
+	// handle errors
+	app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+		console.error(err.stack);
+		res.status(500).json({ error: 'Internal Server Error' });
+	});
+
 	// setup any services
 	await loadOpenAI();
 	await loadStorage();
 
 	// app.post('/generate-image', async (req, res) => {
-	//     if (req.headers.authorization !== `Bearer ${API_KEY}`) {
-	//         return res.status(403).json({ error: "Unauthorized" });
-	//     }
 
 	//     try {
 	//         const response = await axios.post(`https://api.${API_PROVIDER}.com/generate`, {
