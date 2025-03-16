@@ -28,15 +28,12 @@ if you're running into limits.
 
   - Run the following in your terminal:
     ```sh
-    gcloud auth login
-    gcloud config set project YOUR_GCP_PROJECT_ID
-    gcloud builds submit --tag gcr.io/YOUR_GCP_PROJECT_ID/foundry-backend
-    gcloud run deploy foundry-backend --image gcr.io/YOUR_GCP_PROJECT_ID/foundry-backend --platform managed --region us-central1 --allow-unauthenticated
+    curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.sh | bash
     ```
 
 2. Set environment variables
     ```sh
-    gcloud run services update foundry-backend     --set-env-vars FOUNDRY_API_TOKEN=my-secret-token,AI_API_KEY=my-ai-api-key
+    gcloud run services update foundry-backend --set-env-vars FOUNDRY_API_TOKEN=my-secret-token,AI_API_KEY=my-ai-api-key
     ```
 
 3. Copy the API URL

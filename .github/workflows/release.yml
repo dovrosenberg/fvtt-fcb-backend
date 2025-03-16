@@ -11,25 +11,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Authenticate with Google Cloud
-        uses: google-github-actions/auth@v1
-        with:
-          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+      - name: Log in to GitHub Container Registry (GHCR)
+        run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build and Push Docker Image
         run: |
-          IMAGE_NAME=gcr.io/${{ secrets.GCP_PROJECT }}/foundry-backend:${{ github.event.release.tag_name }}
-          gcloud builds submit --tag $IMAGE_NAME
+          IMAGE_NAME=ghcr.io/${{ github.repository }}/foundry-backend:${{ github.event.release.tag_name }}
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
 
       - name: Generate Deployment Script
         run: |
           echo '#!/bin/bash' > deploy-gcp.sh
           echo 'gcloud auth login' >> deploy-gcp.sh
-          echo 'gcloud config set project ${{ secrets.GCP_PROJECT }}' >> deploy-gcp.sh
-          echo 'gcloud run deploy foundry-backend --image gcr.io/${{ secrets.GCP_PROJECT }}/foundry-backend:${{ github.event.release.tag_name }} --platform managed --region us-central1 --allow-unauthenticated' >> deploy-gcp.sh
+          echo 'gcloud config set project YOUR_GCP_PROJECT_ID' >> deploy-gcp.sh
+          echo 'gcloud run deploy foundry-backend --image ghcr.io/${{ github.repository }}/foundry-backend:${{ github.event.release.tag_name }} --platform managed --region us-central1 --allow-unauthenticated' >> deploy-gcp.sh
           chmod +x deploy-gcp.sh
 
       - name: Upload Deployment Script to Release
