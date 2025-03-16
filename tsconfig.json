@@ -8,13 +8,12 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
+    "moduleResolution": "node",
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"],
     },
-},
-  "include": [
-    "./src/**/*.ts",
-  ],
+  },
+  "include": ["./src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
