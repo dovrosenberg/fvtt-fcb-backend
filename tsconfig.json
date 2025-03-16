@@ -14,10 +14,6 @@
     "paths": {
       "@/*": ["src/*"],
     },
-    "plugins": [
-      { "transform": "typescript-transform-paths" },
-      { "transform": "typescript-transform-paths", "afterDeclarations": true }
-    ]
   },
   "include": ["./src/**/*.ts"],
   "exclude": ["node_modules", "dist"],
