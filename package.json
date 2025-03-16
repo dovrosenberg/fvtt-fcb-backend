@@ -11,7 +11,6 @@
         "cors": "^2.8.5",
         "axios": "^1.4.0",
         "dotenv": "^16.0.3",
-        "multer": "^1.4.5",
         "@google-cloud/storage": "^6.10.0"
     }
 }
