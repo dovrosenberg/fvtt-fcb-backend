@@ -25,12 +25,12 @@ gcloud config set project $GCP_PROJECT_ID
 
 # Deploy the container from GitHub Container Registry
 echo "Deploying container..."
-IMAGE_NAME="ghcr.io/dovrosenberg/ffvtt-fcb-backend:latest"
-gcloud run deploy foundry-backend --image $IMAGE_NAME --platform managed --region us-central1 --allow-unauthenticated
+IMAGE_NAME="docker.io/drosenberg62/fvtt-fcb-backend:latest"
+gcloud run deploy fvtt-fcb-backend --image $IMAGE_NAME --platform managed --region $GCP_REGION --allow-unauthenticated
 
 # Set environment variables in the deployed container
-echo "set env"
-gcloud run services update foundry-backend \
+echo "Setting environment variables..."
+gcloud run services update fvtt-fcb-backend --region $GCP_REGION \
     --set-env-vars FOUNDRY_API_TOKEN=$FOUNDRY_API_TOKEN,AI_API_KEY=$AI_API_KEY
 
 # Output success message

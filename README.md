@@ -83,6 +83,8 @@ NEEDED?
     curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.sh | bash
     ```
 
+    This might take a few minutes
+
 
 3. Copy the API URL
   - Copy the generated API URL and paste it into Foundry VTT settings.
