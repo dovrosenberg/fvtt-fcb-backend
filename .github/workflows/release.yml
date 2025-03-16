@@ -22,15 +22,6 @@ jobs:
           docker build -t $IMAGE_NAME .
           docker push $IMAGE_NAME
 
-      - name: Make the Image Public
-        run: |
-          gh api --method PATCH \
-            -H "Accept: application/vnd.github.v3+json" \
-            /user/packages/container/fvtt-fcb-backend/visibility \
-            -f visibility=public
-        env:
-          GITHUB_TOKEN: ${{ secrets.GHCR_TOKEN }}
-
       - name: Upload Deployment Script and Environment Template to Release
         uses: softprops/action-gh-release@v1
         with:
