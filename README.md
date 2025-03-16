@@ -24,17 +24,23 @@ if you're running into limits.
 2. Install Google Cloud CLI installed (`gcloud`)
 
 ### Deployment Steps
-1. Deploy the backend
+1. Set environment variables
+    ```sh
+    curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
+    gcloud run services update foundry-backend --set-env-vars FOUNDRY_API_TOKEN=my-secret-token,AI_API_KEY=my-ai-api-key
+    ```
 
+  Edit the file to put in [_________________]:
+  ```sh
+  nano .env
+  ```
+  
+2. Deploy the backend
   - Run the following in your terminal:
     ```sh
     curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.sh | bash
     ```
 
-2. Set environment variables
-    ```sh
-    gcloud run services update foundry-backend --set-env-vars FOUNDRY_API_TOKEN=my-secret-token,AI_API_KEY=my-ai-api-key
-    ```
 
 3. Copy the API URL
   - Copy the generated API URL and paste it into Foundry VTT settings.

@@ -22,15 +22,15 @@ jobs:
           docker build -t $IMAGE_NAME .
           docker push $IMAGE_NAME
 
-      - name: Generate Deployment Script
+      - name: Copy Deployment Script and Env File from Repo
         run: |
-          echo '#!/bin/bash' > deploy-gcp.sh
-          echo 'gcloud auth login' >> deploy-gcp.sh
-          echo 'gcloud config set project YOUR_GCP_PROJECT_ID' >> deploy-gcp.sh
-          echo 'gcloud run deploy foundry-backend --image ghcr.io/${{ github.repository }}/foundry-backend:${{ github.event.release.tag_name }} --platform managed --region us-central1 --allow-unauthenticated' >> deploy-gcp.sh
-          chmod +x deploy-gcp.sh
+          cp scripts/deploy-gcp.sh .
+          cp env.template .
 
-      - name: Upload Deployment Script to Release
+      - name: Upload Deployment Script and Environment Template to Release
         uses: softprops/action-gh-release@v1
         with:
-          files: deploy-gcp.sh
+          files: |
+            deploy-gcp.sh
+            env.template
+            
