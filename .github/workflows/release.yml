@@ -18,9 +18,18 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          IMAGE_NAME=ghcr.io/${{ github.repository }}/foundry-backend:${{ github.event.release.tag_name }}
+          IMAGE_NAME=ghcr.io/${{ github.repository }}/fvtt-fcb-backend:latest
           docker build -t $IMAGE_NAME .
           docker push $IMAGE_NAME
+
+      - name: Make the Image Public
+        run: |
+          gh api --method PATCH \
+            -H "Accept: application/vnd.github.v3+json" \
+            /user/packages/container/fvtt-fcb-backend/visibility \
+            -f visibility=public
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Deployment Script and Environment Template to Release
         uses: softprops/action-gh-release@v1
