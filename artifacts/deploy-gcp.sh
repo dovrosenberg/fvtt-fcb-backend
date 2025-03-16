@@ -24,13 +24,15 @@ echo "Setting up..."
 gcloud config set project $GCP_PROJECT_ID
 
 # ✅ Create a Cloud Storage bucket if it doesn't exist
+export FULL_BUCKET_NAME="$GCP_PROJECT_ID-$GCS_BUCKET_NAME"
+
 echo "🗂 Checking for Cloud Storage bucket..."
-if ! gcloud storage buckets list --format="value(name)" | grep -q "^$GCP_PROJECT_ID-$GCS_BUCKET_NAME$"; then
-    echo "📦 Creating Cloud Storage bucket: $GCP_PROJECT_ID-$GCS_BUCKET_NAME..."
-    gcloud storage buckets create gs://$GCP_PROJECT_ID-$GCS_BUCKET_NAME --location=$GCP_REGION
-    echo "✅ Bucket $GCP_PROJECT_ID-$GCS_BUCKET_NAME created successfully!"
+if ! gcloud storage buckets list --format="value(name)" | grep -q "^$FULL_BUCKET_NAME$"; then
+    echo "📦 Creating Cloud Storage bucket: $FULL_BUCKET_NAME..."
+    gcloud storage buckets create gs://$FULL_BUCKET_NAME --location=$GCP_REGION
+    echo "✅ Bucket $FULL_BUCKET_NAME created successfully!"
 else
-    echo "✅ Cloud Storage bucket $GCP_PROJECT_ID-$GCS_BUCKET_NAME already exists."
+    echo "✅ Cloud Storage bucket $FULL_BUCKET_NAME already exists."
 fi
 
 # Deploy the container from GitHub Container Registry
@@ -38,11 +40,18 @@ echo "Deploying container..."
 IMAGE_NAME="docker.io/drosenberg62/fvtt-fcb-backend:latest"
 gcloud run deploy fvtt-fcb-backend --image $IMAGE_NAME --platform managed --region $GCP_REGION --allow-unauthenticated
 
+# ✅ Generate a Secure API Token
+API_TOKEN=$(openssl rand -hex 32)  # Generate a 32-byte random token
+
+# ✅ Encode the service account credentials in base64
+GCP_CERT=$(cat gcp-service-key.json | base64 -w 0)
+
 # Set environment variables in the deployed container
 echo "Setting environment variables..."
 gcloud run services update fvtt-fcb-backend --region $GCP_REGION \
-    --set-env-vars FOUNDRY_API_TOKEN=$FOUNDRY_API_TOKEN,AI_API_KEY=$AI_API_KEY,GCS_BUCKET_NAME=$GCP_PROJECT_ID-$GCS_BUCKET_NAME
+    --set-env-vars GCP_PROJECT_ID=$GCP_PROJECT_ID,API_TOKEN=$API_TOKEN,OPENAI_API_KEY=$OPENAI_API_KEY,GCS_BUCKET_NAME=$FULL_BUCKET_NAME,GCP_CERT=$GCP_CERT
 
 # Output success message
 echo "✅ Deployment complete! Your Foundry Campaign Builder backend is now live."
+echo "Your API Token: $API_TOKEN"
 echo "See README for final configuration steps."
