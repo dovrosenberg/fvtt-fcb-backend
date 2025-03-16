@@ -18,7 +18,7 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          IMAGE_NAME=ghcr.io/${{ github.repository }}/fvtt-fcb-backend:latest
+          IMAGE_NAME=ghcr.io/dovrosenberg/fvtt-fcb-backend:latest
           docker build -t $IMAGE_NAME .
           docker push $IMAGE_NAME
 
