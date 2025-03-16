@@ -15,4 +15,4 @@ COPY . .
 RUN npm run build
 
 # Set the correct start command
-CMD ["node", "/app/dist/server.js"]
+CMD ["npx", "ts-node", "/app/dist/server.js"]
