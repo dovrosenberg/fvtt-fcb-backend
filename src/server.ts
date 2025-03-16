@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 
 import { loadOpenAI } from '@/services/openai';
-import { loadStorage } from '@/services/storage';
+// import { loadStorage } from '@/services/storage';
 import { authenticate } from '@/middleware';
 import routes from '@/routes';
 
@@ -38,7 +38,7 @@ void (async () => {
 
 	// setup any services
 	await loadOpenAI();
-	await loadStorage();
+	// await loadStorage();
 
 	// app.post('/generate-image', async (req, res) => {
 
