@@ -24,8 +24,8 @@ jobs:
 
       - name: Copy Deployment Script and Env File from Repo
         run: |
-          cp scripts/deploy-gcp.sh .
-          cp env.template .
+          cp artifacts/deploy-gcp.sh .
+          cp artifacts/env.template .
 
       - name: Upload Deployment Script and Environment Template to Release
         uses: softprops/action-gh-release@v1
@@ -33,4 +33,3 @@ jobs:
           files: |
             deploy-gcp.sh
             env.template
-            
