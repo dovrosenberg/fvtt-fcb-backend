@@ -30,7 +30,7 @@ jobs:
       - name: Build and Push Docker Image to Docker Hub
         run: |
           IMAGE_NAME=docker.io/drosenberg62/fvtt-fcb-backend:latest
-          docker build -t $IMAGE_NAME .
+          docker build --no-cache -t $IMAGE_NAME .
           docker push $IMAGE_NAME
 
       - name: Upload Deployment Script and Environment Template to Release
