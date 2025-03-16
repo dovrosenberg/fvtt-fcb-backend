@@ -10,7 +10,7 @@ const loadOpenAI = async function () {
 
 const getCompletion = async (system: string, prompt: string, temperature: number): Promise<Record<string, any>> => {
   const chat_completion = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-4o-mini',
     messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
     temperature: temperature,
   });
