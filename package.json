@@ -4,7 +4,7 @@
   "description": "Backend for Foundry Campaign Builder module",
   "main": "server.js",
   "scripts": {
-    "dev": "ts-node --require tsconfig-paths/register --require dotenv/config src/server.ts",
+    "dev": "DOTENV_CONFIG_PATH=./dist/.env ts-node --require tsconfig-paths/register --require dotenv/config src/server.ts",
     "build": "webpack"
   },
   "dependencies": {
