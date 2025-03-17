@@ -30,7 +30,7 @@ jobs:
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
 
           # Increment patch version
-          NEW_VERSION="v$MAJOR.$MINOR.$((PATCH + 1))"
+          NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
           NEW_TAG="v$NEW_VERSION"
 
           # Output the new version
