@@ -60,7 +60,7 @@ gcloud run deploy fvtt-fcb-backend \
     --platform managed \
     --region $GCP_REGION \
     --allow-unauthenticated \
-    --set-env-vars GCP_PROJECT_ID=$GCP_PROJECT_ID,API_TOKEN=$API_TOKEN,OPENAI_API_KEY=$OPENAI_API_KEY,GCS_BUCKET_NAME=$FULL_BUCKET_NAME,GCP_CERT=$GCP_CERT
+    --set-env-vars "GCP_PROJECT_ID=$GCP_PROJECT_ID,API_TOKEN=$API_TOKEN,OPENAI_API_KEY=$OPENAI_API_KEY,GCS_BUCKET_NAME=$FULL_BUCKET_NAME,GCP_CERT=\"$GCP_CERT\""
 
 # Output success message
 echo "✅ Deployment complete! Your Foundry Campaign Builder backend is now live."
