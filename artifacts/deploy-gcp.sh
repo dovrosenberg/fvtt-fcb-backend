@@ -45,21 +45,21 @@ fi
 #     gcloud run services delete $SERVICE_NAME --platform managed --region $GCP_REGION --quiet
 # fi
 
-# Deploy the container from Docker Hub
-echo "Deploying container..."
-IMAGE_NAME="docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
-
-gcloud run deploy fvtt-fcb-backend --image $IMAGE_NAME --platform managed --region $GCP_REGION --allow-unauthenticated
-
 # ✅ Generate a Secure API Token
 API_TOKEN=$(openssl rand -hex 32)  # Generate a 32-byte random token
 
 # ✅ Encode the service account credentials in base64
 GCP_CERT=$(cat gcp-service-key.json | base64 -w 0)
 
-# Set environment variables in the deployed container
-echo "Setting environment variables..."
-gcloud run services update fvtt-fcb-backend --region $GCP_REGION \
+# Deploy the container from Docker Hub
+echo "Deploying container..."
+IMAGE_NAME="docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
+
+gcloud run deploy fvtt-fcb-backend \
+    --image $IMAGE_NAME \
+    --platform managed \
+    --region $GCP_REGION \
+    --allow-unauthenticated \
     --set-env-vars GCP_PROJECT_ID=$GCP_PROJECT_ID,API_TOKEN=$API_TOKEN,OPENAI_API_KEY=$OPENAI_API_KEY,GCS_BUCKET_NAME=$FULL_BUCKET_NAME,GCP_CERT=$GCP_CERT
 
 # Output success message
