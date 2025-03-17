@@ -14,5 +14,7 @@ COPY . .
 # Build TypeScript (compiles `src/` into `dist/`)
 RUN npm run build
 
+RUN ls -l dist
+
 # Set the correct start command
-CMD ["npx", "ts-node", "/app/dist/server.js"]
+CMD ["node", "dist/server.js"]
