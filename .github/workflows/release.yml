@@ -22,6 +22,7 @@ jobs:
         run: |
           # Get the latest Git tag (fallback to v0.0.0 if none exist)
           CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo Current version found - $CURRENT_VERSION
 
           # Remove "v" prefix for processing
           CURRENT_VERSION=${CURRENT_VERSION#v}
