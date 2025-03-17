@@ -1,17 +1,68 @@
 name: Release and Deploy to Google Cloud Run
 
 on:
-  release:
-    types: [created]
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed  # Runs only when a PR is closed
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true  # Ensures the PR was merged, not just closed
     permissions:
       contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Get Latest Version & Bump Patch
+        id: version
+        run: |
+          # Get the latest Git tag (fallback to v0.0.0 if none exist)
+          CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+
+          # Remove "v" prefix for processing
+          CURRENT_VERSION=${CURRENT_VERSION#v}
+
+          # Extract major, minor, and patch numbers
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+
+          # Increment patch version
+          NEW_VERSION="v$MAJOR.$MINOR.$((PATCH + 1))"
+          NEW_TAG="v$NEW_VERSION"
+
+          # Output the new version
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+          echo "Bumped version to $NEW_VERSION"
+
+      - name: Update `package.json` Version (If Applicable)
+        run: |
+          echo "Updating package.json version to ${{ env.NEW_VERSION }}"
+          jq ".version = \"${{ env.NEW_VERSION }}\"" package.json > temp.json && mv temp.json package.json
+          git add package.json
+
+      - name: Commit & Push Version Bump
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "Bump version to ${{ env.NEW_VERSION }}" || echo "No changes to commit"
+          git tag ${{ env.NEW_TAG }}
+          git push origin main --tags
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.NEW_TAG }}
+          name: Release ${{ env.NEW_TAG }}
+          draft: false
+          prerelease: false
+
+      - name: Replace Image Tag in Deploy Script
+        run: |
+          sed -i "s|REPLACE_IMAGE_TAG|${{ env.NEW_VERSION }}|g" artifacts/deploy-gcp.sh
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
