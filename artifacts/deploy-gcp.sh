@@ -35,9 +35,20 @@ else
     echo "✅ Cloud Storage bucket $FULL_BUCKET_NAME already exists."
 fi
 
-# Deploy the container from GitHub Container Registry
+# # Check if the Cloud Run service exists
+# # If it does, for some reason it won't deploy the new revision
+# SERVICE_NAME="fvtt-fcb-backend"
+# EXISTING_SERVICE=$(gcloud run services list --platform managed --filter "metadata.name=${SERVICE_NAME}" --format="value(metadata.name)")
+
+# if [ "$EXISTING_SERVICE" = "$SERVICE_NAME" ]; then
+#     echo "🛑 Deleting existing Cloud Run service: $SERVICE_NAME..."
+#     gcloud run services delete $SERVICE_NAME --platform managed --region $GCP_REGION --quiet
+# fi
+
+# Deploy the container from Docker Hub
 echo "Deploying container..."
-IMAGE_NAME="docker.io/drosenberg62/fvtt-fcb-backend:latest"
+IMAGE_NAME="docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
+
 gcloud run deploy fvtt-fcb-backend --image $IMAGE_NAME --platform managed --region $GCP_REGION --allow-unauthenticated
 
 # ✅ Generate a Secure API Token
