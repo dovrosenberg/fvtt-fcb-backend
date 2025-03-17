@@ -8,6 +8,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "server.js",
+    clean: true,
   },
   resolve: {
     extensions: [".ts", ".js"],
