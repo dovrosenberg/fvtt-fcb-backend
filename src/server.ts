@@ -6,10 +6,12 @@ import { loadOpenAI } from '@/services/openai';
 // import { loadStorage } from '@/services/storage';
 import { authenticate } from '@/middleware';
 import routes from '@/routes';
+import { version } from '../package.json';
 
 const PORT = Number(process.env.PORT) || 8080;
 
 void (async () => {
+	console.log(`Starting server version ${version}`);
 	const app = express();
 	app.use(helmet());  // security best practices
 

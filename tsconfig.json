@@ -10,6 +10,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
+    "resolveJsonModule": true,
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"],
