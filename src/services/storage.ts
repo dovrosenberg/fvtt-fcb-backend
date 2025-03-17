@@ -5,7 +5,7 @@ let bucket: Bucket;
 const loadStorage = async function(): Promise<void> {
   if (!bucket) {
     const storage = new Storage({
-      credentials: JSON.parse(process.env.GCP_CERT as string),
+      credentials: JSON.parse(Buffer.from(process.env.GCP_CERT, 'base64').toString('utf-8')),
       projectId: process.env.GCP_PROJECT_ID,
     });
 

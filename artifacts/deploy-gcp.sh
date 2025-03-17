@@ -49,7 +49,7 @@ fi
 API_TOKEN=$(openssl rand -hex 32)  # Generate a 32-byte random token
 
 # ✅ Encode the service account credentials in base64
-GCP_CERT=$(cat gcp-service-key.json | base64 -w 0)
+GCP_CERT=$(base64 0 < gcp-service-key.json)
 
 # Deploy the container from Docker Hub
 echo "Deploying container..."
