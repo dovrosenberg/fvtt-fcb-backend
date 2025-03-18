@@ -1,7 +1,8 @@
 import Fastify from 'fastify';
 import helmet from '@fastify/helmet';
 import cors from '@fastify/cors';
-import  bearerAuthPlugin from '@fastify/bearer-auth';
+import swagger from '@fastify/swagger';
+import swaggerUI from '@fastify/swagger-ui';
 
 import { loadOpenAI } from '@/services/openai';
 import { loadStorage } from '@/services/storage';
@@ -23,6 +24,52 @@ void (async () => {
 		}
 	});
 
+	// tell swagger plugin to start watching routes created
+	await fastify.register(swagger, {
+		openapi: {
+			openapi: '3.0.0',
+			info: {
+				title: 'Test swagger',
+				description: 'Testing the Fastify swagger API',
+				version: '0.1.0'
+			},
+			servers: [
+				{
+					url: 'http://localhost:8080',
+					description: 'Development server'
+				}
+			],
+			components: {
+				securitySchemes: {
+					'BearerAuth': {
+						type: 'http',
+						scheme: 'bearer',
+						bearerFormat: 'custom'
+					}
+				}
+			},
+			security: [{ BearerAuth: [] }], // Apply globally to ALL routes
+		}
+	})
+
+	// setup the swagger ui
+	await fastify.register(swaggerUI, {
+		routePrefix: '/documentation',
+		uiConfig: {
+			docExpansion: 'full',
+			deepLinking: false,
+			persistAuthorization: true,
+		},
+		staticCSP: true,
+		transformStaticCSP: (header) => header,
+		transformSpecification: (swaggerObject) => {
+			return {
+				...swaggerObject,
+				security: [{ BearerAuth: [] }] // Apply auth globally in the UI
+			}
+		},
+	})
+
 	fastify.register(helmet);   // security best practices
 
 	// have to allow all origins, but try to lock it down a bit
@@ -31,9 +78,6 @@ void (async () => {
 		methods: ['GET', 'POST'],  
 		allowedHeaders: ['Content-Type', 'Authorization']
 	});
-
-	// authenticate all routes
-	fastify.register(bearerAuthPlugin, { keys: [process.env.API_TOKEN as string] });
 
 	// attach routes
 	fastify.register(routes, { prefix: '/api' });
