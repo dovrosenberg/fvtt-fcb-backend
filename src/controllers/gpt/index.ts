@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { getCompletion } from '../../services/openai';
+import { FastifyReply, FastifyRequest } from 'fastify';
+import { getCompletion } from '@/services/openai';
 
 // note: we don't clean briefDescription in these functions because there generally shouldn't be any HTML in it and if someone goes out of their way
 //    to inject HTML, etc. it's unclear there's any risk
@@ -18,43 +18,39 @@ interface GenerateCharacterOutput {
   }
 }
 
-const generateCharacter = async (req: Request, res: Response) => {
-  try {
-    const input = req.body as GenerateCharacterInput | null;
+const generateCharacter = async (req: FastifyRequest, res: FastifyReply): Promise<GenerateCharacterOutput> => {
+  const input = req.body as GenerateCharacterInput | null;
 
-    if (!input)
-      throw new Error('Invalid input in generateCharacter');
+  if (!input)
+    throw new Error('Invalid input in generateCharacter');
 
-    const { genre, worldFeeling, type, species, briefDescription } = input;
+  const { genre, worldFeeling, type, species, briefDescription } = input;
 
-    const system =  `
-      I am writing a ${genre} novel. ${worldFeeling ? 'The feeling of the world is: ' + worldFeeling + '.\n' : ''} You are my assistant.  
-      ALL OF YOUR RESPONSES MUST BE VALID JSON.  EACH RESPONSE SHOULD CONTAIN TWO FIELDS:
-      1. "name": A STRING CONTAINING ((ONLY)) THE NAME OF THE CHARACTER WE ARE DISCUSSING
-      2. "description": A STRING CONTAINING ((ONLY)) A DESCRIPTION OF THE CHARACTER THAT MATCHES MY REQUEST
-    `;
+  const system =  `
+    I am writing a ${genre} novel. ${worldFeeling ? 'The feeling of the world is: ' + worldFeeling + '.\n' : ''} You are my assistant.  
+    ALL OF YOUR RESPONSES MUST BE VALID JSON.  EACH RESPONSE SHOULD CONTAIN TWO FIELDS:
+    1. "name": A STRING CONTAINING ((ONLY)) THE NAME OF THE CHARACTER WE ARE DISCUSSING
+    2. "description": A STRING CONTAINING ((ONLY)) A DESCRIPTION OF THE CHARACTER THAT MATCHES MY REQUEST
+  `;
 
-    const prompt = `
-      I need you to suggest one name and one description for a character.  The description should be 2-3 paragraphs long with paragraphs separated with <br/><br/>. 
-      ${type ? 'The type of character is a ' + type + '. Give this only a little weight.' : ''}.
-      ${species ? 'It should be a description of a ' + species : ''}.
-      ${briefDescription ? 'Here is a brief description of the character that you should use as a starting point.  Your description should include all of these facts: ' + briefDescription : ''}
-    `
+  const prompt = `
+    I need you to suggest one name and one description for a character.  The description should be 2-3 paragraphs long with paragraphs separated with <br/><br/>. 
+    ${type ? 'The type of character is a ' + type + '. Give this only a little weight.' : ''}.
+    ${species ? 'It should be a description of a ' + species : ''}.
+    ${briefDescription ? 'Here is a brief description of the character that you should use as a starting point.  Your description should include all of these facts: ' + briefDescription : ''}
+  `
 
-    const result = (await getCompletion(system, prompt, 1)) as { name: string, description: string } || { name: '', description: ''};
-    if (!result.name || !result.description) {
-      throw new Error('Error in generateCharacter');
-    }
-
-    const character = {
-      name: result.name,
-      description: result.description
-    }
-
-    res.json({ character } as GenerateCharacterOutput);
-  } catch (error) {
-    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error in generateCharacter' });
+  const result = (await getCompletion(system, prompt, 1)) as { name: string, description: string } || { name: '', description: ''};
+  if (!result.name || !result.description) {
+    throw new Error('Error in generateCharacter');
   }
+
+  const character = {
+    name: result.name,
+    description: result.description
+  }
+
+  return { character };
 };
 
 

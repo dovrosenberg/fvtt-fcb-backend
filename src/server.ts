@@ -1,10 +1,10 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
+import Fastify from 'fastify';
+import helmet from '@fastify/helmet';
+import cors from '@fastify/cors';
+import  bearerAuthPlugin from '@fastify/bearer-auth';
 
 import { loadOpenAI } from '@/services/openai';
 import { loadStorage } from '@/services/storage';
-import { authenticate } from '@/middleware';
 import routes from '@/routes';
 import { version } from '../package.json';
 
@@ -12,35 +12,31 @@ const PORT = Number(process.env.PORT) || 8080;
 
 void (async () => {
 	console.log(`Starting server version ${version}`);
-	const app = express();
-	app.use(helmet());  // security best practices
-
-	// have to allow all origins, but try to lock it down a bit
-	app.use(cors({
-		origin: '*',
-		methods: ['GET', 'POST'],  
-		allowedHeaders: ['Content-Type', 'Authorization']
-	}));
-
-	// parse JSON, URL encoded data
-	app.use(express.json());  
-	app.use(express.urlencoded({ extended: true }));
-
-	// authenticate all routes
-	app.use(authenticate);
-
-	// attach routes
-	app.use('/api', routes);
-
-	// handle errors
-	app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-		console.error(err.stack);
-		res.status(500).json({ error: 'Internal Server Error' });
-	});
 
 	// setup any services
 	await loadOpenAI();
 	await loadStorage();
+
+	const fastify = Fastify({
+		logger: {
+			level: 'debug',   // 'info'
+		}
+	});
+
+	fastify.register(helmet);   // security best practices
+
+	// have to allow all origins, but try to lock it down a bit
+	fastify.register(cors, {
+		origin: true,
+		methods: ['GET', 'POST'],  
+		allowedHeaders: ['Content-Type', 'Authorization']
+	});
+
+	// authenticate all routes
+	fastify.register(bearerAuthPlugin, { keys: [process.env.API_TOKEN as string] });
+
+	// attach routes
+	fastify.register(routes, { prefix: '/api' });
 
 	// app.post('/generate-image', async (req, res) => {
 
@@ -64,5 +60,12 @@ void (async () => {
 	//     }
 	// });
 
-	app.listen(PORT, "0.0.0.0", () => console.log(`Server running on http://0.0.0.0:${PORT}`));
+	fastify.listen(
+		{ 
+			port: PORT,
+			host: '0.0.0.0',
+			listenTextResolver: (address) => { return `Server running on ${address}` }
+		},
+		(err: Error | null) => { if (err) throw err; }
+	);
 })();

@@ -1,8 +1,13 @@
-import express from 'express';
+import { FastifyInstance } from 'fastify';
 import characterRoutes from './character';
 
-const router = express.Router();
+/**
+ * Encapsulates the routes
+ * @param {FastifyInstance} fastify  Encapsulated Fastify Instance
+ */
+async function routes (fastify: FastifyInstance): Promise<void> {
+  fastify.register(characterRoutes, { prefix: '/character' });
+}
 
-router.use('/characters', characterRoutes);
+export default routes;
 
-export default router;
