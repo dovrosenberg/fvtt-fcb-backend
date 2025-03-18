@@ -18,6 +18,7 @@ interface GenerateCharacterOutput {
   }
 }
 
+
 const generateCharacter = async (req: FastifyRequest, res: FastifyReply): Promise<GenerateCharacterOutput> => {
   const input = req.body as GenerateCharacterInput | null;
 
