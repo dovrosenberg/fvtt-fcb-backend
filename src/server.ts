@@ -39,6 +39,10 @@ void (async () => {
 					description: 'Development server'
 				}
 			],
+			tags: [
+				{ name: 'character', description: 'Character related end-points' },
+				{ name: 'gpt', description: 'AI-generated text end-points' },
+			],
 			components: {
 				securitySchemes: {
 					'BearerAuth': {

@@ -1,18 +1,6 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, } from 'fastify';
 import { generateCharacter } from '@/controllers';
-
-const opts = {
-  schema: {
-    body: {
-      type: 'object',
-      properties: {
-        genre: { type: 'string' },
-        namee: { type: 'string' }
-      },
-      required: ['namee']    
-    }
-  }
-}
+import { generateCharacterInputSchema } from '@/schemas';
 
 
 /**
@@ -20,7 +8,7 @@ const opts = {
  * @param {FastifyInstance} fastify  Encapsulated Fastify Instance
  */
 async function routes (fastify: FastifyInstance): Promise<void> {
-  fastify.post('/generate', opts, generateCharacter);
+  fastify.post('/generate', { schema: generateCharacterInputSchema }, generateCharacter);
 }
 
 export default routes;
