@@ -20,7 +20,7 @@ void (async () => {
 
 	const fastify = Fastify({
 		logger: {
-			level: 'debug',   // 'info'
+			level: 'warn',   // 'info'
 		}
 	});
 
@@ -61,8 +61,12 @@ void (async () => {
 		routePrefix: '/documentation',
 		uiConfig: {
 			docExpansion: 'full',
-			deepLinking: false,
+			deepLinking: true,
 			persistAuthorization: true,
+			displayRequestDuration: true, // Shows request time in UI
+			defaultModelsExpandDepth: 2, // Ensures schema models are fully visible
+			defaultModelExpandDepth: 2, // Expands individual schemas (important!)
+			showCommonExtensions: true
 		},
 		staticCSP: true,
 		transformStaticCSP: (header) => header,

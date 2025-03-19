@@ -1,12 +1,12 @@
 import { FastifyReply, } from 'fastify';
 import { getCompletion } from '@/services/openai';
-import { GenerateCharacterRequest } from '@/schemas';
+import { GenerateCharacterRequest, GenerateCharacterOutput} from '@/schemas';
 
 // note: we don't clean briefDescription in these functions because there generally shouldn't be any HTML in it and if someone goes out of their way
 //    to inject HTML, etc. it's unclear there's any risk
 
-const generateCharacter = async (req: GenerateCharacterRequest, _res: FastifyReply): Promise<Record<string, string>> => {
-  const { genre, worldFeeling, type, species, briefDescription } = req.body;
+const generateCharacter = async (request: GenerateCharacterRequest, _reply: FastifyReply): Promise<GenerateCharacterOutput> => {
+  const { genre, worldFeeling, type, species, briefDescription } = request.body;
 
   const system =  `
     I am writing a ${genre} novel. ${worldFeeling ? 'The feeling of the world is: ' + worldFeeling + '.\n' : ''} You are my assistant.  
@@ -30,9 +30,9 @@ const generateCharacter = async (req: GenerateCharacterRequest, _res: FastifyRep
   const character = {
     name: result.name,
     description: result.description
-  }
+  } as GenerateCharacterOutput;
 
-  return { character };
+  return character;
 };
 
 
