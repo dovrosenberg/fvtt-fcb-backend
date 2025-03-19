@@ -1,68 +1,122 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
+import Fastify from 'fastify';
+import helmet from '@fastify/helmet';
+import cors from '@fastify/cors';
+import swagger from '@fastify/swagger';
+import swaggerUI from '@fastify/swagger-ui';
 
 import { loadOpenAI } from '@/services/openai';
 import { loadStorage } from '@/services/storage';
-import { authenticate } from '@/middleware';
 import routes from '@/routes';
 import { version } from '../package.json';
 
 const PORT = Number(process.env.PORT) || 8080;
 
 void (async () => {
-	console.log(`Starting server version ${version}`);
-	const app = express();
-	app.use(helmet());  // security best practices
+  console.log(`Starting server version ${version}`);
 
-	// have to allow all origins, but try to lock it down a bit
-	app.use(cors({
-		origin: '*',
-		methods: ['GET', 'POST'],  
-		allowedHeaders: ['Content-Type', 'Authorization']
-	}));
+  // setup any services
+  await loadOpenAI();
+  await loadStorage();
 
-	// parse JSON, URL encoded data
-	app.use(express.json());  
-	app.use(express.urlencoded({ extended: true }));
+  const fastify = Fastify({
+    logger: {
+      level: 'warn',   // 'info'
+    }
+  });
 
-	// authenticate all routes
-	app.use(authenticate);
+  // tell swagger plugin to start watching routes created
+  await fastify.register(swagger, {
+    openapi: {
+      openapi: '3.0.0',
+      info: {
+        title: 'fvtt-fcb-backend',
+        description: 'Backend for advanced capabilities for fvtt-campaign-builder Foundry module',
+        version: version
+      },
+      servers: [
+        {
+          url: 'http://localhost:8080',
+          description: 'Development server'
+        }
+      ],
+      tags: [
+        { name: 'gpt', description: 'AI-generated text end-points' },
+      ],
+      components: {
+        securitySchemes: {
+          'BearerAuth': {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'custom'
+          }
+        }
+      },
+      security: [{ BearerAuth: [] }], // Apply globally to ALL routes
+    }
+  });
 
-	// attach routes
-	app.use('/api', routes);
+  // setup the swagger ui
+  await fastify.register(swaggerUI, {
+    routePrefix: '/documentation',
+    uiConfig: {
+      docExpansion: 'full',
+      deepLinking: true,
+      persistAuthorization: true,
+      displayRequestDuration: true, // Shows request time in UI
+      defaultModelsExpandDepth: 2, // Ensures schema models are fully visible
+      defaultModelExpandDepth: 2, // Expands individual schemas (important!)
+      showCommonExtensions: true
+    },
+    staticCSP: true,
+    transformStaticCSP: (header) => header,
+    transformSpecification: (swaggerObject) => {
+      return {
+        ...swaggerObject,
+        security: [{ BearerAuth: [] }] // Apply auth globally in the UI
+      };
+    },
+  });
 
-	// handle errors
-	app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-		console.error(err.stack);
-		res.status(500).json({ error: 'Internal Server Error' });
-	});
+  fastify.register(helmet);   // security best practices
 
-	// setup any services
-	await loadOpenAI();
-	await loadStorage();
+  // have to allow all origins, but try to lock it down a bit
+  fastify.register(cors, {
+    origin: true,
+    methods: ['GET', 'POST'],  
+    allowedHeaders: ['Content-Type', 'Authorization']
+  });
 
-	// app.post('/generate-image', async (req, res) => {
+  // attach routes
+  fastify.register(routes, { prefix: '/api' });
 
-	//     try {
-	//         const response = await axios.post(`https://api.${API_PROVIDER}.com/generate`, {
-	//             prompt: req.body.prompt
-	//         }, {
-	//             headers: { Authorization: `Bearer ${AI_API_KEY}` }
-	//         });
+  // app.post('/generate-image', async (req, res) => {
 
-	//         const imageBuffer = Buffer.from(response.data.image, 'base64');
-	//         const fileName = `generated-${Date.now()}.png`;
-	//         const file = bucket.file(fileName);
+  //     try {
+  //         const response = await axios.post(`https://api.${API_PROVIDER}.com/generate`, {
+  //             prompt: req.body.prompt
+  //         }, {
+  //             headers: { Authorization: `Bearer ${AI_API_KEY}` }
+  //         });
 
-	//         await file.save(imageBuffer, { contentType: 'image/png' });
-	//         const publicUrl = `https://storage.googleapis.com/${GCS_BUCKET}/${fileName}`;
+  //         const imageBuffer = Buffer.from(response.data.image, 'base64');
+  //         const fileName = `generated-${Date.now()}.png`;
+  //         const file = bucket.file(fileName);
 
-	//         res.json({ imageUrl: publicUrl });
-	//     } catch (error) {
-	//         res.status(500).json({ error: error.message });
-	//     }
-	// });
+  //         await file.save(imageBuffer, { contentType: 'image/png' });
+  //         const publicUrl = `https://storage.googleapis.com/${GCS_BUCKET}/${fileName}`;
 
-	app.listen(PORT, "0.0.0.0", () => console.log('Server running on http://0.0.0.0:${PORT}'));
+  //         res.json({ imageUrl: publicUrl });
+  //     } catch (error) {
+  //         res.status(500).json({ error: error.message });
+  //     }
+  // });
+
+  fastify.listen(
+    { 
+      port: PORT,
+      host: '0.0.0.0',
+      listenTextResolver: (address) => { return `Server running on ${address}`; }
+    },
+    (err: Error | null) => { if (err) throw err; }
+  );
 })();
