@@ -4,9 +4,9 @@ let openai: OpenAI;
 
 const loadOpenAI = async function () {
   openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
+    apiKey: process.env.OPENAI_API_KEY
   });
-}
+};
 
 const getCompletion = async (system: string, prompt: string, temperature: number): Promise<Record<string, any>> => {
   const chat_completion = await openai.chat.completions.create({
@@ -23,15 +23,15 @@ const getCompletion = async (system: string, prompt: string, temperature: number
   let response : Record<string, any> = {};
   try {
     response = JSON.parse(chat_completion.choices[0].message?.content) as Record<string, any>;
-  } catch (e) {
+  } catch (_e) {
     throw new Error(`Error parsing response from GPT: \vSystem:${system}\nPrompt:${prompt}\nResponse:${chat_completion.choices[0].message?.content}`);
   }
 
   return response;
-}
+};
 
 export { 
   openai,
   loadOpenAI,
   getCompletion
-}
+};

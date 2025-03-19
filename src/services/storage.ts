@@ -11,9 +11,9 @@ const loadStorage = async function(): Promise<void> {
 
     bucket = storage.bucket(process.env.GCS_BUCKET_NAME as string);
   }
-}
+};
 
 export { 
   loadStorage, 
   bucket,
-}
+};
