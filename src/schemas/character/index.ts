@@ -23,7 +23,7 @@ export const generateCharacterResponseSchema = {
   required: ['name', 'description']
 } as const;
 
-export const generateCharacterInputSchema = createInputSchema('Generate a character', ['character', 'gpt'], generateCharacterBodySchema, generateCharacterResponseSchema);
+export const generateCharacterInputSchema = createInputSchema('Generate a character', generateCharacterBodySchema, generateCharacterResponseSchema);
 
 export type GenerateCharacterRequest = FastifyRequest<{ Body: FromSchema<typeof generateCharacterBodySchema> }>;
 export type GenerateCharacterOutput = FromSchema<typeof generateCharacterResponseSchema>;

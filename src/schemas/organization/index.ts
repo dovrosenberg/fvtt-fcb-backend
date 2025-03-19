@@ -25,7 +25,7 @@ export const generateOrganizationResponseSchema = {
   required: ['name', 'description']
 } as const;
 
-export const generateOrganizationInputSchema = createInputSchema('Generate an organization', ['organization', 'gpt'], generateOrganizationBodySchema, generateOrganizationResponseSchema);
+export const generateOrganizationInputSchema = createInputSchema('Generate an organization', generateOrganizationBodySchema, generateOrganizationResponseSchema);
 
 export type GenerateOrganizationRequest = FastifyRequest<{ Body: FromSchema<typeof generateOrganizationBodySchema> }>;
 export type GenerateOrganizationOutput = FromSchema<typeof generateOrganizationResponseSchema> ;

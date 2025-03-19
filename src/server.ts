@@ -29,9 +29,9 @@ void (async () => {
     openapi: {
       openapi: '3.0.0',
       info: {
-        title: 'Test swagger',
-        description: 'Testing the Fastify swagger API',
-        version: '0.1.0'
+        title: 'fvtt-fcb-backend',
+        description: 'Backend for advanced capabilities for fvtt-campaign-builder Foundry module',
+        version: version
       },
       servers: [
         {
@@ -40,7 +40,6 @@ void (async () => {
         }
       ],
       tags: [
-        { name: 'character', description: 'Character related end-points' },
         { name: 'gpt', description: 'AI-generated text end-points' },
       ],
       components: {

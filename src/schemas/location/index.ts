@@ -28,7 +28,7 @@ export const generateLocationResponseSchema = {
   required: ['name', 'description']
 } as const;
 
-export const generateLocationInputSchema = createInputSchema('Generate an location', ['location', 'gpt'], generateLocationBodySchema, generateLocationResponseSchema);
+export const generateLocationInputSchema = createInputSchema('Generate an location', generateLocationBodySchema, generateLocationResponseSchema);
 
 export type GenerateLocationRequest = FastifyRequest<{ Body: FromSchema<typeof generateLocationBodySchema> }>;
 export type GenerateLocationOutput = FromSchema<typeof generateLocationResponseSchema> ;
