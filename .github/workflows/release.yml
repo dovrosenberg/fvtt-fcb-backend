@@ -68,10 +68,6 @@ jobs:
           git tag ${{ env.NEW_TAG }}
           git push origin main --tags
 
-      - name: Replace Image Tag in Deploy Script
-        run: |
-          sed -i "s|REPLACE_IMAGE_TAG|${{ env.NEW_VERSION }}|g" artifacts/deploy-gcp.sh
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
