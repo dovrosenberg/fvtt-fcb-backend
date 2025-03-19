@@ -43,6 +43,12 @@ jobs:
           NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
           NEW_TAG="v$NEW_VERSION"
 
+          # create the image tag
+          # Cloud Run is unable to reliably use the 'latest' tag, so we have to produce a new script that uses a specific image
+          TIMESTAMP=$(date +%s)
+          IMAGE_TAG="$NEW_TAG-$TIMESTAMP"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
           # Output the new version
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
@@ -73,13 +79,6 @@ jobs:
   
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "drosenberg62" --password-stdin
-
-      # Cloud Run is unable to reliably use the 'latest' tag, so we have to produce a new script that uses a specific image
-      - name: Generate Unique Image Tag with Release Name
-        run: |
-          TIMESTAMP=$(date +%s)
-          IMAGE_TAG="${{ env.NEW_TAG }}-${TIMESTAMP}"
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Build and Push Docker Image to Docker Hub
         run: |
