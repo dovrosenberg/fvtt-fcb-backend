@@ -40,7 +40,7 @@ void (async () => {
         }
       ],
       tags: [
-        { name: 'gpt', description: 'AI-generated text end-points' },
+        { name: 'FCB', description: 'All backend functions' },
       ],
       components: {
         securitySchemes: {

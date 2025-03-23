@@ -1,6 +1,6 @@
 import { FastifyRequest, } from 'fastify';
 import { FromSchema } from 'json-schema-to-ts';
-import { createInputSchema } from '@/schemas/utils';
+import { createPostInputSchema } from '@/schemas/utils';
 
 const generateCharacterBodySchema = {
   type: 'object',
@@ -24,7 +24,7 @@ export const generateCharacterResponseSchema = {
   required: ['name', 'description']
 } as const;
 
-export const generateCharacterInputSchema = createInputSchema('Generate a character', generateCharacterBodySchema, generateCharacterResponseSchema);
+export const generateCharacterInputSchema = createPostInputSchema('Generate a character', generateCharacterBodySchema, generateCharacterResponseSchema);
 
 export type GenerateCharacterRequest = FastifyRequest<{ Body: FromSchema<typeof generateCharacterBodySchema> }>;
 export type GenerateCharacterOutput = FromSchema<typeof generateCharacterResponseSchema>;
