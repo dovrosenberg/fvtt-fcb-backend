@@ -66,15 +66,24 @@ NEEDED?
 
   - THESE ARE THE SETTINGS THAT NEED TO BE POPULATED:
     ```
-    # AI API Configuration
-    AI_API_KEY=your-ai-api-key
-    AI_PROVIDER=openai
+    # take from "Project ID" on the dashboard for the project in GCP console
+    GCP_PROJECT_ID=fcb-backend   
 
-    # Storage Configuration
-    GCS_BUCKET_NAME=your-bucket-name
+    # GCP region for cloud run deploy - put it close to you/your players
+    GCP_REGION=us-central1
 
-    # Foundry Authentication Token
-    FOUNDRY_API_TOKEN=your-secret-token
+    # take from the 'client-email' fieled in the key file you download from GCP
+    GCP_SERVICE_ACCT_EMAIL=fcb-backend-service@fcb-backend.iam.gserviceaccount.com
+
+    # find in the list of service accounts after you enable the cloud storage service
+    GCP_DEFAULT_STORAGE_ACCOUNT=101834528339-compute@developer.gserviceaccount.com
+
+    # Storage Configuration - should match what you're going to put (or already have) in foundry configuration
+    # See https://foundryvtt.com/article/aws-s3/ for more info
+    GCS_BUCKET_NAME=fvtt-fcb-backend
+
+    # it's a really long # - get from https://platform.openai.com
+    OPENAI_API_KEY=sk-proj-SMCp9_Tu0keQ9T3Blbk...
     ```
 
 2. Deploy the backend
@@ -86,8 +95,8 @@ NEEDED?
     This might take a few minutes
 
 
-3. Copy the API URL
-  - Copy the generated API URL and paste it into Foundry VTT settings.
+3. Copy the API URL and token
+  - Copy the generated API URL (like `https://fvtt-fcb-backend-1018734923.us-central1.run.app` ) and token and paste them into Foundry VTT settings.
 
 ---------------
 
