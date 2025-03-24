@@ -24,7 +24,12 @@ const getCompletion = async (system: string, prompt: string, temperature: number
   try {
     response = JSON.parse(chat_completion.choices[0].message?.content) as Record<string, any>;
   } catch (_e) {
-    throw new Error(`Error parsing response from GPT: \vSystem:${system}\nPrompt:${prompt}\nResponse:${chat_completion.choices[0].message?.content}`);
+    // sometimes it comes up with escaped JSON strings... 
+    try {
+      response = JSON.parse(JSON.parse(JSON.stringify(chat_completion.choices[0].message.content)));
+    } catch (_e2) {
+      throw new Error(`Error parsing response from GPT: \vSystem:${system}\nPrompt:${prompt}\nResponse:${chat_completion.choices[0].message?.content}`);      
+    }
   }
 
   return response;

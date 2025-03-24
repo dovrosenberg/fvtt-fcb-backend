@@ -72,7 +72,7 @@ NEEDED?
     # GCP region for cloud run deploy - put it close to you/your players
     GCP_REGION=us-central1
 
-    # take from the 'client-email' fieled in the key file you download from GCP
+    # take from the 'client-email' field in the key file you download from GCP
     GCP_SERVICE_ACCT_EMAIL=fcb-backend-service@fcb-backend.iam.gserviceaccount.com
 
     # find in the list of service accounts after you enable the cloud storage service
