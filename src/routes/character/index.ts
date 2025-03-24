@@ -18,11 +18,11 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     `;
 
     const prompt = `
-      I need you to suggest one name and one description for a character.  The description should be 2-3 paragraphs long with paragraphs separated with <br/><br/>. 
+      I need you to suggest one name and one description for a character.  The description should be 2-3 paragraphs long with paragraphs separated with \n. 
       ${type ? `The type of character is a ${type}. Give this moderate weight.` : ''}.
       ${species ? `It should be a description of a ${species}.` : ''}.
       ${species && speciesDescription ? `Here is a description of what a ${species} is.  Give it light weight: ${speciesDescription}` : ''}.
-      ${briefDescription ? `Here is a brief description of the character that you should use as a starting point.  Your description should include all of these facts: ${briefDescription}` : ''}
+      ${briefDescription ? `Here is a brief description of the character that you should use as a starting point.  Your description MUST INCLUDE ALL of these facts: ${briefDescription}` : ''}
     `;
 
     const result = (await getCompletion(system, prompt, 1)) as { name: string, description: string } || { name: '', description: ''};
