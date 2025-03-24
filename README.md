@@ -96,7 +96,9 @@ NEEDED?
 
 
 3. Copy the API URL and token
-  - Copy the generated API URL (like `https://fvtt-fcb-backend-1018734923.us-central1.run.app` ) and token and paste them into Foundry VTT settings.
+  - Copy the generated API URL (like `https://fvtt-fcb-backend-1018734923.us-central1.run.app` ) and token that are output from the deploy script and paste them into Foundry VTT settings.
+  - If you ever need them again, you can find them at https://console.cloud.google.com/run?project=fcb-backend (click on the machine, then 'revisions' then the latest revision to see the token under 'environment variables')
+
 
 ---------------
 
