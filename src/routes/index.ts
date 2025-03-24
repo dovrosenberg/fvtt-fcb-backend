@@ -4,7 +4,7 @@ import bearerAuthPlugin from '@fastify/bearer-auth';
 import characterRoutes from './character';
 import organizationRoutes from './organization';
 import locationRoutes from './location';
-import { VersionOutput } from '@/schemas';
+import { versionInputSchema, VersionOutput } from '@/schemas';
 
 /**
  * Encapsulates the routes
@@ -15,7 +15,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.register(bearerAuthPlugin, { keys: [process.env.API_TOKEN as string] });
 
   // provide the version
-  fastify.get('/version', { schema: {} }, async (): Promise<VersionOutput> => ({ version: version }));
+  fastify.get('/version', { schema: versionInputSchema }, async (): Promise<VersionOutput> => ({ version: version }));
 
   fastify.register(characterRoutes, { prefix: '/character' });
   fastify.register(organizationRoutes, { prefix: '/organization' });

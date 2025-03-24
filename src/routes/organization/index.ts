@@ -19,9 +19,9 @@ async function routes (fastify: FastifyInstance): Promise<void> {
   
     const prompt = `
       I need you to suggest one name and one description for an organization.  The description should be 2-3 paragraphs long with paragraphs separated with <br/><br/>. 
-      ${type ? 'The type of organization is a ' + type : ''}.
-      ${parentName ? 'The organization is part of ' + parentName + (parentType ? '(which is a ' + parentType + ')' : '') + '.  ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.') : ''}
-      ${briefDescription ? 'Here is a brief description of the organization that you should use as a starting point.  Your description should include all of these facts: ' + briefDescription : ''}
+      ${type ? `The type of organization is a ${type}` : ''}.
+      ${parentName ? `The organization is part of ${parentName + (parentType ? '(which is a ' + parentType + ')' : '')}.  ${(parentDescription ? `Here is some information about ${parentName}: ${parentDescription}.` : '.')}` : ''}
+      ${briefDescription ? `Here is a brief description of the organization that you should use as a starting point.  Your description should include all of these facts: ${briefDescription}` : ''}
     `;
   
     const result = (await getCompletion(system, prompt, 1)) as { name: string, description: string } || { name: '', description: ''};

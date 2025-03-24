@@ -1,6 +1,6 @@
 import { FastifyRequest, } from 'fastify';
 import { FromSchema } from 'json-schema-to-ts';
-import { createInputSchema } from '@/schemas/utils';
+import { createPostInputSchema } from '@/schemas/utils';
 
 const generateCharacterBodySchema = {
   type: 'object',
@@ -8,7 +8,8 @@ const generateCharacterBodySchema = {
     genre: { type: 'string', description: 'Genre of the world (ex. "fantasy" or "science fiction")' },
     worldFeeling: { type: 'string', description: 'The feeling of the world (ex. "humorous" or "apocalyptic")' },
     type: { type: 'string', description: 'The type of character (ex. a trade or a title)' },
-    species: { type: 'string', description: 'The species of the character (will default to human)' },
+    species: { type: 'string', description: 'The species of the character' },
+    speciesDescription: { type: 'string', description: 'A brief description of the species' },
     briefDescription: { type: 'string', description: 'A brief description of the character to factor into the produced text' }
   },
   required: ['genre'],
@@ -23,7 +24,7 @@ export const generateCharacterResponseSchema = {
   required: ['name', 'description']
 } as const;
 
-export const generateCharacterInputSchema = createInputSchema('Generate a character', generateCharacterBodySchema, generateCharacterResponseSchema);
+export const generateCharacterInputSchema = createPostInputSchema('Generate a character', generateCharacterBodySchema, generateCharacterResponseSchema);
 
 export type GenerateCharacterRequest = FastifyRequest<{ Body: FromSchema<typeof generateCharacterBodySchema> }>;
 export type GenerateCharacterOutput = FromSchema<typeof generateCharacterResponseSchema>;

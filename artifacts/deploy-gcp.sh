@@ -24,15 +24,13 @@ echo "Setting up..."
 gcloud config set project $GCP_PROJECT_ID
 
 # ✅ Create a Cloud Storage bucket if it doesn't exist
-export FULL_BUCKET_NAME="$GCP_PROJECT_ID-$GCS_BUCKET_NAME"
-
 echo "🗂 Checking for Cloud Storage bucket..."
-if ! gcloud storage buckets list --format="value(name)" | grep -q "^$FULL_BUCKET_NAME$"; then
-    echo "📦 Creating Cloud Storage bucket: $FULL_BUCKET_NAME..."
-    gcloud storage buckets create gs://$FULL_BUCKET_NAME --location=$GCP_REGION
-    echo "✅ Bucket $FULL_BUCKET_NAME created successfully!"
+if ! gcloud storage buckets list --format="value(name)" | grep -q "^$GCS_BUCKET_NAME$"; then
+    echo "📦 Creating Cloud Storage bucket: $GCS_BUCKET_NAME..."
+    gcloud storage buckets create gs://$GCS_BUCKET_NAME --location=$GCP_REGION
+    echo "✅ Bucket $GCS_BUCKET_NAME created successfully!"
 else
-    echo "✅ Cloud Storage bucket $FULL_BUCKET_NAME already exists."
+    echo "✅ Cloud Storage bucket $GCS_BUCKET_NAME already exists."
 fi
 
 # # Check if the Cloud Run service exists
@@ -60,7 +58,7 @@ gcloud run deploy fvtt-fcb-backend \
     --platform managed \
     --region $GCP_REGION \
     --allow-unauthenticated \
-    --set-env-vars "GCP_PROJECT_ID=$GCP_PROJECT_ID,API_TOKEN=$API_TOKEN,OPENAI_API_KEY=$OPENAI_API_KEY,GCS_BUCKET_NAME=$FULL_BUCKET_NAME,GCP_CERT=\"$GCP_CERT\""
+    --set-env-vars "GCP_PROJECT_ID=$GCP_PROJECT_ID,API_TOKEN=$API_TOKEN,OPENAI_API_KEY=$OPENAI_API_KEY,GCS_BUCKET_NAME=$GCS_BUCKET_NAME,GCP_CERT=\"$GCP_CERT\""
 
 if [ $? -ne 0 ]; then
   echo "Cloud run deploy failed"

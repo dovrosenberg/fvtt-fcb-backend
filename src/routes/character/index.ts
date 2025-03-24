@@ -8,7 +8,7 @@ import { generateCharacterInputSchema, GenerateCharacterOutput, GenerateCharacte
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateCharacterInputSchema }, async (request: GenerateCharacterRequest, _reply: FastifyReply): Promise<GenerateCharacterOutput> => {
-    const { genre, worldFeeling, type, species, briefDescription } = request.body;
+    const { genre, worldFeeling, type, species, speciesDescription, briefDescription } = request.body;
 
     const system =  `
       I am writing a ${genre} novel. ${worldFeeling ? 'The feeling of the world is: ' + worldFeeling + '.\n' : ''} You are my assistant.  
@@ -19,9 +19,10 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
     const prompt = `
       I need you to suggest one name and one description for a character.  The description should be 2-3 paragraphs long with paragraphs separated with <br/><br/>. 
-      ${type ? 'The type of character is a ' + type + '. Give this only a little weight.' : ''}.
-      ${species ? 'It should be a description of a ' + species : ''}.
-      ${briefDescription ? 'Here is a brief description of the character that you should use as a starting point.  Your description should include all of these facts: ' + briefDescription : ''}
+      ${type ? `The type of character is a ${type}. Give this moderate weight.` : ''}.
+      ${species ? `It should be a description of a ${species}.` : ''}.
+      ${species && speciesDescription ? `Here is a description of what a ${species} is.  Give it light weight: ${speciesDescription}` : ''}.
+      ${briefDescription ? `Here is a brief description of the character that you should use as a starting point.  Your description should include all of these facts: ${briefDescription}` : ''}
     `;
 
     const result = (await getCompletion(system, prompt, 1)) as { name: string, description: string } || { name: '', description: ''};

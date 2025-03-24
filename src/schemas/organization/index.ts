@@ -1,6 +1,6 @@
 import { FastifyRequest, } from 'fastify';
 import { FromSchema } from 'json-schema-to-ts';
-import { createInputSchema } from '@/schemas/utils';
+import { createPostInputSchema } from '@/schemas/utils';
 
 const generateOrganizationBodySchema = {
   type: 'object',
@@ -25,7 +25,7 @@ export const generateOrganizationResponseSchema = {
   required: ['name', 'description']
 } as const;
 
-export const generateOrganizationInputSchema = createInputSchema('Generate an organization', generateOrganizationBodySchema, generateOrganizationResponseSchema);
+export const generateOrganizationInputSchema = createPostInputSchema('Generate an organization', generateOrganizationBodySchema, generateOrganizationResponseSchema);
 
 export type GenerateOrganizationRequest = FastifyRequest<{ Body: FromSchema<typeof generateOrganizationBodySchema> }>;
 export type GenerateOrganizationOutput = FromSchema<typeof generateOrganizationResponseSchema> ;
