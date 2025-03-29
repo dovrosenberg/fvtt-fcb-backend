@@ -58,7 +58,7 @@ gcloud run deploy fvtt-fcb-backend \
     --platform managed \
     --region $GCP_REGION \
     --allow-unauthenticated \
-    --set-env-vars "GCP_PROJECT_ID=$GCP_PROJECT_ID,API_TOKEN=$API_TOKEN,OPENAI_API_KEY=$OPENAI_API_KEY,GCS_BUCKET_NAME=$GCS_BUCKET_NAME,GCP_CERT=\"$GCP_CERT\""
+    --set-env-vars "GCP_PROJECT_ID=$GCP_PROJECT_ID,API_TOKEN=$API_TOKEN,OPENAI_API_KEY=$OPENAI_API_KEY,REPLICATE_API_KEY=$REPLICATE_API_KEY,GCS_BUCKET_NAME=$GCS_BUCKET_NAME,GCP_CERT=\"$GCP_CERT\""
 
 if [ $? -ne 0 ]; then
   echo "Cloud run deploy failed"

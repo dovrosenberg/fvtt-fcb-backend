@@ -6,6 +6,7 @@ import swaggerUI from '@fastify/swagger-ui';
 
 import { loadOpenAI } from '@/services/openai';
 import { loadStorage } from '@/services/storage';
+import { loadReplicate } from '@/services/replicate';
 import routes from '@/routes';
 import { version } from '../package.json';
 
@@ -17,6 +18,7 @@ void (async () => {
   // setup any services
   await loadOpenAI();
   await loadStorage();
+  await loadReplicate();
 
   const fastify = Fastify({
     logger: {
@@ -88,28 +90,6 @@ void (async () => {
 
   // attach routes
   fastify.register(routes, { prefix: '/api' });
-
-  // app.post('/generate-image', async (req, res) => {
-
-  //     try {
-  //         const response = await axios.post(`https://api.${API_PROVIDER}.com/generate`, {
-  //             prompt: req.body.prompt
-  //         }, {
-  //             headers: { Authorization: `Bearer ${AI_API_KEY}` }
-  //         });
-
-  //         const imageBuffer = Buffer.from(response.data.image, 'base64');
-  //         const fileName = `generated-${Date.now()}.png`;
-  //         const file = bucket.file(fileName);
-
-  //         await file.save(imageBuffer, { contentType: 'image/png' });
-  //         const publicUrl = `https://storage.googleapis.com/${GCS_BUCKET}/${fileName}`;
-
-  //         res.json({ imageUrl: publicUrl });
-  //     } catch (error) {
-  //         res.status(500).json({ error: error.message });
-  //     }
-  // });
 
   fastify.listen(
     { 
