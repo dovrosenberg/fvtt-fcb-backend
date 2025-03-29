@@ -14,8 +14,22 @@ const loadReplicate = async function(): Promise<void> {
   }
 };
 
-export const DEFAULT_MODEL = 3;  // for testing - should be 0 normally
+export const DEFAULT_MODEL = 0;
 export const models = [
+  // https://replicate.com/minimax/image-01?prediction=11hkfma171rme0cnvwpvn7tzac - Slow, variable (usually moderate to good) quality, but only $0.01
+  // https://replicate.com/minimax/image-01?prediction=gnfvbzt46hrmc0cnvwv8zw69xw - scenery
+  { 
+    name: 'Minimax image-01', 
+    modelId: 'minimax/image-01', 
+    description: 'Slow, variable (usually moderate to good) quality, but only $0.01',
+    outputFormat: 'jpg',
+    getOptions: (prompt: string) => ({ 
+      prompt: prompt,
+      aspect_ratio: '3:4',
+      number_of_images: 1,
+      prompt_optimizer: true
+    })
+  },
   // https://replicate.com/black-forest-labs/flux-1.1-pro?prediction=bmahxcefn1rmc0cnvwraz0qk2w - fast, $0.04, high quality
   // https://replicate.com/black-forest-labs/flux-1.1-pro?prediction=74343jyypxrmc0cnvwss1s380c - scenery
   { 
@@ -71,20 +85,6 @@ export const models = [
       output_format: 'webp',
       output_quality: 80,
       num_inference_steps: 4
-    })
-  },
-  // https://replicate.com/minimax/image-01?prediction=11hkfma171rme0cnvwpvn7tzac - slow, inconsistent quality, but $0.01
-  // https://replicate.com/minimax/image-01?prediction=gnfvbzt46hrmc0cnvwv8zw69xw - scenery
-  { 
-    name: 'Minimax image-01', 
-    modelId: 'minimax/image-01', 
-    description: 'Slow, variable quality, but only $0.01',
-    outputFormat: 'jpg',
-    getOptions: (prompt: string) => ({ 
-      prompt: prompt,
-      aspect_ratio: '3:4',
-      number_of_images: 1,
-      prompt_optimizer: true
     })
   },
 ] as {

@@ -1,6 +1,14 @@
 import { getCompletion } from '@/services/openai';
 import { FastifyInstance, FastifyReply, } from 'fastify';
-import { generateLocationInputSchema, GenerateLocationOutput, GenerateLocationRequest } from '@/schemas';
+import { 
+  generateLocationInputSchema, 
+  GenerateLocationOutput, 
+  GenerateLocationRequest,
+  generateLocationImageInputSchema,
+  GenerateLocationImageOutput,
+  GenerateLocationImageRequest
+} from '@/schemas';
+import { generateImage } from '@/services/replicate';
 
 
 // note: we don't clean briefDescription in these functions because there generally shouldn't be any HTML in it and if someone goes out of their way
@@ -37,6 +45,31 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     } as GenerateLocationOutput;
 
     return location;
+  });
+
+  fastify.post('/generate-image', { schema: generateLocationImageInputSchema }, async (request: GenerateLocationImageRequest, _reply: FastifyReply): Promise<GenerateLocationImageOutput> => {
+    const { genre, worldFeeling, name, type, parentName, parentDescription, briefDescription, } = request.body;
+
+    // Construct a detailed prompt 
+    const prompt = `
+      ${genre} scnery ${name ? `of a location named ${name}` : ''},
+      ${worldFeeling ? ` from a ${worldFeeling} world` :''}.
+      ${parentName ? `The location is in ${parentName + (parentName ? '(which is a ' + parentType + ')' : '') + '.  ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
+      ${type ? `, ${type}` : ''}.
+      ${briefDescription ? `, ${briefDescription}` : ''}.
+      , fantasy art, photorealistic, cinematic lighting, ultra detail, sharp focus
+    `;
+
+    // TODO: consider if we should use GPT to create a better prompt vs the description
+
+    try {
+      const imageUrl = await generateImage(prompt);
+
+      return { filePath: imageUrl } as GenerateLocationImageOutput;
+    } catch (error) {
+      console.error('Error generating character image:', error);
+      throw new Error(`Failed to generate character image: ${(error as Error)?.message}`);
+    }
   });
 }
 

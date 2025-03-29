@@ -29,6 +29,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     const prompt = `
       I need you to suggest one name and one description for a character.  The description should be 2-3 paragraphs long with paragraphs separated with \\n.
       ${type ? `The type of character is a ${type}. Give this moderate weight.` : ''}.
+      ${name ? `The name of character is a ${name}. Give this light weight.` : ''}.
       ${species ? `It should be a description of a ${species}.` : ''}.
       ${species && speciesDescription ? `Here is a description of what a ${species} is.  Give it light weight: ${speciesDescription}` : ''}.
       ${name ? `The name of the character is ${name}. You MUST use this name instead of creating a new one.` : ''}.
@@ -52,39 +53,20 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
   // Add the new endpoint for generating character images
   fastify.post('/generate-image', { schema: generateCharacterImageInputSchema }, async (request: GenerateCharacterImageRequest, _reply: FastifyReply): Promise<GenerateCharacterImageOutput> => {
-    const { genre, worldFeeling, type, species, speciesDescription, description, } = request.body;
+    const { genre, worldFeeling, name, type, species, speciesDescription, briefDescription, } = request.body;
 
-    // Construct a detailed prompt for the flux-schnell model
-    // This model works well with more concise, descriptive prompts
-    let prompt = `${genre} character portrait`;
-    
-    if (worldFeeling) 
-      prompt += ` from a ${worldFeeling} world`;
-
-    // location = 
-    // prompt += '', Fantasy scenery image';
-
-    // Add species if provided
-    if (species) {
-      prompt += `, ${species}`;
-    }
-
-    if (speciesDescription) {
-      prompt += `(${speciesDescription})`;
-    }
-
-    // Add character type if provided
-    if (type) {
-      prompt += `, ${type}`;
-    }
+    // Construct a detailed prompt 
+    const prompt = `
+      ${genre} character portrait ${name ? `of a character named ${name}` : ''},
+      ${worldFeeling ? ` from a ${worldFeeling} world` :''}.
+      ${species ? `, ${species}` : ''}.
+      ${species && speciesDescription ? `(${speciesDescription})` : ''}.
+      ${type ? `, ${type}` : ''}.
+      ${briefDescription ? `, ${briefDescription}` : ''}.
+      , fantasy art, photorealistic, cinematic lighting, ultra detail, sharp focus
+    `;
 
     // TODO: consider if we should use GPT to create a better prompt vs the description
-
-    // Add the character description
-    prompt += `, ${description}`;
-
-    // Add style keywords 
-    prompt += ', fantasy art, photorealistic, cinematic lighting, ultra detail, sharp focus';
 
     try {
       const imageUrl = await generateImage(prompt);
