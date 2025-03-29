@@ -28,15 +28,16 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
     const prompt = `
       I need you to suggest one name and one description for a character.  The description should be 2-3 paragraphs long with paragraphs separated with \\n.
+      ${name ? `The name of character is ${name}. You MUST ABSOLUTELY USE THIS NAME. DO NOT GENERATE YOUR OWN.` : ''}.
       ${type ? `The type of character is a ${type}. Give this moderate weight.` : ''}.
-      ${name ? `The name of character is a ${name}. Give this light weight.` : ''}.
       ${species ? `It should be a description of a ${species}.` : ''}.
       ${species && speciesDescription ? `Here is a description of what a ${species} is.  Give it light weight: ${speciesDescription}` : ''}.
       ${name ? `The name of the character is ${name}. You MUST use this name instead of creating a new one.` : ''}.
       ${briefDescription ? `Here is a brief description of the character that you should use as a starting point.
         THIS IS THE MOST IMPORTANT THING!  EVEN MORE IMPORTANT THAN SPECIES DESCRIPTION/STEREOTYPES.  YOUR GENERATED DESCRIPTION MUST
         INCLUDE ALL OF THESE FACTS. REQUIRED FACTS: ${briefDescription}` : ''}
-    `;
+      You should only take the world feeling into account in ways that do not contradict the other information.
+`;
 
     const result = (await getCompletion(system, prompt, 1)) as { name: string, description: string } || { name: '', description: ''};
     if (!result.name || !result.description) {
