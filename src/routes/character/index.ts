@@ -20,7 +20,6 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
     const system =  `
       I am writing a ${genre} novel. ${worldFeeling ? 'The feeling of the world is: ' + worldFeeling + '.\n' : ''} You are my assistant.
-      ALL OF YOUR RESPONSES MUST BE VALID JSON CAPABLE OF BEING PARSED BY JSON.parse() IN JAVASCRIPT.  THAT MEANS NO ESCAPE CHARACTERS OUTSIDE OF VALID STRINGS.
       EACH RESPONSE SHOULD CONTAIN TWO FIELDS:
       1. "name": A STRING CONTAINING ((ONLY)) THE NAME OF THE CHARACTER WE ARE DISCUSSING
       2. "description": A STRING CONTAINING ((ONLY)) A DESCRIPTION OF THE CHARACTER THAT MATCHES MY REQUEST
