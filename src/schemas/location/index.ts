@@ -40,7 +40,7 @@ export const generateLocationImageResponseSchema = {
 } as const;
 
 export const generateLocationInputSchema = createPostInputSchema('Generate an location', generateLocationBodySchema, generateLocationResponseSchema);
-export const generateLocationImageInputSchema = createPostInputSchema('Generate an location', generateLocationImageBodySchema, generateLocationImageResponseSchema);
+export const generateLocationImageInputSchema = createPostInputSchema('Generate an location image', generateLocationImageBodySchema, generateLocationImageResponseSchema);
 
 export type GenerateLocationRequest = FastifyRequest<{ Body: FromSchema<typeof generateLocationBodySchema> }>;
 export type GenerateLocationImageRequest = FastifyRequest<{ Body: FromSchema<typeof generateLocationImageBodySchema> }>;

@@ -27,10 +27,10 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
     const prompt = `
       I need you to suggest one name and one description for an location.  The description should be 2-3 paragraphs long with paragraphs separated with \n. 
-      ${name ? `The name of character is ${name}. You MUST ABSOLUTELY USE THIS NAME. DO NOT GENERATE YOUR OWN.` : ''}.
+      ${name ? `The name of location is ${name}. You MUST ABSOLUTELY USE THIS NAME. DO NOT GENERATE YOUR OWN.` : ''}.
       ${type ? `The type of location is a ${type}` : ''}.
       ${parentName ? `The location is in ${parentName + (parentName ? '(which is a ' + parentType + ')' : '') + '.  ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
-      ${grandparentName ? `${parent} is located in ${grandparentName + (grandparentType ? '(which is a ' + grandparentType + ')' : '')}. ${(grandparentDescription ? 'Here is some information about ' + grandparentName + ': ' + grandparentDescription + '.' : '.')}` : ''}
+      ${grandparentName ? `${parentName} is located in ${grandparentName + (grandparentType ? '(which is a ' + grandparentType + ')' : '')}. ${(grandparentDescription ? 'Here is some information about ' + grandparentName + ': ' + grandparentDescription + '.' : '.')}` : ''}
       ${briefDescription ? `Here is a brief description of the location that you should use as a starting point.
         THIS IS THE MOST IMPORTANT THING!  YOUR GENERATED DESCRIPTION MUST
         INCLUDE ALL OF THESE FACTS. REQUIRED FACTS: ${briefDescription}` : ''}
@@ -69,8 +69,8 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       ${name ? `The name of location is ${name}` : ''}.
       ${type ? `The type of location is a ${type}` : ''}.
       ${parentName ? `The location is in ${parentName + (parentName ? '(which is a ' + parentType + ')' : '') + '.  ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
-      ${grandparentName ? `${parent} is located in ${grandparentName + (grandparentType ? '(which is a ' + grandparentType + ')' : '')}. ${(grandparentDescription ? 'Here is some information about ' + grandparentName + ': ' + grandparentDescription + '.' : '.')}` : ''}
-      ${parentName || grandparentName ? 'ONLY USE INFORMATION ON THE PARENT OR GRANDPARENT IF IT DOESN\'T CONFLICT WITH THE LOCATION DESCRIPTION. IT IS ONLY SUPPLEMENTAL' : ''}
+      ${grandparentName ? `${parentName} is located in ${grandparentName + (grandparentType ? '(which is a ' + grandparentType + ')' : '')}. ${(grandparentDescription ? 'Here is some information about ' + grandparentName + ': ' + grandparentDescription + '.' : '.')}` : ''}
+      ${parentName || grandparentName ? 'ONLY USE INFORMATION ON THE BROADER PLACES IF IT DOESN\'T CONFLICT WITH THE LOCATION DESCRIPTION. IT IS ONLY SUPPLEMENTAL' : ''}
       ${briefDescription ? `Here is a brief description of the location that you should use as a starting point.
         THIS IS THE MOST IMPORTANT THING!  DESCRIPTION: ${briefDescription}` : ''}
       You should only take the world feeling into account in ways that do not contradict the other information.
@@ -87,8 +87,8 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
       return { filePath: imageUrl } as GenerateLocationImageOutput;
     } catch (error) {
-      console.error('Error generating character image:', error);
-      throw new Error(`Failed to generate character image: ${(error as Error)?.message}`);
+      console.error('Error generating location image:', error);
+      throw new Error(`Failed to generate location image: ${(error as Error)?.message}`);
     }
   });
 }

@@ -14,7 +14,7 @@ const getCompletion = async (system: string, prompt: string, temperature: number
     ALL OF YOUR RESPONSES MUST BE VALID JSON CAPABLE OF BEING PARSED BY JSON.parse() IN JAVASCRIPT.  THAT MEANS NO ESCAPE CHARACTERS OR NEW LINES
     OUTSIDE OF VALID STRINGS VALUES AND PROPERLY FORMED JSON WITH KEY VALUE PAIRS. 
     DO NOT ADD ANYTHING ELSE TO THE RESPONSE OTHER THAN WHAT IS DESCRIBED ABOVE. FOR EXAMPLE, A PROPERLY FORMED RESPONSE LOOKS LIKE:
-    '{"keyone":"value one", "keytwo":"Values can have newlines\n\nin them"}'
+    {"keyone":"value one", "keytwo":"Values can have newlines\n\nin them"}
 
   `;
 
@@ -38,7 +38,7 @@ const getCompletion = async (system: string, prompt: string, temperature: number
     try {
       response = JSON.parse(JSON.parse(JSON.stringify(content)));
     } catch (_e2) {
-      throw new Error(`Error parsing response from GPT: System:${system}*** Prompt:${prompt}*** Response:${content}`);
+      throw new Error(`Error parsing response from GPT: System:${fullSystem}*** Prompt:${prompt}*** Response:${content}`);
     }
   }
 

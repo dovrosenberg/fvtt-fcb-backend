@@ -36,7 +36,7 @@ export const generateCharacterImageResponseSchema = {
 } as const;
 
 export const generateCharacterInputSchema = createPostInputSchema('Generate a character', generateCharacterBodySchema, generateCharacterResponseSchema);
-export const generateCharacterImageInputSchema = createPostInputSchema('Generate a character', generateCharacterImageBodySchema, generateCharacterImageResponseSchema);
+export const generateCharacterImageInputSchema = createPostInputSchema('Generate a character image', generateCharacterImageBodySchema, generateCharacterImageResponseSchema);
 
 export type GenerateCharacterRequest = FastifyRequest<{ Body: FromSchema<typeof generateCharacterBodySchema> }>;
 export type GenerateCharacterImageRequest = FastifyRequest<{ Body: FromSchema<typeof generateCharacterImageBodySchema> }>;
