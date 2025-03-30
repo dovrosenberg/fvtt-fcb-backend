@@ -37,7 +37,7 @@ void (async () => {
       },
       servers: [
         {
-          url: 'http://localhost:8080',
+          url: `http://localhost:${PORT}`,
           description: 'Development server'
         }
       ],
