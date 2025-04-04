@@ -53,12 +53,26 @@ GCP_CERT=$(base64 < gcp-service-key.json)
 echo "Deploying container..."
 IMAGE_NAME="docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
 
+# Prepare environment variables
+ENV_VARS="\
+GCP_PROJECT_ID={$GCP_PROJECT_ID:-},\
+API_TOKEN={$API_TOKEN:-},\
+OPENAI_API_KEY={$OPENAI_API_KEY:-},\
+REPLICATE_API_KEY={$REPLICATE_API_KEY:-},\
+GCS_BUCKET_NAME={$GCS_BUCKET_NAME:-},\
+GCP_CERT=\"$GCP_CERT\",\
+STORAGE_TYPE=${STORAGE_TYPE:-},\
+AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-},\
+AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-},\
+AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-},\
+AWS_REGION=${AWS_REGION:-}"
+
 gcloud run deploy fvtt-fcb-backend \
     --image $IMAGE_NAME \
     --platform managed \
     --region $GCP_REGION \
     --allow-unauthenticated \
-    --set-env-vars "GCP_PROJECT_ID=$GCP_PROJECT_ID,API_TOKEN=$API_TOKEN,OPENAI_API_KEY=$OPENAI_API_KEY,REPLICATE_API_KEY=$REPLICATE_API_KEY,GCS_BUCKET_NAME=$GCS_BUCKET_NAME,GCP_CERT=\"$GCP_CERT\""
+    --set-env-vars "$ENV_VARS"
 
 if [ $? -ne 0 ]; then
   echo "Cloud run deploy failed"
