@@ -1,4 +1,4 @@
-import { bucket } from '@/services/storage';
+import { storageProvider } from '@/services/storage';
 import Replicate from 'replicate';
 
 // Replicate API client
@@ -8,7 +8,7 @@ const loadReplicate = async function(): Promise<void> {
   replicate = new Replicate({
     auth: process.env.REPLICATE_API_KEY as string
   });
-  
+
   if (!replicate) {
     console.error('Issue initializing Replicate API client');
   }
@@ -127,20 +127,15 @@ const generateImage = async (prompt: string, modelID?: number): Promise<string> 
     const imageBuffer = Buffer.from(await response.arrayBuffer());
 
     // Generate a unique filename with the correct extension
-    const fileName = `character-image-${Date.now()}.${model.outputFormat}`;
-    const file = bucket.file(fileName);
+    // put it in the fcb folder
+    const fileName = `fcb/character-image-${Date.now()}.${model.outputFormat}`;
 
-    // Save the image to the bucket
-    await file.save(imageBuffer, {
-      contentType: `image/${model.outputFormat}`,
-      public: true,
-      metadata: {
-        cacheControl: 'public, max-age=31536000' // Cache for 1 year
-      }
-    });
-
-    // Get the public URL
-    const publicUrl = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${fileName}`;
+    // Save the image using the storage provider
+    const publicUrl = await storageProvider.saveFile(
+      fileName,
+      imageBuffer,
+      `image/${model.outputFormat}`
+    );
     return publicUrl;
   } catch (error) {
     console.error('Error generating image with Replicate:', error);
