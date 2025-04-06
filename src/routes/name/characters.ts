@@ -19,7 +19,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     const prompt = `
       Generate ${count} unique character names.
       ${genre ? `The names MUST  be appropriate for a ${genre} setting.` : ''}
-      ${worldFeeling ? `The world has a ${worldFeeling} feeling or atmosphere, so names could reflect this tone, butonly  give this a light weight.` : ''}
+      ${worldFeeling ? `The world has a ${worldFeeling} feeling or atmosphere, so names could reflect this tone, but only about half of your responses should take this into account.` : ''}
       Return ONLY an array of strings with the names. No explanations or additional text.
     `;
 

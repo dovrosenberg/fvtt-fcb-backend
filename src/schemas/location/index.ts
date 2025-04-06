@@ -39,8 +39,16 @@ export const generateLocationImageResponseSchema = {
   required: ['filePath']
 } as const;
 
-export const generateLocationInputSchema = createPostInputSchema('Generate an location', generateLocationRequestSchema, generateLocationResponseSchema);
-export const generateLocationImageInputSchema = createPostInputSchema('Generate an location image', generateLocationImageRequestSchema, generateLocationImageResponseSchema);
+export const generateLocationInputSchema = createPostInputSchema(
+  'Generate an location', 
+  generateLocationRequestSchema, 
+  generateLocationResponseSchema
+);
+export const generateLocationImageInputSchema = createPostInputSchema(
+  'Generate an location image', 
+  generateLocationImageRequestSchema, 
+  generateLocationImageResponseSchema
+);
 
 export type GenerateLocationRequest = FastifyRequest<{ Body: FromSchema<typeof generateLocationRequestSchema> }>;
 export type GenerateLocationImageRequest = FastifyRequest<{ Body: FromSchema<typeof generateLocationImageRequestSchema> }>;

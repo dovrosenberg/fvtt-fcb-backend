@@ -39,8 +39,16 @@ export const generateOrganizationImageResponseSchema = {
   required: ['filePath']
 } as const;
 
-export const generateOrganizationInputSchema = createPostInputSchema('Generate an organization', generateOrganizationRequestSchema, generateOrganizationResponseSchema);
-export const generateOrganizationImageInputSchema = createPostInputSchema('Generate an organization image', generateOrganizationImageRequestSchema, generateOrganizationImageResponseSchema);
+export const generateOrganizationInputSchema = createPostInputSchema(
+  'Generate an organization', 
+  generateOrganizationRequestSchema, 
+  generateOrganizationResponseSchema
+);
+export const generateOrganizationImageInputSchema = createPostInputSchema(
+  'Generate an organization image', 
+  generateOrganizationImageRequestSchema, 
+  generateOrganizationImageResponseSchema
+);
 
 export type GenerateOrganizationRequest = FastifyRequest<{ Body: FromSchema<typeof generateOrganizationRequestSchema> }>;
 export type GenerateOrganizationImageRequest = FastifyRequest<{ Body: FromSchema<typeof generateOrganizationImageRequestSchema> }>;

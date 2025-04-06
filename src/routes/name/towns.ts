@@ -8,7 +8,7 @@ import {
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/towns', { schema: generateTownNamesInputSchema }, async (request: GenerateTownNamesRequest, _reply: FastifyReply): Promise<GenerateTownNamesOutput> => {
-    const { count, genre, worldFeeling, region } = request.body;
+    const { count, genre, worldFeeling, } = request.body;
 
     const system = `
       You are a creative name generator for fictional towns and settlements.
@@ -20,8 +20,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     const prompt = `
       Generate ${count} unique town or settlement names.
       ${genre ? `The names should be appropriate for a ${genre} setting.` : ''}
-      ${worldFeeling ? `The world has a ${worldFeeling} feeling or atmosphere, so names could reflect this tone, but only give this light weight.` : ''}
-      ${region ? `The towns are located in a region described as: ${region}. Names should reflect this regional character.` : ''}
+      ${worldFeeling ? `The world has a ${worldFeeling} feeling or atmosphere, so names could reflect this tone, but only about half of your responses should take this into account.` : ''}
       Return ONLY an array of strings with the names. No explanations or additional text.
     `;
 
