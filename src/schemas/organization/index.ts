@@ -2,7 +2,7 @@ import { FastifyRequest, } from 'fastify';
 import { FromSchema } from 'json-schema-to-ts';
 import { createPostInputSchema } from '@/schemas/utils';
 
-const generateOrganizationBodySchema = {
+const generateOrganizationRequestSchema = {
   type: 'object',
   properties: {
     genre: { type: 'string', description: 'Genre of the world (ex. "fantasy" or "science fiction")' },
@@ -20,7 +20,7 @@ const generateOrganizationBodySchema = {
   required: ['genre'],
 } as const;
 
-export const generateOrganizationImageBodySchema = generateOrganizationBodySchema; 
+export const generateOrganizationImageRequestSchema = generateOrganizationRequestSchema; 
 
 export const generateOrganizationResponseSchema = {
   type: 'object',
@@ -39,11 +39,11 @@ export const generateOrganizationImageResponseSchema = {
   required: ['filePath']
 } as const;
 
-export const generateOrganizationInputSchema = createPostInputSchema('Generate an organization', generateOrganizationBodySchema, generateOrganizationResponseSchema);
-export const generateOrganizationImageInputSchema = createPostInputSchema('Generate an organization image', generateOrganizationImageBodySchema, generateOrganizationImageResponseSchema);
+export const generateOrganizationInputSchema = createPostInputSchema('Generate an organization', generateOrganizationRequestSchema, generateOrganizationResponseSchema);
+export const generateOrganizationImageInputSchema = createPostInputSchema('Generate an organization image', generateOrganizationImageRequestSchema, generateOrganizationImageResponseSchema);
 
-export type GenerateOrganizationRequest = FastifyRequest<{ Body: FromSchema<typeof generateOrganizationBodySchema> }>;
-export type GenerateOrganizationImageRequest = FastifyRequest<{ Body: FromSchema<typeof generateOrganizationImageBodySchema> }>;
+export type GenerateOrganizationRequest = FastifyRequest<{ Body: FromSchema<typeof generateOrganizationRequestSchema> }>;
+export type GenerateOrganizationImageRequest = FastifyRequest<{ Body: FromSchema<typeof generateOrganizationImageRequestSchema> }>;
 
 export type GenerateOrganizationOutput = FromSchema<typeof generateOrganizationResponseSchema> ;
 export type GenerateOrganizationImageOutput = FromSchema<typeof generateOrganizationImageResponseSchema> ;

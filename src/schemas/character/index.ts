@@ -2,7 +2,7 @@ import { FastifyRequest, } from 'fastify';
 import { FromSchema } from 'json-schema-to-ts';
 import { createPostInputSchema } from '@/schemas/utils';
 
-const generateCharacterBodySchema = {
+const generateCharacterRequestSchema = {
   type: 'object',
   properties: {
     genre: { type: 'string', description: 'Genre of the world (ex. "fantasy" or "science fiction")' },
@@ -16,7 +16,7 @@ const generateCharacterBodySchema = {
   required: ['genre'],
 } as const;
 
-const generateCharacterImageBodySchema = generateCharacterBodySchema;
+const generateCharacterImageRequestSchema = generateCharacterRequestSchema;
 
 export const generateCharacterResponseSchema = {
   type: 'object',
@@ -35,11 +35,11 @@ export const generateCharacterImageResponseSchema = {
   required: ['filePath']
 } as const;
 
-export const generateCharacterInputSchema = createPostInputSchema('Generate a character', generateCharacterBodySchema, generateCharacterResponseSchema);
-export const generateCharacterImageInputSchema = createPostInputSchema('Generate a character image', generateCharacterImageBodySchema, generateCharacterImageResponseSchema);
+export const generateCharacterInputSchema = createPostInputSchema('Generate a character', generateCharacterRequestSchema, generateCharacterResponseSchema);
+export const generateCharacterImageInputSchema = createPostInputSchema('Generate a character image', generateCharacterImageRequestSchema, generateCharacterImageResponseSchema);
 
-export type GenerateCharacterRequest = FastifyRequest<{ Body: FromSchema<typeof generateCharacterBodySchema> }>;
-export type GenerateCharacterImageRequest = FastifyRequest<{ Body: FromSchema<typeof generateCharacterImageBodySchema> }>;
+export type GenerateCharacterRequest = FastifyRequest<{ Body: FromSchema<typeof generateCharacterRequestSchema> }>;
+export type GenerateCharacterImageRequest = FastifyRequest<{ Body: FromSchema<typeof generateCharacterImageRequestSchema> }>;
 
 export type GenerateCharacterOutput = FromSchema<typeof generateCharacterResponseSchema>;
 export type GenerateCharacterImageOutput = FromSchema<typeof generateCharacterImageResponseSchema>;

@@ -3,6 +3,7 @@ import { FromSchema } from 'json-schema-to-ts';
 export * from './character';
 export * from './organization';
 export * from './location';
+export * from './name';
 
 import { createGetInputSchema } from '@/schemas/utils';
 

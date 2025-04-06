@@ -2,7 +2,7 @@ import { FastifyRequest, } from 'fastify';
 import { FromSchema } from 'json-schema-to-ts';
 import { createPostInputSchema } from '@/schemas/utils';
 
-const generateLocationBodySchema = {
+const generateLocationRequestSchema = {
   type: 'object',
   properties: {
     genre: { type: 'string', description: 'Genre of the world (ex. "fantasy" or "science fiction")' },
@@ -20,7 +20,7 @@ const generateLocationBodySchema = {
   required: ['genre'],
 } as const;
 
-export const generateLocationImageBodySchema = generateLocationBodySchema; 
+export const generateLocationImageRequestSchema = generateLocationRequestSchema; 
 
 export const generateLocationResponseSchema = {
   type: 'object',
@@ -39,11 +39,11 @@ export const generateLocationImageResponseSchema = {
   required: ['filePath']
 } as const;
 
-export const generateLocationInputSchema = createPostInputSchema('Generate an location', generateLocationBodySchema, generateLocationResponseSchema);
-export const generateLocationImageInputSchema = createPostInputSchema('Generate an location image', generateLocationImageBodySchema, generateLocationImageResponseSchema);
+export const generateLocationInputSchema = createPostInputSchema('Generate an location', generateLocationRequestSchema, generateLocationResponseSchema);
+export const generateLocationImageInputSchema = createPostInputSchema('Generate an location image', generateLocationImageRequestSchema, generateLocationImageResponseSchema);
 
-export type GenerateLocationRequest = FastifyRequest<{ Body: FromSchema<typeof generateLocationBodySchema> }>;
-export type GenerateLocationImageRequest = FastifyRequest<{ Body: FromSchema<typeof generateLocationImageBodySchema> }>;
+export type GenerateLocationRequest = FastifyRequest<{ Body: FromSchema<typeof generateLocationRequestSchema> }>;
+export type GenerateLocationImageRequest = FastifyRequest<{ Body: FromSchema<typeof generateLocationImageRequestSchema> }>;
 
 export type GenerateLocationOutput = FromSchema<typeof generateLocationResponseSchema> ;
 export type GenerateLocationImageOutput = FromSchema<typeof generateLocationImageResponseSchema> ;

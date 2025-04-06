@@ -13,10 +13,12 @@ const getCompletion = async (system: string, prompt: string, temperature: number
     ${system}
     ALL OF YOUR RESPONSES MUST BE VALID JSON CAPABLE OF BEING PARSED BY JSON.parse() IN JAVASCRIPT.  THAT MEANS NO ESCAPE CHARACTERS OR NEW LINES
     OUTSIDE OF VALID STRINGS VALUES AND PROPERLY FORMED JSON WITH KEY VALUE PAIRS. 
-    DO NOT ADD ANYTHING ELSE TO THE RESPONSE OTHER THAN WHAT IS DESCRIBED ABOVE. FOR EXAMPLE, A PROPERLY FORMED RESPONSE LOOKS LIKE:
-    {"keyone":"value one", "keytwo":"Values can have newlines\n\nin them"}
-
+    DO NOT ADD ANYTHING ELSE TO THE RESPONSE OTHER THAN WHAT IS DESCRIBED ABOVE. 
   `;
+
+  // used to use this but doesn't work for arrays - testing to see if it's really needed
+  // FOR EXAMPLE, A PROPERLY FORMED RESPONSE LOOKS LIKE:
+  //   {"keyone":"value one", "keytwo":"Values can have newlines\n\nin them"}
 
   const chat_completion = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
