@@ -14,7 +14,8 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       You are a creative name generator for fictional taverns, inns, and pubs.
       You will generate unique and appropriate tavern names based on the provided parameters. Names should be 
       a mix of one to three words long, and not too similar to each other.
-      EACH RESPONSE MUST BE A JSON ARRAY OF STRINGS, CONTAINING EXACTLY ${count} TAVERN NAMES.
+      EACH RESPONSE SHOULD CONTAIN ONE FIELD:
+      1. "names": AN ARRAY OF STRINGS, CONTAINING EXACTLY ${count} TAVERN NAMES.
     `;
 
     const prompt = `
@@ -24,14 +25,17 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       Return ONLY an array of strings with the names. No explanations or additional text.
     `;
 
-    const result = await getCompletion(system, prompt, 0.7) as string[];
+    const result = await getCompletion(system, prompt, 0.9) as { names: string[] } || { names: []};
     
-    if (!Array.isArray(result) || result.length !== count) {
-      // Fallback in case the result isn't properly formatted
-      throw new Error('Error generating tavern names: Invalid response format');
+    if (!result.names) {
+      throw new Error('Error in /names/taversn');
     }
-
-    return { names: result };
+        
+    const nameList = {
+      names: result.names,
+    } as GenerateTavernNamesOutput;
+      
+    return nameList;
   });
 };
 
