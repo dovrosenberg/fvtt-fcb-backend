@@ -38,7 +38,7 @@ void (async () => {
       },
       servers: [
         {
-          url: `${SERVER_URL}:${PORT}`,
+          url: `${SERVER_URL}`,
           description: 'Foundry Campaign Builder Backend Server'
         }
       ],
