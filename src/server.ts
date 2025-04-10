@@ -11,6 +11,7 @@ import routes from '@/routes';
 import { version } from '../package.json';
 
 const PORT = Number(process.env.PORT) || 8080;
+const SERVER_URL = process.env.SERVER_URL || 'http://localhost';
 
 void (async () => {
   console.log(`Starting server version ${version}`);
@@ -37,8 +38,8 @@ void (async () => {
       },
       servers: [
         {
-          url: `http://localhost:${PORT}`,
-          description: 'Development server'
+          url: `${SERVER_URL}:${PORT}`,
+          description: 'Foundry Campaign Builder Backend Server'
         }
       ],
       tags: [
