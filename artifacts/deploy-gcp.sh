@@ -53,6 +53,12 @@ GCP_CERT=$(base64 < gcp-service-key.json)
 echo "Deploying container..."
 IMAGE_NAME="docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
 
+# get the deploy URL
+SERVER_URL=$(gcloud run services describe fvtt-fcb-backend \
+  --platform managed \
+  --region=us-central1 \
+  --format "value(status.url)")
+
 # Prepare environment variables
 ENV_VARS="\
 GCP_PROJECT_ID={$GCP_PROJECT_ID:-},\
@@ -65,7 +71,8 @@ STORAGE_TYPE=${STORAGE_TYPE:-},\
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-},\
 AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-},\
 AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-},\
-AWS_REGION=${AWS_REGION:-}"
+AWS_REGION=${AWS_REGION:-},\
+SERVER_URL=${SERVER_URL:-}"
 
 gcloud run deploy fvtt-fcb-backend \
     --image $IMAGE_NAME \
