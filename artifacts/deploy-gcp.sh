@@ -61,11 +61,11 @@ SERVER_URL=$(gcloud run services describe fvtt-fcb-backend \
 
 # Prepare environment variables
 ENV_VARS="\
-GCP_PROJECT_ID={$GCP_PROJECT_ID:-},\
-API_TOKEN={$API_TOKEN:-},\
-OPENAI_API_KEY={$OPENAI_API_KEY:-},\
-REPLICATE_API_KEY={$REPLICATE_API_KEY:-},\
-GCS_BUCKET_NAME={$GCS_BUCKET_NAME:-},\
+GCP_PROJECT_ID=${GCP_PROJECT_ID:-},\
+API_TOKEN=${API_TOKEN:-},\
+OPENAI_API_KEY=${OPENAI_API_KEY:-},\
+REPLICATE_API_KEY=${REPLICATE_API_KEY:-},\
+GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-},\
 GCP_CERT=\"$GCP_CERT\",\
 STORAGE_TYPE=${STORAGE_TYPE:-},\
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-},\
@@ -88,5 +88,7 @@ fi
 
 # Output success message
 echo "✅ Deployment complete! Your Foundry Campaign Builder backend is now live."
-echo "Your API Token: $API_TOKEN"
+echo "Use these settings in "Advanced Settings" for the module:"
+echo "URL: $SERVER_URL"
+echo "API Token: $API_TOKEN"
 echo "See README for final configuration steps."
