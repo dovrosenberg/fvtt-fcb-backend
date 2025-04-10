@@ -11,7 +11,7 @@ import routes from '@/routes';
 import { version } from '../package.json';
 
 const PORT = Number(process.env.PORT) || 8080;
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost';
+const SERVER_URL = process.env.SERVER_URL || 'http://localhost:8080';
 
 void (async () => {
   console.log(`Starting server version ${version}`);
