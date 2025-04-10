@@ -17,31 +17,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Get Latest Version & Bump Patch
+      - name: Get Version from package.json
         id: version
         run: |
-          # Ensure we have all tags
-          git fetch --tags
-
-          # Get the latest tag (fallback to v0.0.0 if none exist)
-          CURRENT_VERSION=$(git tag --list | sort -V | tail -n 1)
-
-          # If no tags exist, start at v0.0.0
-          if [[ -z "$CURRENT_VERSION" ]]; then
-            CURRENT_VERSION="v0.0.0"
-          fi
-          
-          echo Current version found - $CURRENT_VERSION
-
-          # Remove "v" prefix for processing
-          CURRENT_VERSION=${CURRENT_VERSION#v}
-
-          # Extract major, minor, and patch numbers
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
-
-          # Increment patch version
-          NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+          # Get version from package.json
+          NEW_VERSION=$(node -p "require('./package.json').version")
           NEW_TAG="v$NEW_VERSION"
+          
+          echo "Using version from package.json: $NEW_VERSION"
 
           # create the image tag
           # Cloud Run is unable to reliably use the 'latest' tag, so we have to produce a new script that uses a specific image
@@ -49,24 +32,22 @@ jobs:
           IMAGE_TAG="$NEW_TAG-$TIMESTAMP"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
-          # Output the new version
+          # Output the version
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
-          echo "Bumped version to $NEW_VERSION"
+          echo "Using version $NEW_VERSION from package.json"
 
-      - name: Update `package.json` Version (If Applicable)
+      - name: Verify package.json Version
         run: |
-          echo "Updating package.json version to ${{ env.NEW_VERSION }}"
-          jq ".version = \"${{ env.NEW_VERSION }}\"" package.json > temp.json && mv temp.json package.json
-          git add package.json
+          echo "Using package.json version: ${{ env.NEW_VERSION }}"
+          # No need to update package.json as we're using its version
 
-      - name: Commit & Push Version Bump
+      - name: Create Release Tag
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -m "Bump version to ${{ env.NEW_VERSION }}" || echo "No changes to commit"
           git tag ${{ env.NEW_TAG }}
-          git push origin main --tags
+          git push origin ${{ env.NEW_TAG }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
