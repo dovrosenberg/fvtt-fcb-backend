@@ -64,7 +64,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     `;
 
     const prompt = `
-      I need you to suggest a prompt for an organization image or perhaps an insignia.  
+      I need you to suggest a prompt creating an image of an organization or perhaps an insignia.  
       ${name ? `The name of organization is ${name}` : ''}.
       ${type ? `The type of organization is a ${type}` : ''}.
       ${parentName ? `The organization is a part of an organization called ${parentName + (parentName ? '(which is a ' + parentType + ')' : '') + '.  ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
@@ -82,7 +82,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
         throw new Error('No prompt generated');
       }
 
-      const imageUrl = await generateImage(imagePrompt.prompt);
+      const imageUrl = await generateImage(imagePrompt.prompt, 'organization-image');
 
       return { filePath: imageUrl } as GenerateOrganizationImageOutput;
     } catch (error) {
