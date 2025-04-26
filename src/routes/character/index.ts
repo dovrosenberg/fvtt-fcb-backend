@@ -69,7 +69,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     // TODO: consider if we should use GPT to create a better prompt vs the description
 
     try {
-      const imageUrl = await generateImage(prompt);
+      const imageUrl = await generateImage(prompt, 'character-image');
 
       return { filePath: imageUrl } as GenerateCharacterImageOutput;
     } catch (error) {

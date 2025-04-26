@@ -65,7 +65,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     `;
 
     const prompt = `
-      I need you to suggest a prompt for a location.  
+      I need you to suggest a prompt for creating an image of a location.  
       ${name ? `The name of location is ${name}` : ''}.
       ${type ? `The type of location is a ${type}` : ''}.
       ${parentName ? `The location is in ${parentName + (parentName ? '(which is a ' + parentType + ')' : '') + '.  ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
@@ -83,7 +83,8 @@ async function routes (fastify: FastifyInstance): Promise<void> {
         throw new Error('No prompt generated');
       }
 
-      const imageUrl = await generateImage(imagePrompt.prompt);
+      // generate in landscape
+      const imageUrl = await generateImage(imagePrompt.prompt, 'location-image', { aspect_ratio: '4:3' });
 
       return { filePath: imageUrl } as GenerateLocationImageOutput;
     } catch (error) {
