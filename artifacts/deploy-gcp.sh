@@ -28,6 +28,12 @@ echo "🗂 Checking for Cloud Storage bucket..."
 if ! gcloud storage buckets list --format="value(name)" | grep -q "^$GCS_BUCKET_NAME$"; then
     echo "📦 Creating Cloud Storage bucket: $GCS_BUCKET_NAME..."
     gcloud storage buckets create gs://$GCS_BUCKET_NAME --location=$GCP_REGION
+
+    # need to open up CORS
+    echo '[{"origin": ["*"], "method": ["GET"], "responseHeader":   ["Content-Type"], "maxAgeSeconds": 3600}]' > cors.json
+    gcloud storage buckets update gs://$GCS_BUCKET_NAME --cors-file=cors.json
+    rm cors.json
+    
     echo "✅ Bucket $GCS_BUCKET_NAME created successfully!"
 else
     echo "✅ Cloud Storage bucket $GCS_BUCKET_NAME already exists."

@@ -99,16 +99,18 @@ export const models = [
  * Generates an image using Replicate's flux-schnell model and stores it in the configured bucket
  * @returns URL to the generated image
  */
-const generateImage = async (prompt: string, modelID?: number): Promise<string> => {
+const generateImage = async (prompt: string, filenamePrefix: string, overrideOptions?: Record<string, any>, modelID?: number): Promise<string> => {
   if (!replicate) {
     throw new Error('Replicate not configured');
   }
+
+  overrideOptions ||= {};
 
   try {
     // Prepare the request body for Replicate API
     const model = models[modelID ?? DEFAULT_MODEL];
 
-    const output = await replicate.run(model.modelId, { input: model.getOptions(prompt) });
+    const output = await replicate.run(model.modelId, { input: { ...model.getOptions(prompt), ...overrideOptions }});
 
     // Get the image URL or FileOutput object from the response
     const imageUrl = Array.isArray(output) ? output[0] : output;
@@ -128,7 +130,7 @@ const generateImage = async (prompt: string, modelID?: number): Promise<string> 
 
     // Generate a unique filename with the correct extension
     // put it in the fcb folder
-    const fileName = `fcb/character-image-${Date.now()}.${model.outputFormat}`;
+    const fileName = `fcb/${filenamePrefix}-${Date.now()}.${model.outputFormat}`;
 
     // Save the image using the storage provider
     const publicUrl = await storageProvider.saveFile(

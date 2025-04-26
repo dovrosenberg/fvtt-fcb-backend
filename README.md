@@ -104,7 +104,9 @@ NEEDED?
     curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.sh | bash
     ```
 
-    This might take a few minutes
+    This might take a few minutes - especially after the line around Setting IAM Policy.
+    
+    You may also see a warning: *Your active project does not match the quota project in your local Application Default Credentials file. This might result in unexpected quota issues*  You can ignore this.
 
 
 3. Copy the API URL and token
