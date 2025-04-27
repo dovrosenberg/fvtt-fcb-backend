@@ -15,6 +15,7 @@ const generateLocationBodySchema = {
     grandparentName: { type: 'string', description: 'The type of the grandparent location' },
     grandparentType: { type: 'string', description: 'The type of grandparent location' },
     grandparentDescription: { type: 'string', description: 'The current description of the location\'s grandparent' },
+    createLongDescription: { type: 'boolean', description: 'Create a detailed description or a digestible summary'},
   },
   required: ['genre'],
 } as const;
@@ -23,7 +24,7 @@ export const generateLocationResponseSchema = {
   type: 'object',
   properties: {
     name: { type: 'string', description: 'The generated locations\'s name' },
-    description: { type: 'string', description: 'A detailed description or the location' }
+    description: { type: 'string', description: 'A generated description of the location' }
   },
   required: ['name', 'description']
 } as const;

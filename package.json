@@ -1,6 +1,6 @@
 {
   "name": "foundry-ai-backend-gcp",
-  "version": "0.0.1",
+  "version": "0.0.7",
   "description": "Backend for Foundry Campaign Builder module",
   "main": "server.js",
   "scripts": {

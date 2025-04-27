@@ -10,7 +10,8 @@ const generateCharacterBodySchema = {
     type: { type: 'string', description: 'The type of character (ex. a trade or a title)' },
     species: { type: 'string', description: 'The species of the character' },
     speciesDescription: { type: 'string', description: 'A brief description of the species' },
-    briefDescription: { type: 'string', description: 'A brief description of the character to factor into the produced text' }
+    briefDescription: { type: 'string', description: 'A brief description of the character to factor into the produced text' },
+    createLongDescription: { type: 'boolean', description: 'Create a detailed description or a digestible summary'},
   },
   required: ['genre'],
 } as const;
@@ -19,7 +20,7 @@ export const generateCharacterResponseSchema = {
   type: 'object',
   properties: {
     name: { type: 'string', description: 'The generated character\'s name' },
-    description: { type: 'string', description: 'A detailed description or the character' }
+    description: { type: 'string', description: 'A generated description of the character' }
   },
   required: ['name', 'description']
 } as const;

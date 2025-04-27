@@ -8,7 +8,7 @@ import { generateCharacterInputSchema, GenerateCharacterOutput, GenerateCharacte
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateCharacterInputSchema }, async (request: GenerateCharacterRequest, _reply: FastifyReply): Promise<GenerateCharacterOutput> => {
-    const { genre, worldFeeling, type, species, speciesDescription, briefDescription } = request.body;
+    const { genre, worldFeeling, type, species, speciesDescription, briefDescription, createLongDescription } = request.body;
 
     const system =  `
       I am writing a ${genre} novel. ${worldFeeling ? 'The feeling of the world is: ' + worldFeeling + '.\n' : ''} You are my assistant.  
@@ -17,8 +17,22 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       2. "description": A STRING CONTAINING ((ONLY)) A DESCRIPTION OF THE CHARACTER THAT MATCHES MY REQUEST
     `;
 
+    const descriptionDefinition = createLongDescription ?
+      'The description should be 2-3 paragraphs long with paragraphs separated with <br/><br/>.' :
+      `
+        The description should be in the style of a brief NPC description for a tabletop RPG.
+        Follow this structure:
+        Tagline (1 sentence): a short summary of who the NPC is and their general vibe.
+        Personality Snapshot (3 traits): list key traits separated by commas.
+        Roleplay Hooks (2 bullet point): two tips on how to roleplay them.
+        Appearance (1 sentence): a quick description of their look.
+        Keep each section to a single short sentence or list.
+        Avoid fictional character references or long explanations.
+        Write clearly, vividly, and efficiently.      
+      `;
+
     const prompt = `
-      I need you to suggest one name and one description for a character.  The description should be 2-3 paragraphs long with paragraphs separated with <br/><br/>. 
+      I need you to suggest one name and one description for a character.  ${descriptionDefinition}. 
       ${type ? `The type of character is a ${type}. Give this moderate weight.` : ''}.
       ${species ? `It should be a description of a ${species}.` : ''}.
       ${species && speciesDescription ? `Here is a description of what a ${species} is.  Give it light weight: ${speciesDescription}` : ''}.

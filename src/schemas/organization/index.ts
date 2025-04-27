@@ -12,6 +12,7 @@ const generateOrganizationBodySchema = {
     parentName: { type: 'string', description: 'The type of the parent organization' },
     parentType: { type: 'string', description: 'The type of parent organization' },
     parentDescription: { type: 'string', description: 'The current description of the organization\'s parent' },
+    createLongDescription: { type: 'boolean', description: 'Create a detailed description or a digestible summary'},
   },
   required: ['genre'],
 } as const;
@@ -20,7 +21,7 @@ export const generateOrganizationResponseSchema = {
   type: 'object',
   properties: {
     name: { type: 'string', description: 'The generated organizations\'s name' },
-    description: { type: 'string', description: 'A detailed description or the organization' }
+    description: { type: 'string', description: 'A generated description of the organization' }
   },
   required: ['name', 'description']
 } as const;
