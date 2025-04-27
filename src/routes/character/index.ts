@@ -16,7 +16,7 @@ import {
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateCharacterInputSchema }, async (request: GenerateCharacterRequest, _reply: FastifyReply): Promise<GenerateCharacterOutput> => {
-    const { genre, worldFeeling, type, species, speciesDescription, name, briefDescription } = request.body;
+    const { name, genre, worldFeeling, type, species, speciesDescription, briefDescription, createLongDescription } = request.body;
 
     const system =  `
       I am writing a ${genre} novel. ${worldFeeling ? 'The feeling of the world is: ' + worldFeeling + '.\n' : ''} You are my assistant.
@@ -25,8 +25,22 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       2. "description": A STRING CONTAINING ((ONLY)) A DESCRIPTION OF THE CHARACTER THAT MATCHES MY REQUEST
     `;
 
+    const descriptionDefinition = createLongDescription ?
+      'The description should be 2-3 paragraphs long with paragraphs separated with \\n.' :
+      `
+        The description should be in the style of a brief NPC description for a tabletop RPG.
+        Keep each section to a single short sentence or list.
+        Avoid fictional character references or long explanations.
+        Write clearly, vividly, and efficiently.
+        Follow this structure (SEPARATING SECTIONS AND ANY LISTS WITH \\n and MAKING SURE to include the field labels and asterisks):
+        first line (don't include this header): a 1-sentence summary of who the NPC is and their general vibe.
+        **Personality Snapshot:** list of 3 key traits separated by commas.
+        **Roleplay Hooks:** 2 tips on how to roleplay them.
+        **Appearance:** a quick description of their look.
+      `;
+
     const prompt = `
-      I need you to suggest one name and one description for a character.  The description should be 2-3 paragraphs long with paragraphs separated with \\n.
+      I need you to suggest one name and one description for a character.  ${descriptionDefinition} 
       ${name ? `The name of character is ${name}. You MUST ABSOLUTELY USE THIS NAME. DO NOT GENERATE YOUR OWN.` : ''}.
       ${type ? `The type of character is a ${type}. Give this moderate weight.` : ''}.
       ${species ? `It should be a description of a ${species}.` : ''}.
@@ -36,7 +50,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
         THIS IS THE MOST IMPORTANT THING!  EVEN MORE IMPORTANT THAN SPECIES DESCRIPTION/STEREOTYPES.  YOUR GENERATED DESCRIPTION MUST
         INCLUDE ALL OF THESE FACTS. REQUIRED FACTS: ${briefDescription}` : ''}
       You should only take the world feeling into account in ways that do not contradict the other information.
-`;
+    `;
 
     const result = (await getCompletion(system, prompt, 1)) as { name: string, description: string } || { name: '', description: ''};
     if (!result.name || !result.description) {

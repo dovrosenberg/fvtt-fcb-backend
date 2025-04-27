@@ -16,7 +16,7 @@ import { generateImage } from '@/services/replicate';
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateLocationInputSchema }, async (request: GenerateLocationRequest, _reply: FastifyReply): Promise<GenerateLocationOutput> => {
-    const { genre, worldFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription } = request.body;
+    const { genre, worldFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, createLongDescription } = request.body;
 
     const system =  `
       I am writing a ${genre} novel. ${worldFeeling ? 'The feeling of the world is: ' + worldFeeling + '.\n' : ''} You are my assistant.  
@@ -25,8 +25,22 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       2. "description": A STRING CONTAINING ((ONLY)) A DESCRIPTION OF THE LOCATION THAT MATCHES MY REQUEST
     `;
 
+    const descriptionDefinition = createLongDescription ?
+      'The description should be 2-3 paragraphs long with paragraphs separated with \\n.' :
+      `
+        The description should be in the style of a concise, fast-to-use location description for a tabletop RPG. 
+        Keep each section to a single short sentence or list.
+        Avoid fictional comparisons.
+        Keep it brief, vivid, and immediately usable at the table with original descriptions a game master can use at a glance.
+        Follow this structure (SEPARATING SECTIONS AND ANY LISTS WITH \\n and MAKING SURE to include the field labels and asterisks):
+        first line (don't include this header): a 1-sentence summary of what the location is and its main vibe.
+        **Notable features:** list of 3 key physical or cultural details.
+        **Sights, sounds, smells:** 3 quick sensory cures for immedion
+        **Roleplay hooks:** 2 ideas for how characters might interact with or feel about the location
+      `;
+
     const prompt = `
-      I need you to suggest one name and one description for an location.  The description should be 2-3 paragraphs long with paragraphs separated with \n. 
+      I need you to suggest one name and one description for an location.  ${descriptionDefinition} 
       ${name ? `The name of location is ${name}. You MUST ABSOLUTELY USE THIS NAME. DO NOT GENERATE YOUR OWN.` : ''}.
       ${type ? `The type of location is a ${type}` : ''}.
       ${parentName ? `The location is in ${parentName + (parentName ? '(which is a ' + parentType + ')' : '') + '.  ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
