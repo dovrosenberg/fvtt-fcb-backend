@@ -28,6 +28,12 @@ echo "🗂 Checking for Cloud Storage bucket..."
 if ! gcloud storage buckets list --format="value(name)" | grep -q "^$GCS_BUCKET_NAME$"; then
     echo "📦 Creating Cloud Storage bucket: $GCS_BUCKET_NAME..."
     gcloud storage buckets create gs://$GCS_BUCKET_NAME --location=$GCP_REGION
+
+    # need to open up CORS
+    echo '[{"origin": ["*"], "method": ["GET"], "responseHeader":   ["Content-Type"], "maxAgeSeconds": 3600}]' > cors.json
+    gcloud storage buckets update gs://$GCS_BUCKET_NAME --cors-file=cors.json
+    rm cors.json
+    
     echo "✅ Bucket $GCS_BUCKET_NAME created successfully!"
 else
     echo "✅ Cloud Storage bucket $GCS_BUCKET_NAME already exists."
@@ -53,12 +59,33 @@ GCP_CERT=$(base64 < gcp-service-key.json)
 echo "Deploying container..."
 IMAGE_NAME="docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
 
+# get the deploy URL
+SERVER_URL=$(gcloud run services describe fvtt-fcb-backend \
+  --platform managed \
+  --region=us-central1 \
+  --format "value(status.url)")
+
+# Prepare environment variables
+ENV_VARS="\
+GCP_PROJECT_ID=${GCP_PROJECT_ID:-},\
+API_TOKEN=${API_TOKEN:-},\
+OPENAI_API_KEY=${OPENAI_API_KEY:-},\
+REPLICATE_API_KEY=${REPLICATE_API_KEY:-},\
+GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-},\
+GCP_CERT=\"$GCP_CERT\",\
+STORAGE_TYPE=${STORAGE_TYPE:-},\
+AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-},\
+AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-},\
+AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-},\
+AWS_REGION=${AWS_REGION:-},\
+SERVER_URL=${SERVER_URL:-}"
+
 gcloud run deploy fvtt-fcb-backend \
     --image $IMAGE_NAME \
     --platform managed \
     --region $GCP_REGION \
     --allow-unauthenticated \
-    --set-env-vars "GCP_PROJECT_ID=$GCP_PROJECT_ID,API_TOKEN=$API_TOKEN,OPENAI_API_KEY=$OPENAI_API_KEY,GCS_BUCKET_NAME=$GCS_BUCKET_NAME,GCP_CERT=\"$GCP_CERT\""
+    --set-env-vars "$ENV_VARS"
 
 if [ $? -ne 0 ]; then
   echo "Cloud run deploy failed"
@@ -67,5 +94,7 @@ fi
 
 # Output success message
 echo "✅ Deployment complete! Your Foundry Campaign Builder backend is now live."
-echo "Your API Token: $API_TOKEN"
+echo "Use these settings in "Advanced Settings" for the module:"
+echo "URL: $SERVER_URL"
+echo "API Token: $API_TOKEN"
 echo "See README for final configuration steps."
