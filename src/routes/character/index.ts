@@ -26,17 +26,17 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     `;
 
     const descriptionDefinition = createLongDescription ?
-      'The description should be 2-3 paragraphs long with paragraphs separated with <br/><br/>.' :
+      'The description should be 2-3 paragraphs long with paragraphs separated with \\n.' :
       `
         The description should be in the style of a brief NPC description for a tabletop RPG.
-        Follow this structure:
-        Tagline (1 sentence): a short summary of who the NPC is and their general vibe.
-        Personality Snapshot (3 traits): list key traits separated by commas.
-        Roleplay Hooks (2 bullet point): two tips on how to roleplay them.
-        Appearance (1 sentence): a quick description of their look.
         Keep each section to a single short sentence or list.
         Avoid fictional character references or long explanations.
-        Write clearly, vividly, and efficiently.  To insert a newline use <br/>    
+        Write clearly, vividly, and efficiently.
+        Follow this structure (SEPARATING SECTIONS AND ANY LISTS WITH \\n and MAKING SURE to include the field labels and asterisks):
+        first line (don't include this header): a 1-sentence summary of who the NPC is and their general vibe.
+        **Personality Snapshot:** list of 3 key traits separated by commas.
+        **Roleplay Hooks:** 2 tips on how to roleplay them.
+        **Appearance:** a quick description of their look.
       `;
 
     const prompt = `
