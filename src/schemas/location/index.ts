@@ -41,12 +41,12 @@ export const generateLocationImageResponseSchema = {
 } as const;
 
 export const generateLocationInputSchema = createPostInputSchema(
-  'Generate an location', 
+  'Generate a location', 
   generateLocationRequestSchema, 
   generateLocationResponseSchema
 );
 export const generateLocationImageInputSchema = createPostInputSchema(
-  'Generate an location image', 
+  'Generate a location image', 
   generateLocationImageRequestSchema, 
   generateLocationImageResponseSchema
 );
