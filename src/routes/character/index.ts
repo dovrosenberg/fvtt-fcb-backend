@@ -36,11 +36,11 @@ async function routes (fastify: FastifyInstance): Promise<void> {
         Appearance (1 sentence): a quick description of their look.
         Keep each section to a single short sentence or list.
         Avoid fictional character references or long explanations.
-        Write clearly, vividly, and efficiently.      
+        Write clearly, vividly, and efficiently.  To insert a newline use <br/>    
       `;
 
     const prompt = `
-      I need you to suggest one name and one description for a character.  ${descriptionDefinition}. 
+      I need you to suggest one name and one description for a character.  ${descriptionDefinition} 
       ${name ? `The name of character is ${name}. You MUST ABSOLUTELY USE THIS NAME. DO NOT GENERATE YOUR OWN.` : ''}.
       ${type ? `The type of character is a ${type}. Give this moderate weight.` : ''}.
       ${species ? `It should be a description of a ${species}.` : ''}.
@@ -50,7 +50,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
         THIS IS THE MOST IMPORTANT THING!  EVEN MORE IMPORTANT THAN SPECIES DESCRIPTION/STEREOTYPES.  YOUR GENERATED DESCRIPTION MUST
         INCLUDE ALL OF THESE FACTS. REQUIRED FACTS: ${briefDescription}` : ''}
       You should only take the world feeling into account in ways that do not contradict the other information.
-`;
+    `;
 
     const result = (await getCompletion(system, prompt, 1)) as { name: string, description: string } || { name: '', description: ''};
     if (!result.name || !result.description) {
