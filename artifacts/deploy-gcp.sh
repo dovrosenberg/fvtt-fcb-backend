@@ -8,6 +8,8 @@ else
     exit 1
 fi
 
+echo $GMAIL_CLIENT_ID
+
 # Check if service account key file exists
 if [ ! -f "gcp-service-key.json" ]; then
     echo "❌ ERROR: Service account key file 'gcp-service-key.json' not found!"
@@ -23,10 +25,10 @@ gcloud auth activate-service-account --key-file=gcp-service-key.json
 echo "Setting up..."
 gcloud config set project $GCP_PROJECT_ID
 
-# ✅ Create a Cloud Storage bucket if it doesn't exist
-echo "🗂 Checking for Cloud Storage bucket..."
+# Create a Cloud Storage bucket if it doesn't exist
+echo "Checking for Cloud Storage bucket..."
 if ! gcloud storage buckets list --format="value(name)" | grep -q "^$GCS_BUCKET_NAME$"; then
-    echo "📦 Creating Cloud Storage bucket: $GCS_BUCKET_NAME..."
+    echo "Creating Cloud Storage bucket: $GCS_BUCKET_NAME..."
     gcloud storage buckets create gs://$GCS_BUCKET_NAME --location=$GCP_REGION
 
     # need to open up CORS
@@ -39,6 +41,7 @@ else
     echo "✅ Cloud Storage bucket $GCS_BUCKET_NAME already exists."
 fi
 
+
 # # Check if the Cloud Run service exists
 # # If it does, for some reason it won't deploy the new revision
 # SERVICE_NAME="fvtt-fcb-backend"
@@ -49,11 +52,61 @@ fi
 #     gcloud run services delete $SERVICE_NAME --platform managed --region $GCP_REGION --quiet
 # fi
 
-# ✅ Generate a Secure API Token
+# Generate a Secure API Token
 API_TOKEN=$(openssl rand -hex 32)  # Generate a 32-byte random token
 
-# ✅ Encode the service account credentials in base64
+# Encode the service account credentials in base64
 GCP_CERT=$(base64 < gcp-service-key.json)
+
+# Step: Gmail OAuth Setup
+if [[ "$INCLUDE_GMAIL_SETUP" == "false" ]]; then
+    echo "Gmail setup skipped due to INCLUDE_GMAIL_SETUP"
+elif [[ -n "$GMAIL_REFRESH_TOKEN" ]]; then
+    echo "Gmail refresh token already provided — skipping Gmail authorization."
+else
+    echo "Gmail refresh token not found. Starting one-time Gmail OAuth authorization..."
+
+    # Construct consent URL
+    AUTH_URL="https://accounts.google.com/o/oauth2/v2/auth?client_id=$GMAIL_CLIENT_ID&redirect_uri=http://localhost:3000/oauth2callback&response_type=code&scope=https://www.googleapis.com/auth/gmail.modify&access_type=offline&prompt=consent"
+
+    echo
+    echo "Please open the following URL in your browser to authorize Gmail access:"
+    echo "$AUTH_URL"
+    echo
+    echo "After authorizing, you'll be redirected to:"
+    echo "    $GMAIL_REDIRECT_URI?code=XYZ..."
+    echo "Copy the 'code' parameter from that URL and paste it below."
+    echo
+
+    read -p "Paste authorization code here: " AUTH_CODE
+
+    echo "Exchanging authorization code for tokens..."
+
+    RESPONSE=$(curl -s -X POST https://oauth2.googleapis.com/token \
+      -d "code=$AUTH_CODE" \
+      -d "client_id=$GMAIL_CLIENT_ID" \
+      -d "client_secret=$GMAIL_CLIENT_SECRET" \
+      -d "redirect_uri=http://localhost:3000/oauth2callback" \
+      -d "grant_type=authorization_code")
+
+    GMAIL_REFRESH_TOKEN=$(echo "$RESPONSE" | jq -r '.refresh_token')
+
+    if [[ "$GMAIL_REFRESH_TOKEN" == "null" || -z "$GMAIL_REFRESH_TOKEN" ]]; then
+        echo "❌ ERROR: Failed to retrieve Gmail refresh token."
+        echo "Response: $RESPONSE"
+        exit 1
+    fi
+
+    echo
+    echo "✅ Gmail authorization complete."
+    echo "Please set the GMAIL_REFRESH_TOKEN in your .env file to this value:"
+    echo
+    echo "GMAIL_REFRESH_TOKEN=$GMAIL_REFRESH_TOKEN"
+    echo
+    echo "Then rerun this setup script with:"
+    echo "curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.sh | bash"
+    exit 0
+fi
 
 # Deploy the container from Docker Hub
 echo "Deploying container..."
@@ -73,6 +126,7 @@ OPENAI_API_KEY=${OPENAI_API_KEY:-},\
 REPLICATE_API_KEY=${REPLICATE_API_KEY:-},\
 GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-},\
 GCP_CERT=\"$GCP_CERT\",\
+GMAIL_REFRESH_TOKEN=${GMAIL_REFRESH_TOKEN:-},
 STORAGE_TYPE=${STORAGE_TYPE:-},\
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-},\
 AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-},\

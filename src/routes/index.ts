@@ -5,6 +5,7 @@ import characterRoutes from './character';
 import organizationRoutes from './organization';
 import locationRoutes from './location';
 import nameRoutes from './name';
+import gmailRoutes from './gmail';
 import { versionInputSchema, VersionOutput } from '@/schemas';
 
 /**
@@ -22,6 +23,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.register(organizationRoutes, { prefix: '/organization' });
   fastify.register(locationRoutes, { prefix: '/location' });
   fastify.register(nameRoutes, { prefix: '/name' });
+  fastify.register(gmailRoutes, { prefix: '/pollEmail' });
 }
 
 export default routes;

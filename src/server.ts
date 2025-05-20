@@ -7,6 +7,7 @@ import swaggerUI from '@fastify/swagger-ui';
 import { loadOpenAI } from '@/services/openai';
 import { loadStorage } from '@/services/storage';
 import { loadReplicate } from '@/services/replicate';
+import { loadGmail } from '@/services/gmail';
 import routes from '@/routes';
 import { version } from '../package.json';
 
@@ -20,6 +21,7 @@ void (async () => {
   await loadOpenAI();
   await loadStorage();
   await loadReplicate();
+  await loadGmail();
 
   const fastify = Fastify({
     logger: {
