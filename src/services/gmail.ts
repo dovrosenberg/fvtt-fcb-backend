@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
+import { OAuth2Client } from 'googleapis-common';
 
 let gmail: any;
 let oauth2Client: OAuth2Client;
