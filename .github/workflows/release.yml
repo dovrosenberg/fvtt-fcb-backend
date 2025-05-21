@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - dev
     types:
       - closed  # Runs only when a PR is closed
 
@@ -22,6 +23,12 @@ jobs:
         run: |
           # Get version from package.json
           NEW_VERSION=$(node -p "require('./package.json').version")
+          
+          # Add -beta suffix if merging to dev branch
+          if [[ "${{ github.base_ref }}" == "dev" ]]; then
+            NEW_VERSION="${NEW_VERSION}-beta"
+          fi
+          
           NEW_TAG="v$NEW_VERSION"
           
           echo "Using version from package.json: $NEW_VERSION"
@@ -73,7 +80,7 @@ jobs:
           tag_name: ${{ env.NEW_TAG }}
           name: Release ${{ env.NEW_TAG }}
           draft: false
-          prerelease: false
+          prerelease: ${{ github.base_ref == 'dev' }}
           files: |
             artifacts/deploy-gcp.sh
             artifacts/env.template
