@@ -1,13 +1,11 @@
 import { google } from 'googleapis';
 import { OAuth2Client } from 'googleapis-common';
+import { TodoItemsOutput } from '@/schemas/gmail';
 
 let gmail: any;
 let oauth2Client: OAuth2Client;
 
-interface TodoItem {
-  timestamp: string;
-  text: string;
-}
+type TodoItem = TodoItemsOutput['items'][0];
 
 const loadGmail = async function(): Promise<void> {
   if (!process.env.GMAIL_CLIENT_ID || !process.env.GMAIL_CLIENT_SECRET || !process.env.GMAIL_REFRESH_TOKEN) {
