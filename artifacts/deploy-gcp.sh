@@ -8,8 +8,6 @@ else
     exit 1
 fi
 
-echo $GMAIL_CLIENT_ID
-
 # Check if service account key file exists
 if [ ! -f "gcp-service-key.json" ]; then
     echo "❌ ERROR: Service account key file 'gcp-service-key.json' not found!"
@@ -126,6 +124,7 @@ OPENAI_API_KEY=${OPENAI_API_KEY:-},\
 REPLICATE_API_KEY=${REPLICATE_API_KEY:-},\
 GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-},\
 GCP_CERT=\"$GCP_CERT\",\
+INCLUDE_EMAIL_SETUP=${INCLUDE_EMAIL_SETUP:-},\
 GMAIL_REFRESH_TOKEN=${GMAIL_REFRESH_TOKEN:-},
 STORAGE_TYPE=${STORAGE_TYPE:-},\
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-},\

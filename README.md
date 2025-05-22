@@ -13,7 +13,7 @@ if you're running into limits.
 We also support AWS S3.  This is so that users already attaching S3 to Foundry can more easily manage the image files output by this backend.  It does not currently support other S3 providers - again, let me know if that's of interest.
 
 ## Quick Deployment
-### Prerequisites
+### Prerequisites (you'll only need to do this one time - not for every update)
 
 1. Setup Google Cloud
 
@@ -53,6 +53,11 @@ NEEDED?
   - Click on the new user and under "Add Key" select "Create new key"; select JSON
   - Download the key file - move it into a temporary directory you'll be using below to deploy, and name it `gcp-service-key.json`
 
+  4. Create accounts at openai.com and replicate.com
+
+  5. If you want to use email there are a gew extra steps you need to take:
+  ________________
+  
 ### Deployment Steps
 1. Set environment variables
   
@@ -87,6 +92,9 @@ NEEDED?
     # it's a really long # - get from https://platform.openai.com
     OPENAI_API_KEY=sk-proj-SMCp9_Tu0keQ9T3Blbk...
 
+    # starts with r8_ - get from https://replicate.com/account/api-tokens
+    REPLICATE_API_KEY=r8_Vqbkq3IWmPDbh4qjw...
+
     # Optional: AWS S3 Configuration
     # If you want to use AWS S3 instead of GCS, set STORAGE_TYPE=aws and provide the following:
     # STORAGE_TYPE=aws
@@ -94,6 +102,14 @@ NEEDED?
     # AWS_ACCESS_KEY_ID=your-access-key-id
     # AWS_SECRET_ACCESS_KEY=your-secret-access-key
     # AWS_REGION=us-east-1
+
+    # Optional: Email setup
+    INCLUDE_EMAIL_SETUP=true
+
+    OUTLOOK_EMAIL=campaign-email@outlook.com
+    # make sure to put password in single quotes
+    OUTLOOK_PASSWORD='my-secure-password'
+    INBOUND_WHITELIST=email1@email.com, 2mail2@email.com
     ```
 
     Note: If you're using AWS S3, you can use the same credentials that you've configured for Foundry VTT's S3 integration. See https://foundryvtt.com/article/aws-s3 for more information on setting up an AWS S3 bucket.
