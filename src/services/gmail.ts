@@ -6,6 +6,7 @@ let gmail: any;
 let oauth2Client: OAuth2Client;
 
 type TodoItem = TodoItemsOutput['items'][0];
+let whitelistedEmails: Set<string> = new Set();
 
 const loadGmail = async function(): Promise<void> {
   if (!process.env.GMAIL_CLIENT_ID || !process.env.GMAIL_CLIENT_SECRET || !process.env.GMAIL_REFRESH_TOKEN) {
@@ -26,11 +27,28 @@ const loadGmail = async function(): Promise<void> {
   if (!gmail) {
     throw new Error('Failed to initialize Gmail client');
   }
+
+  // Initialize whitelist
+  if (process.env.INBOUND_WHITELIST) {
+    whitelistedEmails = new Set(
+      process.env.INBOUND_WHITELIST.split(',').map(email => email.trim().toLowerCase())
+    );
+    console.log(`Loaded ${whitelistedEmails.size} whitelisted email addresses`);
+  } else {
+    console.warn('No INBOUND_WHITELIST provided - no emails will be processed');
+  }
 };
 
-const getTodoItems = async (inboxLabel: string): Promise<TodoItem[]> => {
+const getTodoItems = async (): Promise<TodoItem[]> => {
   if (!gmail) {
     throw new Error('Gmail client not initialized');
+  }
+
+  const inboxLabel = 'INBOX';
+
+  // Return error if email functionality is disabled
+  if (process.env.INCLUDE_EMAIL_SETUP === 'false') {
+    throw new Error('Email functionality is disabled');
   }
 
   try {
@@ -52,35 +70,43 @@ const getTodoItems = async (inboxLabel: string): Promise<TodoItem[]> => {
         format: 'full'
       });
 
-      const headers = email.data.payload.headers;
-      const subject = headers.find((h: any) => h.name === 'Subject')?.value || '';
-      const date = headers.find((h: any) => h.name === 'Date')?.value || '';
-      
-      const timestamp = date ? new Date(date) : new Date();
+      const sender = email.data.payload.headers.find((h: any) => h.name === 'From')?.value;
+      if (sender) {
+        const fromEmail = sender.trim().toLowerCase();
 
-      // Get email body
-      let body = '';
-      if (email.data.payload.parts) {
-        const part = email.data.payload.parts.find((p: any) => p.mimeType === 'text/plain');
-        if (part?.body?.data) {
-          body = Buffer.from(part.body.data, 'base64').toString();
+        // check the whitelist and process
+        if (whitelistedEmails.has(fromEmail)) {
+          const headers = email.data.payload.headers;
+          const subject = headers.find((h: any) => h.name === 'Subject')?.value || '';
+          const date = headers.find((h: any) => h.name === 'Date')?.value || '';
+          
+          const timestamp = date ? new Date(date) : new Date();
+    
+          // Get email body
+          let body = '';
+          if (email.data.payload.parts) {
+            const part = email.data.payload.parts.find((p: any) => p.mimeType === 'text/plain');
+            if (part?.body?.data) {
+              body = Buffer.from(part.body.data, 'base64').toString();
+            }
+          } else if (email.data.payload.body?.data) {
+            body = Buffer.from(email.data.payload.body.data, 'base64').toString();
+          }
+    
+          // we ignore the subject for now - we might use in the future to distinguish different 
+          //    types of messages or different campaigns or something
+          todoItems.push({
+            timestamp: timestamp.toISOString(),
+            text: `${body}`.trim()
+          });
+    
+          // Delete the message after processing
+          await gmail.users.messages.trash({
+            userId: 'me',
+            id: message.id
+          });
         }
-      } else if (email.data.payload.body?.data) {
-        body = Buffer.from(email.data.payload.body.data, 'base64').toString();
       }
-
-      // we ignore the subject for now - we might use in the future to distinguish different 
-      //    types of messages or different campaigns or something
-      todoItems.push({
-        timestamp: timestamp.toISOString(),
-        text: `${body}`.trim()
-      });
-
-      // Delete the message after processing
-      await gmail.users.messages.trash({
-        userId: 'me',
-        id: message.id
-      });
     }
 
     return todoItems;

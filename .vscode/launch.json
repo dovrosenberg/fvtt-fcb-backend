@@ -6,13 +6,7 @@
       "request": "launch",
       "name": "Debug Dev Script",
       "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev"
-      ],
-      "env": {
-        "DOTENV_CONFIG_PATH": "./config/myenv.env"
-      },
+      "runtimeArgs": ["run", "dev"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "skipFiles": ["<node_internals>/**"],
