@@ -45,9 +45,11 @@ Write-Host "✅ All required dependencies are installed."
 if (Test-Path ".env") {
     Get-Content ".env" | ForEach-Object {
         if ($_ -match '^([^=]+)=(.*)$') {
-            $name = $matches[1]
-            $value = $matches[2]
-            Set-Item -Path "env:$name" -Value $value
+            $name = $matches[1].Trim()
+            $value = $matches[2].Trim()
+            if ($name -and -not $name.StartsWith('#')) {
+                Set-Item -Path "env:$name" -Value $value
+            }
         }
     }
 } else {
@@ -181,7 +183,7 @@ Write-Host "Deploying container..."
 $IMAGE_NAME = "docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
 
 # get the deploy URL
-$SERVER_URL = gcloud run services describe fvtt-fcb-backend --platform managed --region=us-central1 --format "value(status.url)"
+$SERVER_URL = gcloud run services describe $env:GCP_PROJECT_ID --platform managed --region=$env:GCP_REGION --format "value(status.url)"
 
 # Prepare environment variables
 $ENV_VARS = @"
@@ -201,7 +203,7 @@ AWS_REGION=$env:AWS_REGION,
 SERVER_URL=$SERVER_URL
 "@
 
-gcloud run deploy fvtt-fcb-backend --image $IMAGE_NAME --platform managed --region $env:GCP_REGION --allow-unauthenticated --set-env-vars "$ENV_VARS"
+gcloud run deploy $env:GCP_PROJECT_ID --image $IMAGE_NAME --platform managed --region $env:GCP_REGION --allow-unauthenticated --set-env-vars "$ENV_VARS"
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Cloud run deploy failed"

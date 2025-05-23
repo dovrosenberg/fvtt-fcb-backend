@@ -33,11 +33,6 @@ There are lot of steps here, but if you follow the directions below, it should b
     - https://console.cloud.google.com/apis/library/storage.googleapis.com
     - https://console.cloud.google.com/apis/library/iam.googleapis.com
 
-```
-TODO: CONFIRM IF NEEDED?
-  - Enable the following services:
-    - Artifact Registry
-```
 
 2. Install Google Cloud CLI (`gcloud`)
     
@@ -70,9 +65,6 @@ TODO: CONFIRM IF NEEDED?
       ```
       brew install openssl jq curl
       ```
-
-  6. If you want to use email there are a gew extra steps you need to take:
-  TODO: ________________
   
 ### Set environment variables (You generally only need to do this once, but will need to update the file if you ever change any of your tokens)
   
@@ -111,6 +103,41 @@ TODO: CONFIRM IF NEEDED?
 1. Copy the generated API URL (like `https://fvtt-fcb-backend-1018734923.us-central1.run.app` ) and token that are output from the deploy script and paste them into Foundry VTT settings.
 2. If you ever need them again (ex. to add to a different Foundry world), you can find them at https://console.cloud.google.com/run?project=fcb-backend (click on the machine, then 'revisions' then the latest revision to see the token under 'environment variables')
 
+### Adding email support
+If you want to use email there are a few extra steps you need to take.  I highly recommend doing this after the initial deploy runs, though in theory you could probably do it as part of the initial deploy, I guess.
+
+1. Create a free gmail account that you will send "to do" emails to (https://accounts.google.com/signup).  Make the password secure.  Do not set up 2FA.  Log into that account
+
+2. Enable the gmail api - https://console.cloud.google.com/apis/api/gmail.googleapis.com/overview, make sure the right project is showing, then click "Enable".
+
+3. Configure OAuth - https://console.cloud.google.com/auth/overview, make sure the right project is showing, and hit "Get Started".  
+    
+    (Step 1) Enter an App name (whatever you want - something like fcb-backend is fine), User Support Email is your gmail address - not the one you created 
+    
+    (Step 2-Audience) - choose External
+
+    (Step 3 - Contact info) - your email address again.  Then agree to the question on step 4 and finish then hit Create.
+
+4. Add "test" user - go to https://console.cloud.google.com/auth/audience and under "Test users" hit add users and enter the gmail address you created to receive emails way back in step a.  We use "test" users because this is an external app that we won't ever publish.
+
+5. Add OAuth Client - go to https://console.cloud.google.com/auth/clients, hit "Create Client" and pick "Web Application" as the type.  Give it a name - again something lik fcb-backend is fine.  Under "Authorized redirect URIs, add a URI and enter http://localhost:3000/oauth2callback.  Hit create.
+
+6. **VERY IMPORTANT!!!** Copy the Client ID and Client secret into your .env file.  If you can't do that right now, copy them somewhere else safe in the meantime -- you won't be able to get the secret again later.  Then hit OK
+
+7. Don't forget to set INCLUDE_EMAIL_SETUP to true in your env file.  Then rerun the deploy script 
+    ```
+    curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
+    ```
+
+    It will ask you to open a URL in the browser and prompt for a code.  Open that URL.  You will be asked to login.  **IMPORTANT!!!** You need to login with the gmail account you created for this - not your normal one. You will get a security warning.  Hit Continue.  You'll get another security warning.  Hit continue again.  You will get a "refused to connect" message - totally fine - don't close the window and see the next step.  
+
+8. Find the code in the URL - it starts after the 'code=' and ends right before the '&scope'... copy everything in between and paste into the terminal where it's waiting for the auth code.  Copy the refresh token it gives you into your .env file. and rerun the deploy script 
+    ```
+    curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
+    ```
+
+9. That's it!  You won't have to do this again for future deployments unless you wanted to change the email address.
+    
 ### Using AWS S3 Instead of Google Cloud Storage (still need Google Cloud for everything else above)
 
 If you prefer to use AWS S3 instead of Google Cloud Storage, follow these steps:

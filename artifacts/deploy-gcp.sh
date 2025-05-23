@@ -2,7 +2,9 @@
 
 # Load environment variables from .env file
 if [ -f ".env" ]; then
-    export $(grep -v '^#' .env | xargs)
+    set -a
+    source .env
+    set +a
 else
     echo "❌ ERROR: .env file not found! Please download and edit the environment variables first.  See the README for details."
     exit 1
@@ -179,9 +181,9 @@ echo "Deploying container..."
 IMAGE_NAME="docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
 
 # get the deploy URL
-SERVER_URL=$(gcloud run services describe fvtt-fcb-backend \
+SERVER_URL=$(gcloud run services describe $GCP_PROJECT_ID \
   --platform managed \
-  --region=us-central1 \
+  --region=$GCP_REGION \
   --format "value(status.url)")
 
 # Prepare environment variables
@@ -201,7 +203,7 @@ AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-},\
 AWS_REGION=${AWS_REGION:-},\
 SERVER_URL=${SERVER_URL:-}"
 
-gcloud run deploy fvtt-fcb-backend \
+gcloud run deploy $GCP_PROJECT_ID \
     --image $IMAGE_NAME \
     --platform managed \
     --region $GCP_REGION \
