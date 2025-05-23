@@ -62,6 +62,8 @@ const getTodoItems = async (): Promise<TodoItem[]> => {
     const messages = response.data.messages || [];
     const todoItems: TodoItem[] = [];
 
+    console.log(`Found ${messages.length} messages in inbox`);
+    
     // Process each message
     for (const message of messages) {
       const email = await gmail.users.messages.get({
@@ -72,10 +74,16 @@ const getTodoItems = async (): Promise<TodoItem[]> => {
 
       const sender = email.data.payload.headers.find((h: any) => h.name === 'From')?.value;
       if (sender) {
-        const fromEmail = sender.trim().toLowerCase();
+        // check to see if any of the whitelisted emails are contained in it (since it might have name and other things, too)
+        let fromEmail = '';
+        for (const email of whitelistedEmails) {
+          if (sender.includes(email)) {
+            fromEmail = email;
+            break;
+          }
+        }
 
-        // check the whitelist and process
-        if (whitelistedEmails.has(fromEmail)) {
+        if (fromEmail) {
           const headers = email.data.payload.headers;
           const subject = headers.find((h: any) => h.name === 'Subject')?.value || '';
           const date = headers.find((h: any) => h.name === 'Date')?.value || '';

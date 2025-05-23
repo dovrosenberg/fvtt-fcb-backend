@@ -63,57 +63,68 @@ gcloud auth activate-service-account --key-file=gcp-service-key.json
 echo "Setting up..."
 gcloud config set project $GCP_PROJECT_ID
 
-# Function to check if a bucket name is available
-check_bucket_name() {
+# Function to check if a bucket exists and if we own it
+check_bucket_ownership() {
     local bucket_name=$1
-    local buckets
-    if ! buckets=$(gcloud storage buckets list --format="value(name)" 2>&1); then
-        echo "Error listing buckets"
-        return 1
+    echo "Checking ownership of bucket: $bucket_name"
+
+    local output
+    output=$(gcloud storage buckets describe "gs://$bucket_name" --format="value(name)" 2>&1)
+    local exit_code=$?
+
+    if gcloud storage buckets describe gs://"$bucket_name" &>/dev/null; then
+        echo "Bucket exists"
+        return 0  # Bucket exists
+    else
+        echo "Bucket does not exist"
+        return 1  # Bucket doesn't exist
     fi
-    
-    if echo "$buckets" | grep -q "^${bucket_name}$"; then
-        return 1  # Bucket exists
-    fi
-    return 0  # Bucket needs to be created
 }
 
 # Create a Cloud Storage bucket if it doesn't exist
-if check_bucket_name "$GCS_BUCKET_NAME"; then
-    echo "Creating Cloud Storage bucket: $GCS_BUCKET_NAME..."
-    # Create a pipe to capture both output and exit status
-    set -o pipefail
-    if ! gcloud storage buckets create gs://$GCS_BUCKET_NAME --location=$GCP_REGION 2>&1 | tee /tmp/bucket_create.log; then
-        if grep -q "HTTPError 409" /tmp/bucket_create.log; then
-            echo "❌ ERROR: The bucket name '$GCS_BUCKET_NAME' is already in use.  GCS bucket names have to be unique globally (not just within your project)."
-            echo "Please choose a different bucket name in your .env file and try again."
-            rm /tmp/bucket_create.log
-            exit 1
+check_bucket_ownership "$GCS_BUCKET_NAME"
+BUCKET_STATUS=$?
+
+case $BUCKET_STATUS in
+    0)
+        echo "✅ Cloud Storage bucket $GCS_BUCKET_NAME already exists."
+        ;;
+    1)
+        echo "Creating Cloud Storage bucket: $GCS_BUCKET_NAME..."
+
+        # Create a pipe to capture both output and exit status
+        set -o pipefail
+
+        if ! gcloud storage buckets create gs://$GCS_BUCKET_NAME --location=$GCP_REGION 2>&1 | tee /tmp/bucket_create.log; then
+            if grep -q "HTTPError 409" /tmp/bucket_create.log; then
+                echo "❌ ERROR: The bucket name '$GCS_BUCKET_NAME' is already in use.  GCS bucket names have to be unique globally (not just within your project)."
+                echo "Please choose a different bucket name in your .env file and try again."
+                rm /tmp/bucket_create.log
+                exit 1
+            else
+                echo "❌ Failed to create bucket $GCS_BUCKET_NAME. Please check the error message above."
+                rm /tmp/bucket_create.log
+                exit 1
+            fi
+        fi
+        
+        echo "✅ Bucket $GCS_BUCKET_NAME created successfully!"
+        
+        # Set up CORS for the bucket
+        echo "Setting up CORS configuration..."
+        echo '[{"origin": ["*"], "method": ["GET"], "responseHeader": ["Content-Type"], "maxAgeSeconds": 3600}]' > cors.json
+
+        if gcloud storage buckets update gs://$GCS_BUCKET_NAME --cors-file=cors.json; then
+            echo "✅ CORS configuration updated successfully."
         else
-            echo "❌ Failed to create bucket $GCS_BUCKET_NAME. Please check the error message above."
-            rm /tmp/bucket_create.log
+            echo "❌ Failed to update CORS configuration."
+            echo "Please verify that the service account has the 'Storage Admin' role and try again."
+            rm cors.json
             exit 1
         fi
-    fi
-    
-    echo "✅ Bucket $GCS_BUCKET_NAME created successfully!"
-    
-    # Set up CORS for the bucket
-    echo "Setting up CORS configuration..."
-    echo '[{"origin": ["*"], "method": ["GET"], "responseHeader":   ["Content-Type"], "maxAgeSeconds": 3600}]' > cors.json
-
-    if gcloud storage buckets update gs://$GCS_BUCKET_NAME --cors-file=cors.json; then
-        echo "✅ CORS configuration updated successfully."
-    else
-        echo "❌ Failed to update CORS configuration."
-        echo "Please verify that the service account has the 'Storage Admin' role and try again."
         rm cors.json
-        exit 1
-    fi
-    rm cors.json
-else
-    echo "✅ Cloud Storage bucket $GCS_BUCKET_NAME already exists."
-fi
+        ;;
+esac
 
 # Verify service account permissions
 echo "Verifying service account permissions..."
@@ -124,7 +135,7 @@ echo "Using service account: $SERVICE_ACCOUNT"
 API_TOKEN=$(openssl rand -hex 32)  # Generate a 32-byte random token
 
 # Encode the service account credentials in base64
-GCP_CERT=$(base64 < gcp-service-key.json)
+GCP_CERT=$(base64 < gcp-service-key.json | tr -d '\n')
 
 # Step: Gmail OAuth Setup
 if [[ "$INCLUDE_EMAIL_SETUP" == "false" ]]; then
@@ -177,43 +188,59 @@ else
 fi
 
 # Deploy the container from Docker Hub
-echo "Deploying container..."
 IMAGE_NAME="docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
 
-# get the deploy URL
-SERVER_URL=$(gcloud run services describe $GCP_PROJECT_ID \
-  --platform managed \
-  --region=$GCP_REGION \
-  --format "value(status.url)")
+# Create a temporary file for environment variables
+# We do it this way because inbound whitelist has commas in it and trying to do it inline was a disaster
+ENV_FILE=$(mktemp)
+cat > "$ENV_FILE" << EOF
+GCP_PROJECT_ID: "$GCP_PROJECT_ID"
+API_TOKEN: "$API_TOKEN"
+OPENAI_API_KEY: "$OPENAI_API_KEY"
+REPLICATE_API_KEY: "$REPLICATE_API_KEY"
+GCS_BUCKET_NAME: "$GCS_BUCKET_NAME"
+GCP_CERT: "$GCP_CERT"
+INCLUDE_EMAIL_SETUP: "$INCLUDE_EMAIL_SETUP"
+GMAIL_CLIENT_ID: "$GMAIL_CLIENT_ID"
+GMAIL_CLIENT_SECRET: "$GMAIL_CLIENT_SECRET"
+GMAIL_REFRESH_TOKEN: "$GMAIL_REFRESH_TOKEN"
+INBOUND_WHITELIST: "$INBOUND_WHITELIST"
+STORAGE_TYPE: "$STORAGE_TYPE"
+AWS_BUCKET_NAME: "$AWS_BUCKET_NAME"
+AWS_ACCESS_KEY_ID: "$AWS_ACCESS_KEY_ID"
+AWS_SECRET_ACCESS_KEY: "$AWS_SECRET_ACCESS_KEY"
+AWS_REGION: "$AWS_REGION"
+EOF
 
-# Prepare environment variables
-ENV_VARS="\
-GCP_PROJECT_ID=${GCP_PROJECT_ID:-},\
-API_TOKEN=${API_TOKEN:-},\
-OPENAI_API_KEY=${OPENAI_API_KEY:-},\
-REPLICATE_API_KEY=${REPLICATE_API_KEY:-},\
-GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-},\
-GCP_CERT=\"$GCP_CERT\",\
-INCLUDE_EMAIL_SETUP=${INCLUDE_EMAIL_SETUP:-},\
-GMAIL_REFRESH_TOKEN=${GMAIL_REFRESH_TOKEN:-},
-STORAGE_TYPE=${STORAGE_TYPE:-},\
-AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-},\
-AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-},\
-AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-},\
-AWS_REGION=${AWS_REGION:-},\
-SERVER_URL=${SERVER_URL:-}"
-
+# Deploy the service
 gcloud run deploy $GCP_PROJECT_ID \
     --image $IMAGE_NAME \
     --platform managed \
     --region $GCP_REGION \
     --allow-unauthenticated \
-    --set-env-vars "$ENV_VARS"
+    --env-vars-file "$ENV_FILE"
+
+# Clean up the temporary file
+# rm "$ENV_FILE"
 
 if [ $? -ne 0 ]; then
-  echo "Cloud run deploy failed"
-  exit 1
+    echo "Cloud run deploy failed"
+    exit 1
 fi
+
+# Get the URL and update the service
+echo "Getting service URL..."
+SERVER_URL=$(gcloud run services describe $GCP_PROJECT_ID \
+    --platform managed \
+    --region=$GCP_REGION \
+    --format "value(status.url)")
+
+# Update just the SERVER_URL environment variable
+echo "Updating service with correct URL..."
+gcloud run services update $GCP_PROJECT_ID \
+    --platform managed \
+    --region=$GCP_REGION \
+    --update-env-vars SERVER_URL=$SERVER_URL
 
 # Output success message
 echo "✅ Deployment complete! Your Foundry Campaign Builder backend is now live."
