@@ -8,6 +8,44 @@ else
     exit 1
 fi
 
+# Check for required dependencies
+echo "Checking for required dependencies..."
+
+# Function to check if a command exists
+check_command() {
+    if ! command -v $1 &> /dev/null; then
+        echo "❌ ERROR: $1 is not installed."
+        return 1
+    fi
+    return 0
+}
+
+# Check each required dependency
+MISSING_DEPS=()
+check_command "gcloud" || MISSING_DEPS+=("gcloud")
+check_command "openssl" || MISSING_DEPS+=("openssl")
+check_command "jq" || MISSING_DEPS+=("jq")
+check_command "curl" || MISSING_DEPS+=("curl")
+
+# If any dependencies are missing, show installation instructions
+if [ ${#MISSING_DEPS[@]} -ne 0 ]; then
+    echo "❌ Missing dependencies: ${MISSING_DEPS[*]}"
+    echo
+    echo "Please install the missing dependencies using one of these commands:"
+    echo
+    echo "Visit https://cloud.google.com/sdk/docs/install for gcloud installation"
+    echo
+    echo "For Ubuntu/Debian:"
+    echo "sudo apt-get update && sudo apt-get install -y openssl jq curl"
+    echo
+    echo "For macOS:"
+    echo "brew install openssl jq curl"
+    echo
+    exit 1
+fi
+
+echo "✅ All required dependencies are installed."
+
 # Check if service account key file exists
 if [ ! -f "gcp-service-key.json" ]; then
     echo "❌ ERROR: Service account key file 'gcp-service-key.json' not found!"
