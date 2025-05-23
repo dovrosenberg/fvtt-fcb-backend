@@ -25,7 +25,7 @@ There are lot of steps here, but if you follow the directions below, it should b
   - Go to the cloud overview dashboard
   - Create a new project - let's name it `FCB Backend`
     - Note the "project ID" that is generated when you put in the name - you can edit it, but don't need to
-    - You will use this ID below (but will be able to find it again) 
+    - You will use this ID below (but will be able to find it again if you lose track of it now) 
   - Setup the services.  For each of these services, go to the link, make sure the right project is selected, and
     click "Enable".  They might each take a minute to run.
     - https://console.cloud.google.com/apis/library/cloudresourcemanager.googleapis.com
@@ -44,17 +44,18 @@ TODO: CONFIRM IF NEEDED?
     https://cloud.google.com/sdk/docs/install
 
 3. Create a service account and get credentials
-  - Inside the project dashboard, navigate to "IAM & Admin"
+  - Navigate to "IAM & Admin" in the dashboard or via this link: https://console.cloud.google.com/iam-admin/
+  - Make sure you have the right project selected at the top, still
   - On the left side, select "Service Accounts"
   - Create a new service account:
-    - Name: fcb-backend-service
-    - Roles:
+    - Name (step 1): fcb-backend-service
+    - Roles (step 2 - you can type these in the role box to find them, then click "Add another role"; you need the roles that exactly match these names):
       - Cloud Run Admin
       - Storage Admin
       - Service Account User
-    - No need to grant users access
-  - Click on the new user and under "Add Key" select "Create new key"; select JSON
-  - Download the key file - move it into a temporary directory you'll be using below to deploy, and name it `gcp-service-key.json`
+    - No need to grant users access (step 3)
+  - In the list of users, click the email address of the new user.  Under "Keys" | "Add Key", select "Create new key"; select JSON and hit create
+  - This will download the key file to your browser - move it into a temporary directory you'll be using below to deploy, and name it `gcp-service-key.json`
 
   4. Create accounts at openai.com and replicate.com
 
@@ -71,11 +72,11 @@ TODO: CONFIRM IF NEEDED?
       ```
 
   6. If you want to use email there are a gew extra steps you need to take:
-  ________________
+  TODO: ________________
   
 ### Set environment variables (You generally only need to do this once, but will need to update the file if you ever change any of your tokens)
   
-1. Run this to download a template variable file.  Run it from a directory where you want the configuration file to live.
+1. Run this to download a template variable file.  Run it from the directory where you downloaded the key file in step 4 above.
     ```sh
     curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
     ```
@@ -83,6 +84,10 @@ TODO: CONFIRM IF NEEDED?
 2. Edit the newly created .env file (in your favorite editor) to put in the needed settings (explained in more detail in the comments in the .env file).
       
 ### Deploy the backend (You'll just do this part whenever you want to upgrade to a new release of this backend)
+
+**Notes:**
+  - The next step might take a few minutes to run - especially after the line around Setting IAM Policy.
+  - You may also see a warning: *Your active project does not match the quota project in your local Application Default Credentials file. This might result in unexpected quota issues*  You can ignore this.
 
  **For Ubuntu/Debian/WSL (recommended for Windows) or MacOS**
   - Run the following in your terminal (in MacOS, this requires Homebrew):

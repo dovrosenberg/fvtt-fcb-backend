@@ -70,25 +70,54 @@ gcloud auth activate-service-account --key-file=gcp-service-key.json
 Write-Host "Setting up..."
 gcloud config set project $env:GCP_PROJECT_ID
 
+# Function to check if a bucket name is available
+function Test-BucketName {
+    param ($bucketName)
+    $exists = gcloud storage buckets list --format="value(name)" | Select-String -Pattern "^$bucketName$"
+    return -not $exists
+}
+
 # Create a Cloud Storage bucket if it doesn't exist
-Write-Host "Checking for Cloud Storage bucket..."
-$bucketExists = gcloud storage buckets list --format="value(name)" | Select-String -Pattern "^$env:GCS_BUCKET_NAME$"
-
-if (-not $bucketExists) {
+if (Test-BucketName $env:GCS_BUCKET_NAME) {
     Write-Host "Creating Cloud Storage bucket: $env:GCS_BUCKET_NAME..."
-    gcloud storage buckets create gs://$env:GCS_BUCKET_NAME --location=$env:GCP_REGION
-
-    # need to open up CORS
+    $bucketCreateOutput = gcloud storage buckets create "gs://$env:GCS_BUCKET_NAME" --location=$env:GCP_REGION 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        if ($bucketCreateOutput -match "HTTPError 409") {
+            Write-Host "❌ ERROR: The bucket name '$env:GCS_BUCKET_NAME' is already in use.  GCS bucket names have to be unique globally (not just within your project)."
+            Write-Host "Please choose a different bucket name in your .env file and try again."
+            exit 1
+        }
+        else {
+            Write-Host "❌ Failed to create bucket $env:GCS_BUCKET_NAME. Please check the error message above."
+            exit 1
+        }
+    }
+    
+    Write-Host "✅ Bucket $env:GCS_BUCKET_NAME created successfully!"
+    
+    # Set up CORS for the bucket
+    Write-Host "Setting up CORS configuration..."
     @'
 [{"origin": ["*"], "method": ["GET"], "responseHeader": ["Content-Type"], "maxAgeSeconds": 3600}]
 '@ | Out-File -FilePath "cors.json" -Encoding utf8
-    gcloud storage buckets update gs://$env:GCS_BUCKET_NAME --cors-file=cors.json
+
+    if (gcloud storage buckets update gs://$env:GCS_BUCKET_NAME --cors-file=cors.json) {
+        Write-Host "✅ CORS configuration updated successfully."
+    } else {
+        Write-Host "❌ Failed to update CORS configuration."
+        Write-Host "Please verify that the service account has the 'Storage Admin' role and try again."
+        Remove-Item cors.json
+        exit 1
+    }
     Remove-Item cors.json
-    
-    Write-Host "✅ Bucket $env:GCS_BUCKET_NAME created successfully!"
 } else {
     Write-Host "✅ Cloud Storage bucket $env:GCS_BUCKET_NAME already exists."
 }
+
+# Verify service account permissions
+Write-Host "Verifying service account permissions..."
+$SERVICE_ACCOUNT = gcloud config get-value account
+Write-Host "Using service account: $SERVICE_ACCOUNT"
 
 # Generate a Secure API Token
 $API_TOKEN = -join ((48..57) + (97..122) | Get-Random -Count 32 | ForEach-Object {[char]$_})
@@ -97,8 +126,8 @@ $API_TOKEN = -join ((48..57) + (97..122) | Get-Random -Count 32 | ForEach-Object
 $GCP_CERT = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes("gcp-service-key.json"))
 
 # Step: Gmail OAuth Setup
-if ($env:INCLUDE_GMAIL_SETUP -eq "false") {
-    Write-Host "Gmail setup skipped due to INCLUDE_GMAIL_SETUP"
+if ($env:INCLUDE_EMAIL_SETUP -eq "false") {
+    Write-Host "Gmail setup skipped due to INCLUDE_EMAIL_SETUP"
 } elseif ($env:GMAIL_REFRESH_TOKEN) {
     Write-Host "Gmail refresh token already provided — skipping Gmail authorization."
 } else {
