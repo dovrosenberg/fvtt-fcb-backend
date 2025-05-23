@@ -135,7 +135,7 @@ echo "Using service account: $SERVICE_ACCOUNT"
 API_TOKEN=$(openssl rand -hex 32)  # Generate a 32-byte random token
 
 # Encode the service account credentials in base64
-GCP_CERT=$(base64 < gcp-service-key.json)
+GCP_CERT=$(base64 < gcp-service-key.json | tr -d '\n')
 
 # Step: Gmail OAuth Setup
 if [[ "$INCLUDE_EMAIL_SETUP" == "false" ]]; then
@@ -188,35 +188,40 @@ else
 fi
 
 # Deploy the container from Docker Hub
-echo "Deploying container..."
-IMAGE_NAME=IMAGE_NAME="docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
+IMAGE_NAME="docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
+
+# Create a temporary file for environment variables
+# We do it this way because inbound whitelist has commas in it and trying to do it inline was a disaster
+ENV_FILE=$(mktemp)
+cat > "$ENV_FILE" << EOF
+GCP_PROJECT_ID: "$GCP_PROJECT_ID"
+API_TOKEN: "$API_TOKEN"
+OPENAI_API_KEY: "$OPENAI_API_KEY"
+REPLICATE_API_KEY: "$REPLICATE_API_KEY"
+GCS_BUCKET_NAME: "$GCS_BUCKET_NAME"
+GCP_CERT: "$GCP_CERT"
+INCLUDE_EMAIL_SETUP: "$INCLUDE_EMAIL_SETUP"
+GMAIL_CLIENT_ID: "$GMAIL_CLIENT_ID"
+GMAIL_CLIENT_SECRET: "$GMAIL_CLIENT_SECRET"
+GMAIL_REFRESH_TOKEN: "$GMAIL_REFRESH_TOKEN"
+INBOUND_WHITELIST: "$INBOUND_WHITELIST"
+STORAGE_TYPE: "$STORAGE_TYPE"
+AWS_BUCKET_NAME: "$AWS_BUCKET_NAME"
+AWS_ACCESS_KEY_ID: "$AWS_ACCESS_KEY_ID"
+AWS_SECRET_ACCESS_KEY: "$AWS_SECRET_ACCESS_KEY"
+AWS_REGION: "$AWS_REGION"
+EOF
 
 # Deploy the service
-ENV_VARS=\
-GCP_PROJECT_ID="$GCP_PROJECT_ID",\
-API_TOKEN="$API_TOKEN",\
-OPENAI_API_KEY="$OPENAI_API_KEY",\
-REPLICATE_API_KEY="$REPLICATE_API_KEY",\
-GCS_BUCKET_NAME="$GCS_BUCKET_NAME",\
-GCP_CERT="$GCP_CERT",\
-INCLUDE_EMAIL_SETUP="$INCLUDE_EMAIL_SETUP",\
-GMAIL_CLIENT_ID="$GMAIL_CLIENT_ID",\
-GMAIL_CLIENT_SECRET="$GMAIL_CLIENT_SECRET",\
-GMAIL_REFRESH_TOKEN="$GMAIL_REFRESH_TOKEN",
-INBOUND_WHITELIST="$INBOUND_WHITELIST",\
-STORAGE_TYPE="$STORAGE_TYPE",\
-AWS_BUCKET_NAME="$AWS_BUCKET_NAME",\
-AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID",\
-AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY",\
-AWS_REGION="$AWS_REGION"
-
-
 gcloud run deploy $GCP_PROJECT_ID \
     --image $IMAGE_NAME \
     --platform managed \
     --region $GCP_REGION \
     --allow-unauthenticated \
-    --set-env-vars "$ENV_VARS"
+    --env-vars-file "$ENV_FILE"
+
+# Clean up the temporary file
+# rm "$ENV_FILE"
 
 if [ $? -ne 0 ]; then
     echo "Cloud run deploy failed"
