@@ -2,13 +2,51 @@
 
 # Load environment variables from .env file
 if [ -f ".env" ]; then
-    export $(grep -v '^#' .env | xargs)
+    set -a
+    source .env
+    set +a
 else
     echo "❌ ERROR: .env file not found! Please download and edit the environment variables first.  See the README for details."
     exit 1
 fi
 
-echo $GMAIL_CLIENT_ID
+# Check for required dependencies
+echo "Checking for required dependencies..."
+
+# Function to check if a command exists
+check_command() {
+    if ! command -v $1 &> /dev/null; then
+        echo "❌ ERROR: $1 is not installed."
+        return 1
+    fi
+    return 0
+}
+
+# Check each required dependency
+MISSING_DEPS=()
+check_command "gcloud" || MISSING_DEPS+=("gcloud")
+check_command "openssl" || MISSING_DEPS+=("openssl")
+check_command "jq" || MISSING_DEPS+=("jq")
+check_command "curl" || MISSING_DEPS+=("curl")
+
+# If any dependencies are missing, show installation instructions
+if [ ${#MISSING_DEPS[@]} -ne 0 ]; then
+    echo "❌ Missing dependencies: ${MISSING_DEPS[*]}"
+    echo
+    echo "Please install the missing dependencies using one of these commands:"
+    echo
+    echo "Visit https://cloud.google.com/sdk/docs/install for gcloud installation"
+    echo
+    echo "For Ubuntu/Debian:"
+    echo "sudo apt-get update && sudo apt-get install -y openssl jq curl"
+    echo
+    echo "For macOS:"
+    echo "brew install openssl jq curl"
+    echo
+    exit 1
+fi
+
+echo "✅ All required dependencies are installed."
 
 # Check if service account key file exists
 if [ ! -f "gcp-service-key.json" ]; then
@@ -25,32 +63,62 @@ gcloud auth activate-service-account --key-file=gcp-service-key.json
 echo "Setting up..."
 gcloud config set project $GCP_PROJECT_ID
 
-# Create a Cloud Storage bucket if it doesn't exist
-echo "Checking for Cloud Storage bucket..."
-if ! gcloud storage buckets list --format="value(name)" | grep -q "^$GCS_BUCKET_NAME$"; then
-    echo "Creating Cloud Storage bucket: $GCS_BUCKET_NAME..."
-    gcloud storage buckets create gs://$GCS_BUCKET_NAME --location=$GCP_REGION
+# Function to check if a bucket name is available
+check_bucket_name() {
+    local bucket_name=$1
+    local buckets
+    if ! buckets=$(gcloud storage buckets list --format="value(name)" 2>&1); then
+        echo "Error listing buckets"
+        return 1
+    fi
+    
+    if echo "$buckets" | grep -q "^${bucket_name}$"; then
+        return 1  # Bucket exists
+    fi
+    return 0  # Bucket needs to be created
+}
 
-    # need to open up CORS
-    echo '[{"origin": ["*"], "method": ["GET"], "responseHeader":   ["Content-Type"], "maxAgeSeconds": 3600}]' > cors.json
-    gcloud storage buckets update gs://$GCS_BUCKET_NAME --cors-file=cors.json
-    rm cors.json
+# Create a Cloud Storage bucket if it doesn't exist
+if check_bucket_name "$GCS_BUCKET_NAME"; then
+    echo "Creating Cloud Storage bucket: $GCS_BUCKET_NAME..."
+    # Create a pipe to capture both output and exit status
+    set -o pipefail
+    if ! gcloud storage buckets create gs://$GCS_BUCKET_NAME --location=$GCP_REGION 2>&1 | tee /tmp/bucket_create.log; then
+        if grep -q "HTTPError 409" /tmp/bucket_create.log; then
+            echo "❌ ERROR: The bucket name '$GCS_BUCKET_NAME' is already in use.  GCS bucket names have to be unique globally (not just within your project)."
+            echo "Please choose a different bucket name in your .env file and try again."
+            rm /tmp/bucket_create.log
+            exit 1
+        else
+            echo "❌ Failed to create bucket $GCS_BUCKET_NAME. Please check the error message above."
+            rm /tmp/bucket_create.log
+            exit 1
+        fi
+    fi
     
     echo "✅ Bucket $GCS_BUCKET_NAME created successfully!"
+    
+    # Set up CORS for the bucket
+    echo "Setting up CORS configuration..."
+    echo '[{"origin": ["*"], "method": ["GET"], "responseHeader":   ["Content-Type"], "maxAgeSeconds": 3600}]' > cors.json
+
+    if gcloud storage buckets update gs://$GCS_BUCKET_NAME --cors-file=cors.json; then
+        echo "✅ CORS configuration updated successfully."
+    else
+        echo "❌ Failed to update CORS configuration."
+        echo "Please verify that the service account has the 'Storage Admin' role and try again."
+        rm cors.json
+        exit 1
+    fi
+    rm cors.json
 else
     echo "✅ Cloud Storage bucket $GCS_BUCKET_NAME already exists."
 fi
 
-
-# # Check if the Cloud Run service exists
-# # If it does, for some reason it won't deploy the new revision
-# SERVICE_NAME="fvtt-fcb-backend"
-# EXISTING_SERVICE=$(gcloud run services list --platform managed --filter "metadata.name=${SERVICE_NAME}" --format="value(metadata.name)")
-
-# if [ "$EXISTING_SERVICE" = "$SERVICE_NAME" ]; then
-#     echo "🛑 Deleting existing Cloud Run service: $SERVICE_NAME..."
-#     gcloud run services delete $SERVICE_NAME --platform managed --region $GCP_REGION --quiet
-# fi
+# Verify service account permissions
+echo "Verifying service account permissions..."
+SERVICE_ACCOUNT=$(gcloud config get-value account)
+echo "Using service account: $SERVICE_ACCOUNT"
 
 # Generate a Secure API Token
 API_TOKEN=$(openssl rand -hex 32)  # Generate a 32-byte random token
@@ -59,8 +127,8 @@ API_TOKEN=$(openssl rand -hex 32)  # Generate a 32-byte random token
 GCP_CERT=$(base64 < gcp-service-key.json)
 
 # Step: Gmail OAuth Setup
-if [[ "$INCLUDE_GMAIL_SETUP" == "false" ]]; then
-    echo "Gmail setup skipped due to INCLUDE_GMAIL_SETUP"
+if [[ "$INCLUDE_EMAIL_SETUP" == "false" ]]; then
+    echo "Gmail setup skipped due to INCLUDE_EMAIL_SETUP"
 elif [[ -n "$GMAIL_REFRESH_TOKEN" ]]; then
     echo "Gmail refresh token already provided — skipping Gmail authorization."
 else
@@ -113,9 +181,9 @@ echo "Deploying container..."
 IMAGE_NAME="docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
 
 # get the deploy URL
-SERVER_URL=$(gcloud run services describe fvtt-fcb-backend \
+SERVER_URL=$(gcloud run services describe $GCP_PROJECT_ID \
   --platform managed \
-  --region=us-central1 \
+  --region=$GCP_REGION \
   --format "value(status.url)")
 
 # Prepare environment variables
@@ -126,6 +194,7 @@ OPENAI_API_KEY=${OPENAI_API_KEY:-},\
 REPLICATE_API_KEY=${REPLICATE_API_KEY:-},\
 GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-},\
 GCP_CERT=\"$GCP_CERT\",\
+INCLUDE_EMAIL_SETUP=${INCLUDE_EMAIL_SETUP:-},\
 GMAIL_REFRESH_TOKEN=${GMAIL_REFRESH_TOKEN:-},
 STORAGE_TYPE=${STORAGE_TYPE:-},\
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-},\
@@ -134,7 +203,7 @@ AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-},\
 AWS_REGION=${AWS_REGION:-},\
 SERVER_URL=${SERVER_URL:-}"
 
-gcloud run deploy fvtt-fcb-backend \
+gcloud run deploy $GCP_PROJECT_ID \
     --image $IMAGE_NAME \
     --platform managed \
     --region $GCP_REGION \
