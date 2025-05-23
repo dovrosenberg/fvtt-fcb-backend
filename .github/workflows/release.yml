@@ -74,6 +74,17 @@ jobs:
         run: |
             sed -i "s|REPLACE_IMAGE_TAG|${{ env.IMAGE_TAG }}|g" artifacts/deploy-gcp.sh
 
+      - name: Replace Image Tag in Deploy Script 2
+        run: |
+          sed -i "s|REPLACE_IMAGE_TAG|${{ env.IMAGE_TAG }}|g" artifacts/deploy-gcp.ps1
+
+      - name: Upload Deployment Script and Environment Template to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.NEW_TAG }}
+          name: Release ${{ env.NEW_TAG }}
+          draft: false
+      
       - name: Upload Deployment Script and Environment Template to Release
         uses: softprops/action-gh-release@v1
         with:
@@ -82,5 +93,6 @@ jobs:
           draft: false
           prerelease: ${{ github.base_ref == 'dev' }}
           files: |
+            artifacts/deploy-gcp.ps1
             artifacts/deploy-gcp.sh
             artifacts/env.template

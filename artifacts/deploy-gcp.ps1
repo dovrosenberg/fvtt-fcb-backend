@@ -21,21 +21,12 @@ if (-not (Test-Command "curl")) { $missingDeps += "curl" }
 # If any dependencies are missing, show installation instructions
 if ($missingDeps.Count -gt 0) {
     Write-Host "❌ Missing dependencies: $($missingDeps -join ', ')"
-    Write-Host ""
-    Write-Host "Please install the missing dependencies using one of these methods:"
-    Write-Host ""
-    Write-Host "1. Install WSL (Windows Subsystem for Linux) and run the Linux version of the script"
-    Write-Host "   This is the recommended approach. Install WSL by running in PowerShell as Administrator:"
-    Write-Host "   wsl --install"
-    Write-Host ""
-    Write-Host "2. Install dependencies manually:"
-    Write-Host "   - Install gcloud: Visit https://cloud.google.com/sdk/docs/install"
-    Write-Host "   - Install OpenSSL: Download from https://slproweb.com/products/Win32OpenSSL.html"
-    Write-Host "   - Install jq: Download from https://stedolan.github.io/jq/download/"
-    Write-Host "   - Install curl: Download from https://curl.se/windows/"
-    Write-Host ""
-    Write-Host "After installing WSL, you can run the Linux version of the script with:"
-    Write-Host "curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.sh | bash"
+    Write-Host "\nPlease install the missing dependencies:\n"
+    
+    Write-Host "   - gcloud: https://cloud.google.com/sdk/docs/install"
+    Write-Host "   - OpenSSL: https://slproweb.com/products/Win32OpenSSL.html"
+    Write-Host "   - jq: https://stedolan.github.io/jq/download/"
+    Write-Host "   - curl: https://curl.se/windows/"
     exit 1
 }
 
@@ -53,14 +44,13 @@ if (Test-Path ".env") {
         }
     }
 } else {
-    Write-Host "❌ ERROR: .env file not found! Please download and edit the environment variables first. See the README for details."
+    Write-Host "❌ ERROR: .env file not found! See the README for details."
     exit 1
 }
 
 # Check if service account key file exists
 if (-not (Test-Path "gcp-service-key.json")) {
     Write-Host "❌ ERROR: Service account key file 'gcp-service-key.json' not found!"
-    Write-Host "Please download your GCP service account key and place it in this directory - see README for more info."
     exit 1
 }
 
@@ -72,19 +62,19 @@ gcloud auth activate-service-account --key-file=gcp-service-key.json
 Write-Host "Setting up..."
 gcloud config set project $env:GCP_PROJECT_ID
 
-# Function to check if a bucket name is available
-function Test-BucketName {
+# Function to check if a bucket exists
+function Test-BucketExists {
     param ($bucketName)
-    $exists = gcloud storage buckets list --format="value(name)" | Select-String -Pattern "^$bucketName$"
-    return -not $exists
+    $result = gcloud storage buckets describe "gs://$bucketName" 2>&1
+    return ($LASTEXITCODE -eq 0)
 }
 
 # Create a Cloud Storage bucket if it doesn't exist
-if (Test-BucketName $env:GCS_BUCKET_NAME) {
+if (-not (Test-BucketExists $env:GCS_BUCKET_NAME)) {
     Write-Host "Creating Cloud Storage bucket: $env:GCS_BUCKET_NAME..."
-    $bucketCreateOutput = gcloud storage buckets create "gs://$env:GCS_BUCKET_NAME" --location=$env:GCP_REGION 2>&1
+    $output = gcloud storage buckets create "gs://$env:GCS_BUCKET_NAME" --location=$env:GCP_REGION 2>&1
     if ($LASTEXITCODE -ne 0) {
-        if ($bucketCreateOutput -match "HTTPError 409") {
+        if ($output -match "HTTPError 409") {
             Write-Host "❌ ERROR: The bucket name '$env:GCS_BUCKET_NAME' is already in use.  GCS bucket names have to be unique globally (not just within your project)."
             Write-Host "Please choose a different bucket name in your .env file and try again."
             exit 1
@@ -99,12 +89,10 @@ if (Test-BucketName $env:GCS_BUCKET_NAME) {
     
     # Set up CORS for the bucket
     Write-Host "Setting up CORS configuration..."
-    @'
-[{"origin": ["*"], "method": ["GET"], "responseHeader": ["Content-Type"], "maxAgeSeconds": 3600}]
-'@ | Out-File -FilePath "cors.json" -Encoding utf8
+    '[{"origin": ["*"], "method": ["GET"], "responseHeader": ["Content-Type"], "maxAgeSeconds": 3600}]' | Out-File -Encoding utf8 cors.json
 
     if (gcloud storage buckets update gs://$env:GCS_BUCKET_NAME --cors-file=cors.json) {
-        Write-Host "✅ CORS configuration updated successfully."
+        Write-Host "✅ CORS updated."
     } else {
         Write-Host "❌ Failed to update CORS configuration."
         Write-Host "Please verify that the service account has the 'Storage Admin' role and try again."
@@ -122,7 +110,7 @@ $SERVICE_ACCOUNT = gcloud config get-value account
 Write-Host "Using service account: $SERVICE_ACCOUNT"
 
 # Generate a Secure API Token
-$API_TOKEN = -join ((48..57) + (97..122) | Get-Random -Count 32 | ForEach-Object {[char]$_})
+$API_TOKEN = -join ((48..57) + (97..102) | Get-Random -Count 64 | ForEach-Object {[char]$_})
 
 # Encode the service account credentials in base64
 $GCP_CERT = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes("gcp-service-key.json"))
@@ -182,37 +170,41 @@ if ($env:INCLUDE_EMAIL_SETUP -eq "false") {
 Write-Host "Deploying container..."
 $IMAGE_NAME = "docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
 
-# get the deploy URL
-$SERVER_URL = gcloud run services describe $env:GCP_PROJECT_ID --platform managed --region=$env:GCP_REGION --format "value(status.url)"
-
 # Prepare environment variables
-$ENV_VARS = @"
-GCP_PROJECT_ID=$env:GCP_PROJECT_ID,
-API_TOKEN=$API_TOKEN,
-OPENAI_API_KEY=$env:OPENAI_API_KEY,
-REPLICATE_API_KEY=$env:REPLICATE_API_KEY,
-GCS_BUCKET_NAME=$env:GCS_BUCKET_NAME,
-GCP_CERT="$GCP_CERT",
-INCLUDE_EMAIL_SETUP=$env:INCLUDE_EMAIL_SETUP,
-GMAIL_REFRESH_TOKEN=$env:GMAIL_REFRESH_TOKEN,
-STORAGE_TYPE=$env:STORAGE_TYPE,
-AWS_BUCKET_NAME=$env:AWS_BUCKET_NAME,
-AWS_ACCESS_KEY_ID=$env:AWS_ACCESS_KEY_ID,
-AWS_SECRET_ACCESS_KEY=$env:AWS_SECRET_ACCESS_KEY,
-AWS_REGION=$env:AWS_REGION,
-SERVER_URL=$SERVER_URL
-"@
+$ENV_VARS = @(
+    "GCP_PROJECT_ID=$env:GCP_PROJECT_ID",
+    "API_TOKEN=$API_TOKEN",
+    "OPENAI_API_KEY=$env:OPENAI_API_KEY",
+    "REPLICATE_API_KEY=$env:REPLICATE_API_KEY",
+    "GCS_BUCKET_NAME=$env:GCS_BUCKET_NAME",
+    "GCP_CERT=$GCP_CERT",
+    "INCLUDE_EMAIL_SETUP=$env:INCLUDE_EMAIL_SETUP",
+    "GMAIL_CLIENT_ID=$env:GMAIL_CLIENT_ID",
+    "GMAIL_CLIENT_SECRET=$env:GMAIL_CLIENT_SECRET",
+    "GMAIL_REFRESH_TOKEN=$env:GMAIL_REFRESH_TOKEN",
+    "INBOUND_WHITELIST=$env:INBOUND_WHITELIST",
+    "STORAGE_TYPE=$env:STORAGE_TYPE",
+    "AWS_BUCKET_NAME=$env:AWS_BUCKET_NAME",
+    "AWS_ACCESS_KEY_ID=$env:AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY=$env:AWS_SECRET_ACCESS_KEY",
+    "AWS_REGION=$env:AWS_REGION"
+) -join ","
 
+# Deploy the service
+Write-Host "Running Cloud Run deploy..."
 gcloud run deploy $env:GCP_PROJECT_ID --image $IMAGE_NAME --platform managed --region $env:GCP_REGION --allow-unauthenticated --set-env-vars "$ENV_VARS"
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Cloud run deploy failed"
+    Write-Host "Cloud Run deploy failed"
     exit 1
 }
 
-# Output success message
-Write-Host "✅ Deployment complete! Your Foundry Campaign Builder backend is now live."
-Write-Host "Use these settings in 'Advanced Settings' for the module:"
-Write-Host "URL: $SERVER_URL"
-Write-Host "API Token: $API_TOKEN"
-Write-Host "See README for final configuration steps." 
+# Get the service URL
+$SERVER_URL = gcloud run services describe $env:GCP_PROJECT_ID --platform managed --region=$env:GCP_REGION --format "value(status.url)"
+
+# Update the service with the URL
+Write-Host "Updating service with SERVER_URL..."
+gcloud run services update $env:GCP_PROJECT_ID --platform managed --region=$env:GCP_REGION --update-env-vars SERVER_URL=$SERVER_URL
+
+# Output final configuration instructions
+Write-Host "✅ Deployment complete!\nUse these settings in 'Advanced Settings':\nURL: $SERVER_URL\nAPI Token: $API_TOKEN\nSee README for final steps."
