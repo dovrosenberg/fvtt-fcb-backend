@@ -10,16 +10,18 @@ async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/stores', { schema: generateStoreNamesInputSchema }, async (request: GenerateStoreNamesRequest, _reply: FastifyReply): Promise<GenerateStoreNamesOutput> => {
     const { count, genre, worldFeeling, storeType, nameStyles } = request.body;
 
+    // generate 30% extra because LLM won't get the count right
     const system = `
       You are a creative name generator for fictional stores and shops.
       You will generate unique and appropriate store names based on the provided parameters. Names should be 
       a mix of one to three words long, and not too similar to each other.
+      EACH RESPONSE MUST BE A VALID JSON ARRAY OF STRINGS, CONTAINING EXACTLY ${count*1.3} STORE NAMES. 
       EACH RESPONSE SHOULD CONTAIN ONE FIELD:
-      1. "names": AN ARRAY OF STRINGS, CONTAINING EXACTLY ${count} STORE NAMES.
+      1. "names": AN ARRAY OF STRINGS, CONTAINING EXACTLY ${count*1.3} STORE NAMES.
     `;
 
     const prompt = `
-      Generate ${count} unique store or shop names.      
+      Generate ${count*1.3} unique store or shop names.      
       ${genre ? `The names should be appropriate for a ${genre} setting.` : ''}
       ${worldFeeling ? `The world has a ${worldFeeling} feeling or atmosphere. Let about one-third of your names reflect this tone.` : ''}
       ${storeType ? `The stores are specifically ${storeType}s. Names MUST reflect this type of business.` : ''}
@@ -35,7 +37,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     }
         
     const nameList = {
-      names: result.names,
+      names: result.names.slice(0, count), // Final safety check to ensure exact count
     } as GenerateStoreNamesOutput;
       
     return nameList;
