@@ -157,7 +157,15 @@ else
     echo "Copy the 'code' parameter from that URL and paste it below."
     echo
 
-    read -p "Paste authorization code here: " AUTH_CODE
+    # Read from terminal even when piped from curl
+    if [ -t 0 ]; then
+        # Standard interactive mode
+        read -p "Paste authorization code here: " AUTH_CODE
+    else
+        # When piped (like curl | bash), read directly from terminal
+        echo -n "Paste authorization code here: "
+        read AUTH_CODE </dev/tty
+    fi
 
     echo "Exchanging authorization code for tokens..."
 
