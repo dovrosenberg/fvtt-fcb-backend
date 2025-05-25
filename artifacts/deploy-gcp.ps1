@@ -166,45 +166,82 @@ if ($env:INCLUDE_EMAIL_SETUP -eq "false") {
     exit 0
 }
 
+# Check if service already exists and get its URL
+Write-Host "Checking if service already exists..."
+$EXISTING_URL = gcloud run services describe $env:GCP_PROJECT_ID `
+    --platform managed `
+    --region=$env:GCP_REGION `
+    --format "value(status.url)" 2>$null
+
+if (-not $EXISTING_URL -or $EXISTING_URL -eq "") {
+    Write-Host "Service not found - creating new one..."
+} else {
+    Write-Host "Service found at $EXISTING_URL - updating..."
+}
+
 # Deploy the container from Docker Hub
-Write-Host "Deploying container..."
 $IMAGE_NAME = "docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
 
-# Prepare environment variables
-$ENV_VARS = @(
-    "GCP_PROJECT_ID=$env:GCP_PROJECT_ID",
-    "API_TOKEN=$API_TOKEN",
-    "OPENAI_API_KEY=$env:OPENAI_API_KEY",
-    "REPLICATE_API_KEY=$env:REPLICATE_API_KEY",
-    "GCS_BUCKET_NAME=$env:GCS_BUCKET_NAME",
-    "GCP_CERT=$GCP_CERT",
-    "INCLUDE_EMAIL_SETUP=$env:INCLUDE_EMAIL_SETUP",
-    "GMAIL_CLIENT_ID=$env:GMAIL_CLIENT_ID",
-    "GMAIL_CLIENT_SECRET=$env:GMAIL_CLIENT_SECRET",
-    "GMAIL_REFRESH_TOKEN=$env:GMAIL_REFRESH_TOKEN",
-    "INBOUND_WHITELIST=$env:INBOUND_WHITELIST",
-    "STORAGE_TYPE=$env:STORAGE_TYPE",
-    "AWS_BUCKET_NAME=$env:AWS_BUCKET_NAME",
-    "AWS_ACCESS_KEY_ID=$env:AWS_ACCESS_KEY_ID",
-    "AWS_SECRET_ACCESS_KEY=$env:AWS_SECRET_ACCESS_KEY",
-    "AWS_REGION=$env:AWS_REGION"
-) -join ","
+# Create a temporary file for environment variables
+# We do it this way because inbound whitelist has commas in it and trying to do it inline was a disaster
+$ENV_FILE = [System.IO.Path]::GetTempFileName()
+@"
+GCP_PROJECT_ID: "$env:GCP_PROJECT_ID"
+API_TOKEN: "$API_TOKEN"
+OPENAI_API_KEY: "$env:OPENAI_API_KEY"
+REPLICATE_API_KEY: "$env:REPLICATE_API_KEY"
+GCS_BUCKET_NAME: "$env:GCS_BUCKET_NAME"
+GCP_CERT: "$GCP_CERT"
+INCLUDE_EMAIL_SETUP: "$env:INCLUDE_EMAIL_SETUP"
+GMAIL_CLIENT_ID: "$env:GMAIL_CLIENT_ID"
+GMAIL_CLIENT_SECRET: "$env:GMAIL_CLIENT_SECRET"
+GMAIL_REFRESH_TOKEN: "$env:GMAIL_REFRESH_TOKEN"
+INBOUND_WHITELIST: "$env:INBOUND_WHITELIST"
+STORAGE_TYPE: "$env:STORAGE_TYPE"
+AWS_BUCKET_NAME: "$env:AWS_BUCKET_NAME"
+AWS_ACCESS_KEY_ID: "$env:AWS_ACCESS_KEY_ID"
+AWS_SECRET_ACCESS_KEY: "$env:AWS_SECRET_ACCESS_KEY"
+AWS_REGION: "$env:AWS_REGION"
+SERVER_URL: "$EXISTING_URL"
+"@ | Out-File -FilePath $ENV_FILE -Encoding utf8
 
 # Deploy the service
-Write-Host "Running Cloud Run deploy..."
-gcloud run deploy $env:GCP_PROJECT_ID --image $IMAGE_NAME --platform managed --region $env:GCP_REGION --allow-unauthenticated --set-env-vars "$ENV_VARS"
+gcloud run deploy $env:GCP_PROJECT_ID `
+    --image $IMAGE_NAME `
+    --platform managed `
+    --region $env:GCP_REGION `
+    --allow-unauthenticated `
+    --env-vars-file "$ENV_FILE"
+
+# Clean up the temporary file
+# Remove-Item "$ENV_FILE"
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Cloud Run deploy failed"
+    Write-Host "Cloud run deploy failed"
     exit 1
 }
 
-# Get the service URL
-$SERVER_URL = gcloud run services describe $env:GCP_PROJECT_ID --platform managed --region=$env:GCP_REGION --format "value(status.url)"
+# Only update with SERVER_URL if this is a new service (no existing URL)
+if (-not $EXISTING_URL -or $EXISTING_URL -eq "") {
+    # Get the URL
+    Write-Host "Getting service URL..."
+    $SERVER_URL = gcloud run services describe $env:GCP_PROJECT_ID `
+        --platform managed `
+        --region=$env:GCP_REGION `
+        --format "value(status.url)"
 
-# Update the service with the URL
-Write-Host "Updating service with SERVER_URL..."
-gcloud run services update $env:GCP_PROJECT_ID --platform managed --region=$env:GCP_REGION --update-env-vars SERVER_URL=$SERVER_URL
+    Write-Host "Updating service with correct URL..."
+    gcloud run services update $env:GCP_PROJECT_ID `
+        --platform managed `
+        --region=$env:GCP_REGION `
+        --update-env-vars SERVER_URL=$SERVER_URL
+} else {
+    $SERVER_URL = $EXISTING_URL
+}
 
-# Output final configuration instructions
-Write-Host "✅ Deployment complete!\nUse these settings in 'Advanced Settings':\nURL: $SERVER_URL\nAPI Token: $API_TOKEN\nSee README for final steps."
+# Output success message
+Write-Host "✅ Deployment complete! Your Foundry Campaign Builder backend is now live."
+Write-Host "Use these settings in `"Advanced Settings`" for the module:"
+Write-Host "URL: $SERVER_URL"
+Write-Host "API Token: $API_TOKEN"
+Write-Host "See README for final configuration steps."

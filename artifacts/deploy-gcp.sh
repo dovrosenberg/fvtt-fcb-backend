@@ -187,6 +187,19 @@ else
     exit 0
 fi
 
+# Check if service already exists and get its URL
+echo "Checking if service already exists..."
+EXISTING_URL=$(gcloud run services describe $GCP_PROJECT_ID \
+    --platform managed \
+    --region=$GCP_REGION \
+    --format "value(status.url)" 2>/dev/null)
+
+if [ -z "$EXISTING_URL" ]; then
+    echo "Service not found - creating new one..."
+else
+    echo "Service found at $EXISTING_URL - updating..."
+fi
+
 # Deploy the container from Docker Hub
 IMAGE_NAME="docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
 
@@ -210,6 +223,7 @@ AWS_BUCKET_NAME: "$AWS_BUCKET_NAME"
 AWS_ACCESS_KEY_ID: "$AWS_ACCESS_KEY_ID"
 AWS_SECRET_ACCESS_KEY: "$AWS_SECRET_ACCESS_KEY"
 AWS_REGION: "$AWS_REGION"
+SERVER_URL: "$EXISTING_URL"
 EOF
 
 # Deploy the service
@@ -228,19 +242,24 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Get the URL and update the service
-echo "Getting service URL..."
-SERVER_URL=$(gcloud run services describe $GCP_PROJECT_ID \
-    --platform managed \
-    --region=$GCP_REGION \
-    --format "value(status.url)")
 
-# Update just the SERVER_URL environment variable
-echo "Updating service with correct URL..."
-gcloud run services update $GCP_PROJECT_ID \
-    --platform managed \
-    --region=$GCP_REGION \
-    --update-env-vars SERVER_URL=$SERVER_URL
+# Only update with SERVER_URL if this is a new service (no existing URL)
+if [ -z "$EXISTING_URL" ]; then
+    # Get the URL
+    echo "Getting service URL..."
+    SERVER_URL=$(gcloud run services describe $GCP_PROJECT_ID \
+        --platform managed \
+        --region=$GCP_REGION \
+        --format "value(status.url)")
+
+    echo "Updating service with correct URL..."
+    gcloud run services update $GCP_PROJECT_ID \
+        --platform managed \
+        --region=$GCP_REGION \
+        --update-env-vars SERVER_URL=$SERVER_URL
+else
+    SERVER_URL=$EXISTING_URL
+fi
 
 # Output success message
 echo "✅ Deployment complete! Your Foundry Campaign Builder backend is now live."
