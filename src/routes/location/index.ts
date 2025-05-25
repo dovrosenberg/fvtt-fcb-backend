@@ -9,6 +9,8 @@ import {
   GenerateLocationImageRequest
 } from '@/schemas';
 import { generateImage } from '@/services/replicate';
+import { generateNameInstruction } from '@/utils/nameStyleSelector';
+import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/utils/entityPromptHelpers';
 
 
 // note: we don't clean briefDescription in these functions because there generally shouldn't be any HTML in it and if someone goes out of their way
@@ -16,18 +18,11 @@ import { generateImage } from '@/services/replicate';
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateLocationInputSchema }, async (request: GenerateLocationRequest, _reply: FastifyReply): Promise<GenerateLocationOutput> => {
-    const { genre, worldFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, createLongDescription } = request.body;
+    const { genre, worldFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, createLongDescription, nameStyles } = request.body;
 
-    const system =  `
-      I am writing a ${genre} novel. ${worldFeeling ? 'The feeling of the world is: ' + worldFeeling + '.\n' : ''} You are my assistant.  
-      EACH RESPONSE SHOULD CONTAIN TWO FIELDS:
-      1. "name": A STRING CONTAINING ((ONLY)) THE NAME OF THE LOCATION WE ARE DISCUSSING
-      2. "description": A STRING CONTAINING ((ONLY)) A DESCRIPTION OF THE LOCATION THAT MATCHES MY REQUEST
-    `;
+    const system = generateEntitySystemPrompt('location', genre, worldFeeling);
 
-    const descriptionDefinition = createLongDescription ?
-      'The description should be 2-3 paragraphs long with paragraphs separated with \\n.' :
-      `
+    const descriptionDefinition = generateDescriptionDefinition(createLongDescription || false, `
         The description should be in the style of a concise, fast-to-use location description for a tabletop RPG. 
         Keep each section to a single short sentence or list.
         Avoid fictional comparisons.
@@ -37,16 +32,18 @@ async function routes (fastify: FastifyInstance): Promise<void> {
         **Notable features:** list of 3 key physical or cultural details.
         **Sights, sounds, smells:** 3 quick sensory cures for immedion
         **Roleplay hooks:** 2 ideas for how characters might interact with or feel about the location
-      `;
+      `);
 
+    const nameInstruction = generateNameInstruction(name, nameStyles);
+    
     const prompt = `
-      I need you to suggest one name and one description for an location.  ${descriptionDefinition} 
-      ${name ? `The name of location is ${name}. You MUST ABSOLUTELY USE THIS NAME. DO NOT GENERATE YOUR OWN.` : ''}.
-      ${type ? `The type of location is a ${type}` : ''}.
-      ${parentName ? `The location is in ${parentName + (parentName ? '(which is a ' + parentType + ')' : '') + '.  ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
-      ${grandparentName ? `${parentName} is located in ${grandparentName + (grandparentType ? '(which is a ' + grandparentType + ')' : '')}. ${(grandparentDescription ? 'Here is some information about ' + grandparentName + ': ' + grandparentDescription + '.' : '.')}` : ''}
+      I need you to suggest one name and one description for a location. ${descriptionDefinition} 
+      ${nameInstruction ? `${nameInstruction}` : ''}
+      ${type ? `The type of location is a ${type}.` : ''}
+      ${parentName ? `The location is in ${parentName + (parentName ? ' (which is a ' + parentType + ')' : '') + '. ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
+      ${grandparentName ? `${parentName} is located in ${grandparentName + (grandparentType ? ' (which is a ' + grandparentType + ')' : '')}. ${(grandparentDescription ? 'Here is some information about ' + grandparentName + ': ' + grandparentDescription + '.' : '.')}` : ''}
       ${briefDescription ? `Here is a brief description of the location that you should use as a starting point.
-        THIS IS THE MOST IMPORTANT THING!  YOUR GENERATED DESCRIPTION MUST
+        THIS IS THE MOST IMPORTANT THING! YOUR GENERATED DESCRIPTION MUST
         INCLUDE ALL OF THESE FACTS. REQUIRED FACTS: ${briefDescription}` : ''}
       You should only take the world feeling into account in ways that do not contradict the other information.
     `;
@@ -80,15 +77,13 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
     const prompt = `
       I need you to suggest a prompt for creating an image of a location.  
-      ${name ? `The name of location is ${name}. You MUST ABSOLUTELY USE THIS NAME. DO NOT GENERATE YOUR OWN.` :   
-        nameStyles && nameStyles.length > 0 ? `When generating a name, it ABSOLUTELY MUST use one of these styles: ${nameStyles.join(', ')}.` : ''
-      }.
-      ${type ? `The type of location is a ${type}` : ''}.
-      ${parentName ? `The location is in ${parentName + (parentName ? '(which is a ' + parentType + ')' : '') + '.  ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
-      ${grandparentName ? `${parentName} is located in ${grandparentName + (grandparentType ? '(which is a ' + grandparentType + ')' : '')}. ${(grandparentDescription ? 'Here is some information about ' + grandparentName + ': ' + grandparentDescription + '.' : '.')}` : ''}
+      ${name ? `The location is named ${name}.` : ''}
+      ${type ? `The type of location is a ${type}.` : ''}
+      ${parentName ? `The location is in ${parentName + (parentName ? ' (which is a ' + parentType + ')' : '') + '. ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
+      ${grandparentName ? `${parentName} is located in ${grandparentName + (grandparentType ? ' (which is a ' + grandparentType + ')' : '')}. ${(grandparentDescription ? 'Here is some information about ' + grandparentName + ': ' + grandparentDescription + '.' : '.')}` : ''}
       ${parentName || grandparentName ? 'ONLY USE INFORMATION ON THE BROADER PLACES IF IT DOESN\'T CONFLICT WITH THE LOCATION DESCRIPTION. IT IS ONLY SUPPLEMENTAL' : ''}
       ${briefDescription ? `Here is a brief description of the location that you should use as a starting point.
-        THIS IS THE MOST IMPORTANT THING!  DESCRIPTION: ${briefDescription}` : ''}
+        THIS IS THE MOST IMPORTANT THING! DESCRIPTION: ${briefDescription}` : ''}
       You should only take the world feeling into account in ways that do not contradict the other information.
     `;
 

@@ -4,7 +4,7 @@ import {
   GenerateCharacterNamesOutput,
   GenerateCharacterNamesRequest,
 } from '@/schemas';
-import { generateRollTableCompletions } from '@/utils/promptGenerator';
+import { generateRollTableCompletions } from '@/utils/rollTableGenerators';
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/characters', { schema: generateCharacterNamesInputSchema }, async (request: GenerateCharacterNamesRequest, _reply: FastifyReply): Promise<GenerateCharacterNamesOutput> => {
