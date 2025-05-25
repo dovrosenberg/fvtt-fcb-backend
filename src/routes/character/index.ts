@@ -16,7 +16,7 @@ import {
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateCharacterInputSchema }, async (request: GenerateCharacterRequest, _reply: FastifyReply): Promise<GenerateCharacterOutput> => {
-    const { name, genre, worldFeeling, type, species, speciesDescription, briefDescription, createLongDescription } = request.body;
+    const { name, genre, worldFeeling, type, species, speciesDescription, briefDescription, createLongDescription, nameStyles } = request.body;
 
     const system =  `
       I am writing a ${genre} novel. ${worldFeeling ? 'The feeling of the world is: ' + worldFeeling + '.\n' : ''} You are my assistant.
@@ -41,7 +41,9 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
     const prompt = `
       I need you to suggest one name and one description for a character.  ${descriptionDefinition} 
-      ${name ? `The name of character is ${name}. You MUST ABSOLUTELY USE THIS NAME. DO NOT GENERATE YOUR OWN.` : ''}.
+      ${name ? `The name of character is ${name}. You MUST ABSOLUTELY USE THIS NAME. DO NOT GENERATE YOUR OWN.` :   
+        nameStyles && nameStyles.length > 0 ? `When generating a name, it ABSOLUTELY MUST use one of these styles: ${nameStyles.join(', ')}.` : ''
+      }.
       ${type ? `The type of character is a ${type}. Give this moderate weight.` : ''}.
       ${species ? `It should be a description of a ${species}.` : ''}.
       ${species && speciesDescription ? `Here is a description of what a ${species} is.  Give it light weight: ${speciesDescription}` : ''}.

@@ -8,7 +8,7 @@ import {
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/characters', { schema: generateCharacterNamesInputSchema }, async (request: GenerateCharacterNamesRequest, _reply: FastifyReply): Promise<GenerateCharacterNamesOutput> => {
-    const { count, genre, worldFeeling } = request.body;
+    const { count, genre, worldFeeling, nameStyles } = request.body;
 
     const system = `
       You are a creative name generator for fictional characters.
@@ -19,10 +19,12 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     `;
 
     const prompt = `
-      Generate ${count} unique character names.
-      ${genre ? `The names MUST  be appropriate for a ${genre} setting.` : ''}
-      ${worldFeeling ? `The world has a ${worldFeeling} feeling or atmosphere, so names could reflect this tone, but only about half of your responses should take this into account.` : ''}
-      Return ONLY an array of strings with the names. No explanations or additional text.
+      Generate ${count} unique character names.      
+      ${genre ? `The names should be appropriate for a ${genre} setting.` : ''}
+      ${worldFeeling ? `The world has a ${worldFeeling} feeling or atmosphere. Let about one-third of your names reflect this tone.` : ''}
+      ${nameStyles && nameStyles.length > 0 ? `90% of names should use the following naming styles, with roughly even portions coming from each: ${nameStyles.join(', ')}.` : ''}
+      Ensure each name clearly fits one of the provided styles, and do not cluster all names of a single style together.
+      Return ONLY a valid JSON array of strings. No explanations or extra text.
     `;
 
     const result = await getCompletion(system, prompt, 0.9) as { names: string[] } || { names: []};

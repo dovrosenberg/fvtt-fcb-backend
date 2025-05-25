@@ -66,7 +66,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
   });
 
   fastify.post('/generate-image', { schema: generateLocationImageInputSchema }, async (request: GenerateLocationImageRequest, _reply: FastifyReply): Promise<GenerateLocationImageOutput> => {
-    const { genre, worldFeeling, name, type, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription,briefDescription, } = request.body;
+    const { genre, worldFeeling, name, type, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription,briefDescription, nameStyles } = request.body;
 
     // get a good prompt
     const system = `
@@ -80,7 +80,9 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
     const prompt = `
       I need you to suggest a prompt for creating an image of a location.  
-      ${name ? `The name of location is ${name}` : ''}.
+      ${name ? `The name of location is ${name}. You MUST ABSOLUTELY USE THIS NAME. DO NOT GENERATE YOUR OWN.` :   
+        nameStyles && nameStyles.length > 0 ? `When generating a name, it ABSOLUTELY MUST use one of these styles: ${nameStyles.join(', ')}.` : ''
+      }.
       ${type ? `The type of location is a ${type}` : ''}.
       ${parentName ? `The location is in ${parentName + (parentName ? '(which is a ' + parentType + ')' : '') + '.  ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
       ${grandparentName ? `${parentName} is located in ${grandparentName + (grandparentType ? '(which is a ' + grandparentType + ')' : '')}. ${(grandparentDescription ? 'Here is some information about ' + grandparentName + ': ' + grandparentDescription + '.' : '.')}` : ''}
