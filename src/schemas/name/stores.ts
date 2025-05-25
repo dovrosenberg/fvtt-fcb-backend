@@ -9,7 +9,8 @@ export const generateStoreNamesRequestSchema = {
     count: { type: 'integer', minimum: 1, maximum: 200, default: 100, description: 'Number of store names to generate' },
     genre: { type: 'string', description: 'Genre of the setting (e.g., fantasy, sci-fi, western)', nullable: true },
     worldFeeling: { type: 'string', description: 'The feeling or atmosphere of the world (e.g., dark, whimsical, gritty)', nullable: true },
-    storeType: { type: 'string', description: 'Type of store (e.g., blacksmith, apothecary, general store)', nullable: true }
+    storeType: { type: 'string', description: 'Type of store (e.g., blacksmith, apothecary, general store)', nullable: true },
+    nameStyles: { type: 'array', description: 'The styles of names to use', items: { type: 'string' }},
   },
   required: ['count']
 } as const;

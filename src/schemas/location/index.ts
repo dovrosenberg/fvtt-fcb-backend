@@ -17,6 +17,7 @@ const generateLocationRequestSchema = {
     grandparentType: { type: 'string', description: 'The type of grandparent location' },
     grandparentDescription: { type: 'string', description: 'The current description of the location\'s grandparent' },
     createLongDescription: { type: 'boolean', description: 'Create a detailed description or a digestible summary'},
+    nameStyles: { type: 'array', description: 'The styles of names to use', items: { type: 'string' }},
   },
   required: ['genre'],
 } as const;

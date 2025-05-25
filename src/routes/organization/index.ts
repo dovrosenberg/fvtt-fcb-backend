@@ -16,7 +16,7 @@ import { generateImage } from '@/services/replicate';
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateOrganizationInputSchema }, async (request: GenerateOrganizationRequest, _reply: FastifyReply): Promise<GenerateOrganizationOutput> => {
-    const { genre, worldFeeling, type, briefDescription, name, parentName, parentType, parentDescription, createLongDescription  } = request.body;
+    const { genre, worldFeeling, type, briefDescription, name, parentName, parentType, parentDescription, createLongDescription, nameStyles } = request.body;
   
     const system =  `
       I am writing a ${genre} novel. ${worldFeeling ? 'The feeling of the world is: ' + worldFeeling + '.\n' : ''} You are my assistant.  
@@ -42,7 +42,9 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
     const prompt = `
       I need you to suggest one name and one description for an organization.  ${descriptionDefinition}. 
-      ${name ? `The name of organization is ${name}. You MUST ABSOLUTELY USE THIS NAME. DO NOT GENERATE YOUR OWN.` : ''}.
+      ${name ? `The name of organization is ${name}. You MUST ABSOLUTELY USE THIS NAME. DO NOT GENERATE YOUR OWN.` :   
+        nameStyles && nameStyles.length > 0 ? `When generating a name, it ABSOLUTELY MUST use one of these styles: ${nameStyles.join(', ')}.` : ''
+      }.
       ${type ? `The type of organization is a ${type}` : ''}.
       ${parentName ? `The organization is a part of an organization called ${parentName + (parentName ? '(which is a ' + parentType + ')' : '') + '.  ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
       ${briefDescription ? `Here is a brief description of the organization that you should use as a starting point.
