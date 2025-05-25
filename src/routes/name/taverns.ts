@@ -4,7 +4,7 @@ import {
   GenerateTavernNamesOutput,
   GenerateTavernNamesRequest
 } from '@/schemas';
-import { generateRollTableCompletions } from '@/utils/promptGenerator';
+import { generateRollTableCompletions } from '@/utils/rollTableGenerators';
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/taverns', { schema: generateTavernNamesInputSchema }, async (request: GenerateTavernNamesRequest, _reply: FastifyReply): Promise<GenerateTavernNamesOutput> => {

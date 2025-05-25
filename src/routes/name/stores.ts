@@ -4,7 +4,7 @@ import {
   GenerateStoreNamesOutput,
   GenerateStoreNamesRequest
 } from '@/schemas';
-import { generateRollTableCompletions } from '@/utils/promptGenerator';
+import { generateRollTableCompletions } from '@/utils/rollTableGenerators';
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/stores', { schema: generateStoreNamesInputSchema }, async (request: GenerateStoreNamesRequest, _reply: FastifyReply): Promise<GenerateStoreNamesOutput> => {
