@@ -22,11 +22,23 @@ jobs:
         id: version
         run: |
           # Get version from package.json
-          NEW_VERSION=$(node -p "require('./package.json').version")
+          BASE_VERSION=$(node -p "require('./package.json').version")
           
           # Add -beta suffix if merging to dev branch
           if [[ "${{ github.base_ref }}" == "dev" ]]; then
-            NEW_VERSION="${NEW_VERSION}-beta"
+            # Fetch all tags to check for existing beta versions
+            git fetch --tags
+            
+            # Find the highest beta number for this version
+            BETA_NUMBER=1
+            while git tag | grep -q "^v${BASE_VERSION}-beta${BETA_NUMBER}$"; do
+              BETA_NUMBER=$((BETA_NUMBER + 1))
+            done
+            
+            NEW_VERSION="${BASE_VERSION}-beta${BETA_NUMBER}"
+            echo "Found existing beta versions, using beta number: $BETA_NUMBER"
+          else
+            NEW_VERSION="$BASE_VERSION"
           fi
           
           NEW_TAG="v$NEW_VERSION"
