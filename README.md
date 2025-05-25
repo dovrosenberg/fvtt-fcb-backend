@@ -94,7 +94,6 @@ There are lot of steps here, but if you follow the directions below, it should b
     ```powershell
     curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.ps1 | powershell
     ```
-  - Note: You may need to set the PowerShell execution policy to allow running scripts:
     ```powershell
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
     ```

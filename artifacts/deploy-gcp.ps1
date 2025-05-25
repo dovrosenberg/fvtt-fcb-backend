@@ -135,7 +135,14 @@ if ($env:INCLUDE_EMAIL_SETUP -eq "false") {
     Write-Host "Copy the 'code' parameter from that URL and paste it below."
     Write-Host ""
 
-    $AUTH_CODE = Read-Host "Paste authorization code here"
+    # PowerShell Read-Host works with piped input, but let's be explicit
+    try {
+        $AUTH_CODE = Read-Host "Paste authorization code here"
+    } catch {
+        Write-Host "❌ ERROR: Unable to read input. Please run this script interactively."
+        Write-Host "Download and run locally: wget https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.ps1"
+        exit 1
+    }
 
     Write-Host "Exchanging authorization code for tokens..."
 
@@ -206,20 +213,25 @@ SERVER_URL: "$EXISTING_URL"
 "@ | Out-File -FilePath $ENV_FILE -Encoding utf8
 
 # Deploy the service
+Write-Host "Deploying service to Cloud Run..."
 gcloud run deploy $env:GCP_PROJECT_ID `
     --image $IMAGE_NAME `
     --platform managed `
     --region $env:GCP_REGION `
     --allow-unauthenticated `
-    --env-vars-file "$ENV_FILE"
-
-# Clean up the temporary file
-# Remove-Item "$ENV_FILE"
+    --env-vars-file "$ENV_FILE" `
+    --quiet
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Cloud run deploy failed"
+    Write-Host "❌ Cloud Run deploy failed"
+    Remove-Item "$ENV_FILE"
     exit 1
 }
+
+Write-Host "✅ Service deployed successfully!"
+
+# Clean up the temporary file
+Remove-Item "$ENV_FILE"
 
 # Only update with SERVER_URL if this is a new service (no existing URL)
 if (-not $EXISTING_URL -or $EXISTING_URL -eq "") {
@@ -234,7 +246,14 @@ if (-not $EXISTING_URL -or $EXISTING_URL -eq "") {
     gcloud run services update $env:GCP_PROJECT_ID `
         --platform managed `
         --region=$env:GCP_REGION `
-        --update-env-vars SERVER_URL=$SERVER_URL
+        --update-env-vars SERVER_URL=$SERVER_URL `
+        --quiet
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "❌ Failed to update service with SERVER_URL"
+        exit 1
+    }
+    Write-Host "✅ Service updated with SERVER_URL successfully!"
 } else {
     $SERVER_URL = $EXISTING_URL
 }
