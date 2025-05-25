@@ -22,7 +22,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       The world has a tone or atmosphere of: ${worldFeeling}.
 
       Each name should reflect the given naming style and fit within the setting.
-      Character names may include first and last names or mononyms.
+      Character names should include first and last names.
       Location names should represent places like taverns, shops, or landmarks.
 
       Return ONLY a JSON array of 5 objects, each with:

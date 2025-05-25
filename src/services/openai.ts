@@ -84,7 +84,7 @@ const getPreviewCompletion = async (namingStyles: string[], prompt: string, temp
     You are a creative name generator for fictional worlds.
     You will generate ${namingStyles.length} objects, each representing a different naming style.
     Each object MUST have two fields:
-    1. "people": an array of 2 character names (first and last or single name)
+    1. "people": an array of 2 character names (first and last)
     2. "locations": an array of 2 place names (e.g. taverns, shops, landmarks)
 
     The ${namingStyles.length} naming styles you will use are:
