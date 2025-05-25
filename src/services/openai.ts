@@ -48,7 +48,7 @@ const getCompletionWithTemperatureStepdown = async(system: string, prompt: strin
     const parsed = tryParseJson(content);
 
     // set this manually in the production revision if you want to see the raw response
-    if (process.env.DEBUG) {
+    if (process.env.DEBUG==='true') {
       console.log(`DEBUG: Ran completion.\nSystem: ${system}\nPrompt: ${prompt}\nTemperature: ${testTemp}\nresult: ${content}`);
     }
 
