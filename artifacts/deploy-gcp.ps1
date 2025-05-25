@@ -173,6 +173,12 @@ $EXISTING_URL = gcloud run services describe $env:GCP_PROJECT_ID `
     --region=$env:GCP_REGION `
     --format "value(status.url)" 2>$null
 
+if (-not $EXISTING_URL -or $EXISTING_URL -eq "") {
+    Write-Host "Service not found - creating new one..."
+} else {
+    Write-Host "Service found at $EXISTING_URL - updating..."
+}
+
 # Deploy the container from Docker Hub
 $IMAGE_NAME = "docker.io/drosenberg62/fvtt-fcb-backend:REPLACE_IMAGE_TAG"  # Github release action inserts the correct tag
 
@@ -196,6 +202,7 @@ AWS_BUCKET_NAME: "$env:AWS_BUCKET_NAME"
 AWS_ACCESS_KEY_ID: "$env:AWS_ACCESS_KEY_ID"
 AWS_SECRET_ACCESS_KEY: "$env:AWS_SECRET_ACCESS_KEY"
 AWS_REGION: "$env:AWS_REGION"
+SERVER_URL: "$EXISTING_URL"
 "@ | Out-File -FilePath $ENV_FILE -Encoding utf8
 
 # Deploy the service
@@ -228,6 +235,8 @@ if (-not $EXISTING_URL -or $EXISTING_URL -eq "") {
         --platform managed `
         --region=$env:GCP_REGION `
         --update-env-vars SERVER_URL=$SERVER_URL
+} else {
+    $SERVER_URL = $EXISTING_URL
 }
 
 # Output success message
