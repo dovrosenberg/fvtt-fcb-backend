@@ -4,7 +4,7 @@ import {
   GenerateTownNamesOutput,
   GenerateTownNamesRequest
 } from '@/schemas';
-import { generateRollTableCompletions } from '@/utils/promptGenerator';
+import { generateRollTableCompletions } from '@/utils/rollTableGenerators';
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/towns', { schema: generateTownNamesInputSchema }, async (request: GenerateTownNamesRequest, _reply: FastifyReply): Promise<GenerateTownNamesOutput> => {
