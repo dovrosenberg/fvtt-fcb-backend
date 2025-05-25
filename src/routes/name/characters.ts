@@ -13,7 +13,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     const result = await generateRollTableCompletions({
       entityType: 'character',
       entityDescription: 'fictional characters',
-      specificInstructions: 'You will generate unique and appropriate character names (first and last) based on the provided parameters.',
+      specificInstructions: 'You will generate unique and appropriate character names based on the provided parameters. Names must include first and last names.',
       count,
       genre: genre || '',
       worldFeeling: worldFeeling || '',
