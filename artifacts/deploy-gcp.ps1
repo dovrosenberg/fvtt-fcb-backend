@@ -210,6 +210,7 @@ AWS_ACCESS_KEY_ID: "$env:AWS_ACCESS_KEY_ID"
 AWS_SECRET_ACCESS_KEY: "$env:AWS_SECRET_ACCESS_KEY"
 AWS_REGION: "$env:AWS_REGION"
 SERVER_URL: "$EXISTING_URL"
+DEBUG: "false"
 "@ | Out-File -FilePath $ENV_FILE -Encoding utf8
 
 # Deploy the service
