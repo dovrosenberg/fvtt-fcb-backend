@@ -270,6 +270,25 @@ else
     SERVER_URL=$EXISTING_URL
 fi
 
+# Clean up old revisions (keep only the 3 most recent)
+echo "Cleaning up old revisions..."
+OLD_REVISIONS=$(gcloud run revisions list \
+    --service=$GCP_PROJECT_ID \
+    --region=$GCP_REGION \
+    --format="value(metadata.name)" \
+    --sort-by="~metadata.creationTimestamp" \
+    --limit=100 | tail -n +4)
+
+if [ -n "$OLD_REVISIONS" ]; then
+    for revision in $OLD_REVISIONS; do
+        echo "  Deleting revision: $revision"
+        gcloud run revisions delete $revision \
+            --region=$GCP_REGION \
+            --quiet
+    done
+    echo "✅ Old revisions cleaned up successfully."
+fi
+
 # Output success message
 echo "✅ Deployment complete! Your Foundry Campaign Builder backend is now live."
 echo "Use these settings in "Advanced Settings" for the module:"

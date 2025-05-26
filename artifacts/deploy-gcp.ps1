@@ -259,6 +259,25 @@ if (-not $EXISTING_URL -or $EXISTING_URL -eq "") {
     $SERVER_URL = $EXISTING_URL
 }
 
+# Clean up old revisions (keep only the 3 most recent)
+Write-Host "Cleaning up old revisions..."
+$OLD_REVISIONS = gcloud run revisions list `
+    --service=$env:GCP_PROJECT_ID `
+    --region=$env:GCP_REGION `
+    --format="value(metadata.name)" `
+    --sort-by="~metadata.creationTimestamp" `
+    --limit=100 | Select-Object -Skip 3
+
+if ($OLD_REVISIONS) {
+    foreach ($revision in $OLD_REVISIONS) {
+        Write-Host "  Deleting revision: $revision"
+        gcloud run revisions delete $revision `
+            --region=$env:GCP_REGION `
+            --quiet
+    }
+    Write-Host "✅ Old revisions cleaned up successfully."
+}
+
 # Output success message
 Write-Host "✅ Deployment complete! Your Foundry Campaign Builder backend is now live."
 Write-Host "Use these settings in `"Advanced Settings`" for the module:"
