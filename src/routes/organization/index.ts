@@ -18,7 +18,7 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateOrganizationInputSchema }, async (request: GenerateOrganizationRequest, _reply: FastifyReply): Promise<GenerateOrganizationOutput> => {
-    const { genre, worldFeeling, type, briefDescription, name, parentName, parentType, parentDescription, createLongDescription, nameStyles } = request.body;
+    const { genre, worldFeeling, type, briefDescription, name, parentName, parentType, parentDescription, createLongDescription, longDescriptionParagraphs, nameStyles } = request.body;
   
     const system = generateEntitySystemPrompt('organization',genre, worldFeeling);
 
@@ -33,7 +33,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
         **Core Beliefs or Goals:** list of 3 things that motivate them
         **Methods and Behavior:** 3 bullet points on how they operate
         **Roleplay hooks:** 2 ideas for how characters might interact with or feel about the organization
-      `);
+      `, longDescriptionParagraphs);
 
     const nameInstruction = generateNameInstruction(name, nameStyles);
     

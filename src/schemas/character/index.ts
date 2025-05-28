@@ -13,6 +13,7 @@ const generateCharacterRequestSchema = {
     name: { type: 'string', description: 'The generated character\'s name.  If blank, one will be generated (text gen only)' },
     briefDescription: { type: 'string', description: 'A brief description of the character to factor into the produced text' },
     createLongDescription: { type: 'boolean', description: 'Create a detailed description or a digestible summary'},
+    longDescriptionParagraphs: { type: 'integer', minimum: 1, maximum: 4, default: 1, description: 'The number of paragraphs to produce in the output when using a long description' },
     nameStyles: { type: 'array', description: 'The styles of names to use', items: { type: 'string' }},
   },
   required: ['genre'],

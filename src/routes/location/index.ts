@@ -18,7 +18,7 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateLocationInputSchema }, async (request: GenerateLocationRequest, _reply: FastifyReply): Promise<GenerateLocationOutput> => {
-    const { genre, worldFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, createLongDescription, nameStyles } = request.body;
+    const { genre, worldFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, createLongDescription, longDescriptionParagraphs, nameStyles } = request.body;
 
     const system = generateEntitySystemPrompt('location', genre, worldFeeling);
 
@@ -32,7 +32,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
         **Notable features:** list of 3 key physical or cultural details.
         **Sights, sounds, smells:** 3 quick sensory cures for immedion
         **Roleplay hooks:** 2 ideas for how characters might interact with or feel about the location
-      `);
+      `, longDescriptionParagraphs);
 
     const nameInstruction = generateNameInstruction(name, nameStyles);
     

@@ -13,8 +13,11 @@ export function generateEntitySystemPrompt(entityType: string, genre: string, wo
 /**
  * Generates description format instructions for short vs long descriptions
  */
-export function generateDescriptionDefinition(createLongDescription: boolean, shortFormat: string): string {
+export function generateDescriptionDefinition(createLongDescription: boolean, shortFormat: string, paragraphCount: number = 1): string {
   return createLongDescription ?
-    'The description should be 2-3 paragraphs long with paragraphs separated with \\n.' :
+    `
+    The description should be ${paragraphCount} paragraph${paragraphCount > 1 ? 's' : ''} long ${paragraphCount > 1 ? 'with paragraphs separated with \\n.' : ''}
+    A paragraph should be 5-6 sentences long.
+    ` :
     shortFormat;
 } 
