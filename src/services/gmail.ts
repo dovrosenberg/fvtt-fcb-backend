@@ -75,6 +75,10 @@ const getTodoItems = async (): Promise<TodoItem[]> => {
       const sender = email.data.payload.headers.find((h: any) => h.name === 'From')?.value;
       if (sender) {
         // check to see if any of the whitelisted emails are contained in it (since it might have name and other things, too)
+        // note - this means that we aren't deleting them and they will ultimately build up; but I think this is better
+        //    than risking some important email being missed (like an account notification from Google)... will just
+        //    need to document to check the mailbox periodically.
+        // I guess as an alternative, we could provide a secondary email to forward to and then delete
         let fromEmail = '';
         for (const email of whitelistedEmails) {
           if (sender.includes(email)) {
