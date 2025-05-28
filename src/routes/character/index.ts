@@ -18,7 +18,7 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateCharacterInputSchema }, async (request: GenerateCharacterRequest, _reply: FastifyReply): Promise<GenerateCharacterOutput> => {
-    const { name, genre, worldFeeling, type, species, speciesDescription, briefDescription, createLongDescription, nameStyles } = request.body;
+    const { name, genre, worldFeeling, type, species, speciesDescription, briefDescription, createLongDescription, longDescriptionParagraphs, nameStyles } = request.body;
 
     const system = generateEntitySystemPrompt('character', genre, worldFeeling);
 
@@ -32,7 +32,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
         **Personality Snapshot:** list of 3 key traits separated by commas.
         **Roleplay Hooks:** 2 tips on how to roleplay them.
         **Appearance:** a quick description of their look.
-      `);
+      `, longDescriptionParagraphs);
 
     const nameInstruction = generateNameInstruction(name, nameStyles);
     
