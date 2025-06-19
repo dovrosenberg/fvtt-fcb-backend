@@ -18,9 +18,9 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateCharacterInputSchema }, async (request: GenerateCharacterRequest, _reply: FastifyReply): Promise<GenerateCharacterOutput> => {
-    const { name, genre, worldFeeling, type, species, speciesDescription, briefDescription, createLongDescription, longDescriptionParagraphs, nameStyles } = request.body;
+    const { name, genre, settingFeeling, type, species, speciesDescription, briefDescription, createLongDescription, longDescriptionParagraphs, nameStyles } = request.body;
 
-    const system = generateEntitySystemPrompt('character', genre, worldFeeling);
+    const system = generateEntitySystemPrompt('character', genre, settingFeeling);
 
     const descriptionDefinition = generateDescriptionDefinition(createLongDescription || false, `
         The description should be in the style of a brief NPC description for a tabletop RPG.
@@ -30,7 +30,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
         Follow this structure (SEPARATING SECTIONS AND ANY LISTS WITH \\n and MAKING SURE to include the field labels and asterisks):
         first line (don't include this header): a 1-sentence summary of who the NPC is and their general vibe.
         **Personality Snapshot:** list of 3 key traits separated by commas.
-        **Roleplay Hooks:** 2 tips on how to roleplay them.
+        **Role-play Hooks:** 2 tips on how to role-play them.
         **Appearance:** a quick description of their look.
       `, longDescriptionParagraphs);
 
@@ -45,7 +45,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       ${briefDescription ? `Here is a brief description of the character that you should use as a starting point.
         THIS IS THE MOST IMPORTANT THING! EVEN MORE IMPORTANT THAN SPECIES DESCRIPTION/STEREOTYPES. YOUR GENERATED DESCRIPTION MUST
         INCLUDE ALL OF THESE FACTS. REQUIRED FACTS: ${briefDescription}` : ''}
-      You should only take the world feeling into account in ways that do not contradict the other information.
+      You should only take the world feeling and species description into account in ways that do not contradict the other information.
     `;
 
     const result = (await getCompletion(system, prompt, 1)) as { name: string, description: string } || { name: '', description: ''};
@@ -63,12 +63,12 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
   // Add the new endpoint for generating character images
   fastify.post('/generate-image', { schema: generateCharacterImageInputSchema }, async (request: GenerateCharacterImageRequest, _reply: FastifyReply): Promise<GenerateCharacterImageOutput> => {
-    const { genre, worldFeeling, name, type, species, speciesDescription, briefDescription, } = request.body;
+    const { genre, settingFeeling, name, type, species, speciesDescription, briefDescription, } = request.body;
 
     // Construct a detailed prompt 
     const prompt = `
       ${genre} character portrait ${name ? `of a character named ${name}` : ''},
-      ${worldFeeling ? ` from a ${worldFeeling} world` :''}.
+      ${settingFeeling ? ` from a ${settingFeeling} world` :''}.
       ${species ? `, ${species}` : ''}.
       ${species && speciesDescription ? `(${speciesDescription})` : ''}.
       ${type ? `, ${type}` : ''}.

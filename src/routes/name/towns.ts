@@ -8,7 +8,7 @@ import { generateRollTableCompletions } from '@/utils/rollTableGenerators';
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/towns', { schema: generateTownNamesInputSchema }, async (request: GenerateTownNamesRequest, _reply: FastifyReply): Promise<GenerateTownNamesOutput> => {
-    const { count, genre, worldFeeling, nameStyles } = request.body;
+    const { count, genre, settingFeeling, nameStyles } = request.body;
 
     const result = await generateRollTableCompletions({
       entityType: 'town',
@@ -16,7 +16,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       specificInstructions: 'Names should be a mix of one to three words long, and not too similar to each other.',
       count,
       genre: genre || '',
-      worldFeeling: worldFeeling || '',
+      settingFeeling: settingFeeling || '',
       nameStyles
     });
     

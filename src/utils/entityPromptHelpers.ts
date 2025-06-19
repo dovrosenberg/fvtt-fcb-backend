@@ -1,9 +1,9 @@
 /**
  * Generates a standard system prompt for entity generation
  */
-export function generateEntitySystemPrompt(entityType: string, genre: string, worldFeeling?: string): string {
+export function generateEntitySystemPrompt(entityType: string, genre: string, settingFeeling?: string): string {
   return `
-    I am writing a ${genre} novel. ${worldFeeling ? 'The feeling of the world is: ' + worldFeeling + '.\n' : ''} You are my assistant.
+    I am writing a ${genre} novel. ${settingFeeling ? 'The feeling of the world is: ' + settingFeeling + '.\n' : ''} You are my assistant.
     EACH RESPONSE SHOULD CONTAIN TWO FIELDS:
     1. "name": A STRING CONTAINING ((ONLY)) THE NAME OF THE ${entityType.toUpperCase()} WE ARE DISCUSSING
     2. "description": A STRING CONTAINING ((ONLY)) A DESCRIPTION OF THE ${entityType.toUpperCase()} THAT MATCHES MY REQUEST

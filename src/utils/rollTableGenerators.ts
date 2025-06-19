@@ -6,7 +6,7 @@ interface PromptConfig {
   specificInstructions?: string;
   count: number;
   genre?: string;
-  worldFeeling?: string;
+  settingFeeling?: string;
   nameStyles?: string[];
   storeType?: string; // For stores specifically
 }
@@ -48,12 +48,12 @@ export function generateSystemPrompt(config: PromptConfig): string {
 }
 
 export function generateUserPrompt(config: PromptConfig): string {
-  const { count, genre, worldFeeling, storeType, entityDescription } = config;
+  const { count, genre, settingFeeling, storeType, entityDescription } = config;
     
   let prompt = `
       Generate ${Math.round(count * 1.3)} unique ${entityDescription} names.      
       ${genre ? `The names should be appropriate for a ${genre} setting.` : ''}
-      ${worldFeeling ? `The world has a feeling/atmosphere like: ${worldFeeling}` : ''}`;
+      ${settingFeeling ? `The world has a feeling/atmosphere like: ${settingFeeling}` : ''}`;
   
   // Add store-specific instruction
   if (storeType) {
