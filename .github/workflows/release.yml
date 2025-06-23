@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - dev
     types:
       - closed  # Runs only when a PR is closed
 
@@ -21,7 +22,25 @@ jobs:
         id: version
         run: |
           # Get version from package.json
-          NEW_VERSION=$(node -p "require('./package.json').version")
+          BASE_VERSION=$(node -p "require('./package.json').version")
+          
+          # Add -beta suffix if merging to dev branch
+          if [[ "${{ github.base_ref }}" == "dev" ]]; then
+            # Fetch all tags to check for existing beta versions
+            git fetch --tags
+            
+            # Find the highest beta number for this version
+            BETA_NUMBER=1
+            while git tag | grep -q "^v${BASE_VERSION}-beta${BETA_NUMBER}$"; do
+              BETA_NUMBER=$((BETA_NUMBER + 1))
+            done
+            
+            NEW_VERSION="${BASE_VERSION}-beta${BETA_NUMBER}"
+            echo "Found existing beta versions, using beta number: $BETA_NUMBER"
+          else
+            NEW_VERSION="$BASE_VERSION"
+          fi
+          
           NEW_TAG="v$NEW_VERSION"
           
           echo "Using version from package.json: $NEW_VERSION"
@@ -54,6 +73,7 @@ jobs:
         with:
           node-version: 20
   
+      # Note: this token is in Docker Hub, not GitHub
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "drosenberg62" --password-stdin
 
@@ -67,13 +87,25 @@ jobs:
         run: |
             sed -i "s|REPLACE_IMAGE_TAG|${{ env.IMAGE_TAG }}|g" artifacts/deploy-gcp.sh
 
+      - name: Replace Image Tag in Deploy Script 2
+        run: |
+          sed -i "s|REPLACE_IMAGE_TAG|${{ env.IMAGE_TAG }}|g" artifacts/deploy-gcp.ps1
+
       - name: Upload Deployment Script and Environment Template to Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ env.NEW_TAG }}
           name: Release ${{ env.NEW_TAG }}
           draft: false
-          prerelease: false
+      
+      - name: Upload Deployment Script and Environment Template to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.NEW_TAG }}
+          name: Release ${{ env.NEW_TAG }}
+          draft: false
+          prerelease: ${{ github.base_ref == 'dev' }}
           files: |
+            artifacts/deploy-gcp.ps1
             artifacts/deploy-gcp.sh
             artifacts/env.template

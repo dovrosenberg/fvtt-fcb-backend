@@ -1,41 +1,31 @@
-import { getCompletion } from '@/services/openai';
 import { FastifyInstance, FastifyReply, } from 'fastify';
 import {
   generateCharacterNamesInputSchema,
   GenerateCharacterNamesOutput,
   GenerateCharacterNamesRequest,
 } from '@/schemas';
+import { generateRollTableCompletions } from '@/utils/rollTableGenerators';
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/characters', { schema: generateCharacterNamesInputSchema }, async (request: GenerateCharacterNamesRequest, _reply: FastifyReply): Promise<GenerateCharacterNamesOutput> => {
-    const { count, genre, worldFeeling } = request.body;
+    const { count, genre, settingFeeling, nameStyles } = request.body;
 
-    const system = `
-      You are a creative name generator for fictional characters.
-      You will generate unique and appropriate character names (first and last) based on the provided parameters.
-      EACH RESPONSE MUST BE A VALID JSON ARRAY OF STRINGS, CONTAINING EXACTLY ${count} CHARACTER NAMES. 
-      EACH RESPONSE SHOULD CONTAIN ONE FIELD:
-      1. "names": AN ARRAY OF STRINGS, CONTAINING EXACTLY ${count} CHARACTER NAMES.
-    `;
-
-    const prompt = `
-      Generate ${count} unique character names.
-      ${genre ? `The names MUST  be appropriate for a ${genre} setting.` : ''}
-      ${worldFeeling ? `The world has a ${worldFeeling} feeling or atmosphere, so names could reflect this tone, but only about half of your responses should take this into account.` : ''}
-      Return ONLY an array of strings with the names. No explanations or additional text.
-    `;
-
-    const result = await getCompletion(system, prompt, 0.9) as { names: string[] } || { names: []};
+    const result = await generateRollTableCompletions({
+      entityType: 'character',
+      entityDescription: 'fictional characters',
+      specificInstructions: 'You will generate unique and appropriate character names based on the provided parameters. Names must include first and last names.',
+      count,
+      genre: genre || '',
+      settingFeeling: settingFeeling || '',
+      nameStyles
+    });
     
-    if (!result.names) {
+    if (!result) {
       throw new Error('Error in /names/characters');
     }
         
-    const nameList = {
-      names: result.names,
-    } as GenerateCharacterNamesOutput;
-      
-    return nameList;
+
+    return result as GenerateCharacterNamesOutput;
   });
 }
 

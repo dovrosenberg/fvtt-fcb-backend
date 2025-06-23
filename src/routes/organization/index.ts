@@ -9,6 +9,8 @@ import {
   GenerateOrganizationImageOutput 
 } from '@/schemas';
 import { generateImage } from '@/services/replicate';
+import { generateNameInstruction } from '@/utils/nameStyleSelector';
+import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/utils/entityPromptHelpers';
 
 
 // note: we don't clean briefDescription in these functions because there generally shouldn't be any HTML in it and if someone goes out of their way
@@ -16,19 +18,12 @@ import { generateImage } from '@/services/replicate';
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateOrganizationInputSchema }, async (request: GenerateOrganizationRequest, _reply: FastifyReply): Promise<GenerateOrganizationOutput> => {
-    const { genre, worldFeeling, type, briefDescription, name, parentName, parentType, parentDescription, createLongDescription  } = request.body;
+    const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, createLongDescription, longDescriptionParagraphs, nameStyles } = request.body;
   
-    const system =  `
-      I am writing a ${genre} novel. ${worldFeeling ? 'The feeling of the world is: ' + worldFeeling + '.\n' : ''} You are my assistant.  
-      EACH RESPONSE SHOULD CONTAIN TWO FIELDS:
-      1. "name": A STRING CONTAINING ((ONLY)) THE NAME OF THE ORGANIZATION WE ARE DISCUSSING
-      2. "description": A STRING CONTAINING ((ONLY)) A DESCRIPTION OF THE ORGANIZATION THAT MATCHES MY REQUEST
-    `;
+    const system = generateEntitySystemPrompt('organization',genre, settingFeeling);
 
-    const descriptionDefinition = createLongDescription ?
-      'The description should be 2-3 paragraphs long with paragraphs separated with \\n.' :
-      `
-        The description should be in the style of a concise, fast-to-use organizaion description for a tabletop RPG. 
+    const descriptionDefinition = generateDescriptionDefinition(createLongDescription || false, `
+        The description should be in the style of a concise, fast-to-use organization description for a tabletop RPG. 
         Keep each section to a single short sentence or list.
         Avoid fictional comparisons.
         Keep it brief, vivid, and immediately usable at the table with original descriptions a game master can use at a glance.
@@ -38,17 +33,19 @@ async function routes (fastify: FastifyInstance): Promise<void> {
         **Core Beliefs or Goals:** list of 3 things that motivate them
         **Methods and Behavior:** 3 bullet points on how they operate
         **Roleplay hooks:** 2 ideas for how characters might interact with or feel about the organization
-      `;
+      `, longDescriptionParagraphs);
 
+    const nameInstruction = generateNameInstruction(name, nameStyles);
+    
     const prompt = `
-      I need you to suggest one name and one description for an organization.  ${descriptionDefinition}. 
-      ${name ? `The name of organization is ${name}. You MUST ABSOLUTELY USE THIS NAME. DO NOT GENERATE YOUR OWN.` : ''}.
-      ${type ? `The type of organization is a ${type}` : ''}.
-      ${parentName ? `The organization is a part of an organization called ${parentName + (parentName ? '(which is a ' + parentType + ')' : '') + '.  ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
+      I need you to suggest one name and one description for an organization. ${descriptionDefinition}
+      ${nameInstruction ? `${nameInstruction}` : ''}
+      ${type ? `The type of organization is a ${type}.` : ''}
+      ${parentName ? `The organization is a part of an organization called ${parentName + (parentName ? ' (which is a ' + parentType + ')' : '') + '. ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
       ${briefDescription ? `Here is a brief description of the organization that you should use as a starting point.
-        THIS IS THE MOST IMPORTANT THING!  YOUR GENERATED DESCRIPTION MUST
+        THIS IS THE MOST IMPORTANT THING! YOUR GENERATED DESCRIPTION MUST
         INCLUDE ALL OF THESE FACTS. REQUIRED FACTS: ${briefDescription}` : ''}
-      You should only take the world feeling into account in ways that do not contradict the other information.
+      You should only take the world feeling and species description into account in ways that do not contradict the other information.
     `;
   
     const result = (await getCompletion(system, prompt, 1)) as { name: string, description: string } || { name: '', description: ''};
@@ -65,11 +62,11 @@ async function routes (fastify: FastifyInstance): Promise<void> {
   });
 
   fastify.post('/generate-image', { schema: generateOrganizationImageInputSchema }, async (request: GenerateOrganizationImageRequest, _reply: FastifyReply): Promise<GenerateOrganizationImageOutput> => {
-    const { genre, worldFeeling, name, type, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription,briefDescription, } = request.body;
+    const { genre, settingFeeling, name, type, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription,briefDescription, } = request.body;
 
     // get a good prompt
     const system = `
-      I am writing a ${genre} novel. ${worldFeeling ? 'The feeling of the world is: ' + worldFeeling + '.\n' : ''} You are my assistant.
+      I am writing a ${genre} novel. ${settingFeeling ? 'The feeling of the world is: ' + settingFeeling + '.\n' : ''} You are my assistant.
       Your job is to write prompts for AI image generators like DALL-E or Stable Diffusion.  It should be very detailed - about a paragraph
       Each response must contain ONLY ONE PROMPT FOR AN IMAGE AND NOTHING ELSE.  THE IMAGE TYPE DESCRIPTION SHOULD BE:
       fantasy art, photorealistic, cinematic lighting, ultra detail, sharp focus 
@@ -86,7 +83,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       ${parentName || grandparentName ? 'ONLY USE INFORMATION ON THE BROADER ORGANIZATIONS IF IT DOESN\'T CONFLICT WITH THE ORGANIZATION DESCRIPTION. IT IS ONLY SUPPLEMENTAL' : ''}
       ${briefDescription ? `Here is a brief description of the organization that you should use as a starting point.
         THIS IS THE MOST IMPORTANT THING!  DESCRIPTION: ${briefDescription}` : ''}
-      You should only take the world feeling into account in ways that do not contradict the other information.
+      You should only take the world feeling and species description into account in ways that do not contradict the other information.
     `;
 
     const imagePrompt = await getCompletion(system, prompt, 1) as { prompt: string } | undefined;

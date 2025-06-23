@@ -6,7 +6,7 @@ const generateOrganizationRequestSchema = {
   type: 'object',
   properties: {
     genre: { type: 'string', description: 'Genre of the world (ex. "fantasy" or "science fiction")' },
-    worldFeeling: { type: 'string', description: 'The feeling of the world (ex. "humorous" or "apocalyptic")' },
+    settingFeeling: { type: 'string', description: 'The feeling of the setting (ex. "humorous" or "apocalyptic")' },
     type: { type: 'string', description: 'The type of organization (ex. "family" or "cult")' },
     name: { type: 'string', description: 'The generated organization\'s name.  If blank, one will be generated (text gen only)' },
     briefDescription: { type: 'string', description: 'A brief description of the organization to factor into the produced text' },
@@ -14,9 +14,11 @@ const generateOrganizationRequestSchema = {
     parentType: { type: 'string', description: 'The type of parent organization' },
     parentDescription: { type: 'string', description: 'The current description of the organization\'s parent' },
     createLongDescription: { type: 'boolean', description: 'Create a detailed description or a digestible summary'},
+    longDescriptionParagraphs: { type: 'integer', minimum: 1, maximum: 4, default: 1, description: 'The number of paragraphs to produce in the output when using a long description' },
     grandparentName: { type: 'string', description: 'The type of the grandparent organization' },
     grandparentType: { type: 'string', description: 'The type of grandparent organization' },
     grandparentDescription: { type: 'string', description: 'The current description of the organization\'s grandparent' },
+    nameStyles: { type: 'array', description: 'The styles of names to use', items: { type: 'string' }},
   },
   required: ['genre'],
 } as const;
