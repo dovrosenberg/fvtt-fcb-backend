@@ -6,7 +6,7 @@ const generateCharacterRequestSchema = {
   type: 'object',
   properties: {
     genre: { type: 'string', description: 'Genre of the world (ex. "fantasy" or "science fiction")' },
-    worldFeeling: { type: 'string', description: 'The feeling of the world (ex. "humorous" or "apocalyptic")' },
+    settingFeeling: { type: 'string', description: 'The feeling of the setting (ex. "humorous" or "apocalyptic")' },
     type: { type: 'string', description: 'The type of character (ex. a trade or a title)' },
     species: { type: 'string', description: 'The species of the character' },
     speciesDescription: { type: 'string', description: 'A brief description of the species' },

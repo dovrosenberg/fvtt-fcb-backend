@@ -9,7 +9,7 @@ export const generatePreviewNamesRequestSchema = {
     nameStyles: { type: 'array', items: { type: 'string' }, description: 'List of name styles to preview' },
     // temperature: { type: 'number', description: 'Temperature to use with GPT completion. Defaults to 0.9', nullable: true },
     genre: { type: 'string', description: 'Genre of the setting (e.g., fantasy, sci-fi, western)', nullable: true },
-    worldFeeling: { type: 'string', description: 'The feeling or atmosphere of the world (e.g., dark, whimsical, gritty)', nullable: true },
+    settingFeeling: { type: 'string', description: 'The feeling or atmosphere of the world (e.g., dark, whimsical, gritty)', nullable: true },
   },
   required: ['nameStyles']
 } as const;

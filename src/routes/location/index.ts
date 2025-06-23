@@ -18,9 +18,9 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateLocationInputSchema }, async (request: GenerateLocationRequest, _reply: FastifyReply): Promise<GenerateLocationOutput> => {
-    const { genre, worldFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, createLongDescription, longDescriptionParagraphs, nameStyles } = request.body;
+    const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, createLongDescription, longDescriptionParagraphs, nameStyles } = request.body;
 
-    const system = generateEntitySystemPrompt('location', genre, worldFeeling);
+    const system = generateEntitySystemPrompt('location', genre, settingFeeling);
 
     const descriptionDefinition = generateDescriptionDefinition(createLongDescription || false, `
         The description should be in the style of a concise, fast-to-use location description for a tabletop RPG. 
@@ -29,9 +29,9 @@ async function routes (fastify: FastifyInstance): Promise<void> {
         Keep it brief, vivid, and immediately usable at the table with original descriptions a game master can use at a glance.
         Follow this structure (SEPARATING SECTIONS AND ANY LISTS WITH \\n and MAKING SURE to include the field labels and asterisks):
         first line (don't include this header): a 1-sentence summary of what the location is and its main vibe.
-        **Notable features:** list of 3 key physical or cultural details.
-        **Sights, sounds, smells:** 3 quick sensory cures for immedion
-        **Roleplay hooks:** 2 ideas for how characters might interact with or feel about the location
+        **Notable features:** list of 3 key physical or cultural details, separated by commas.
+        **Sights, sounds, smells:** 3 quick sensory cues for immersion, separated by commas.
+        **Role-play hooks:** 2 ideas for how characters might interact with or feel about the location
       `, longDescriptionParagraphs);
 
     const nameInstruction = generateNameInstruction(name, nameStyles);
@@ -45,7 +45,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       ${briefDescription ? `Here is a brief description of the location that you should use as a starting point.
         THIS IS THE MOST IMPORTANT THING! YOUR GENERATED DESCRIPTION MUST
         INCLUDE ALL OF THESE FACTS. REQUIRED FACTS: ${briefDescription}` : ''}
-      You should only take the world feeling into account in ways that do not contradict the other information.
+      You should only take the world feeling and species description into account in ways that do not contradict the other information.
     `;
 
     const result = (await getCompletion(system, prompt, 1)) as { name: string, description: string } || { name: '', description: ''};
@@ -63,11 +63,11 @@ async function routes (fastify: FastifyInstance): Promise<void> {
   });
 
   fastify.post('/generate-image', { schema: generateLocationImageInputSchema }, async (request: GenerateLocationImageRequest, _reply: FastifyReply): Promise<GenerateLocationImageOutput> => {
-    const { genre, worldFeeling, name, type, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription,briefDescription, nameStyles } = request.body;
+    const { genre, settingFeeling, name, type, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription,briefDescription, nameStyles } = request.body;
 
     // get a good prompt
     const system = `
-      I am writing a ${genre} novel. ${worldFeeling ? 'The feeling of the world is: ' + worldFeeling + '.\n' : ''} You are my assistant.
+      I am writing a ${genre} novel. ${settingFeeling ? 'The feeling of the world is: ' + settingFeeling + '.\n' : ''} You are my assistant.
       Your job is to write prompts for AI image generators like DALL-E or Stable Diffusion.  It should be very detailed - about a paragraph
       Each response must contain ONLY ONE PROMPT FOR AN IMAGE AND NOTHING ELSE.  THE IMAGE TYPE DESCRIPTION SHOULD BE:
       fantasy art, photorealistic, cinematic lighting, ultra detail, sharp focus 
@@ -84,7 +84,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       ${parentName || grandparentName ? 'ONLY USE INFORMATION ON THE BROADER PLACES IF IT DOESN\'T CONFLICT WITH THE LOCATION DESCRIPTION. IT IS ONLY SUPPLEMENTAL' : ''}
       ${briefDescription ? `Here is a brief description of the location that you should use as a starting point.
         THIS IS THE MOST IMPORTANT THING! DESCRIPTION: ${briefDescription}` : ''}
-      You should only take the world feeling into account in ways that do not contradict the other information.
+      You should only take the world feeling and species description into account in ways that do not contradict the other information.
     `;
 
     const imagePrompt = await getCompletion(system, prompt, 1) as { prompt: string } | undefined;

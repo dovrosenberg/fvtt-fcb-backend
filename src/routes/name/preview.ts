@@ -8,7 +8,7 @@ import {
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/preview', { schema: generatePreviewNamesInputSchema }, async (request: GeneratePreviewNamesRequest, _reply: FastifyReply): Promise<GeneratePreviewNamesOutput> => {
-    const { genre, worldFeeling, nameStyles } = request.body;
+    const { genre, settingFeeling, nameStyles } = request.body;
 
     let prompt = `
       Generate two character names and two location names for each of the following naming styles:`;
@@ -19,7 +19,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
     prompt += `
       The genre is: ${genre}.
-      The world has a tone or atmosphere of: ${worldFeeling}.
+      The world has a tone or atmosphere of: ${settingFeeling}.
 
       Each name should reflect the given naming style and fit within the setting.
       Character names should include first and last names.

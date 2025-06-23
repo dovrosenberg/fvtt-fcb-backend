@@ -6,7 +6,7 @@ const generateOrganizationRequestSchema = {
   type: 'object',
   properties: {
     genre: { type: 'string', description: 'Genre of the world (ex. "fantasy" or "science fiction")' },
-    worldFeeling: { type: 'string', description: 'The feeling of the world (ex. "humorous" or "apocalyptic")' },
+    settingFeeling: { type: 'string', description: 'The feeling of the setting (ex. "humorous" or "apocalyptic")' },
     type: { type: 'string', description: 'The type of organization (ex. "family" or "cult")' },
     name: { type: 'string', description: 'The generated organization\'s name.  If blank, one will be generated (text gen only)' },
     briefDescription: { type: 'string', description: 'A brief description of the organization to factor into the produced text' },
