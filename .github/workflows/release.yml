@@ -73,6 +73,7 @@ jobs:
         with:
           node-version: 20
   
+      # Note: this token is in Docker Hub, not GitHub
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "drosenberg62" --password-stdin
 
