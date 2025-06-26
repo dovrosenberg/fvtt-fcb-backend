@@ -8,7 +8,7 @@ import { generateRollTableCompletions } from '@/utils/rollTableGenerators';
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/taverns', { schema: generateTavernNamesInputSchema }, async (request: GenerateTavernNamesRequest, _reply: FastifyReply): Promise<GenerateTavernNamesOutput> => {
-    const { count, genre, settingFeeling, nameStyles } = request.body;
+    const { count, genre, settingFeeling, nameStyles, model } = request.body;
 
     const result = await generateRollTableCompletions({
       entityType: 'tavern',
@@ -17,7 +17,8 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       count,
       genre: genre || '',
       settingFeeling: settingFeeling || '',
-      nameStyles
+      nameStyles,
+      model,
     });
 
     if (!result) {

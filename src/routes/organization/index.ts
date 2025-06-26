@@ -1,4 +1,4 @@
-import { getCompletion } from '@/services/openai';
+import { getCompletion } from '@/services/llm';
 import { FastifyInstance, FastifyReply, } from 'fastify';
 import { 
   generateOrganizationInputSchema, 
@@ -8,7 +8,7 @@ import {
   GenerateOrganizationImageRequest, 
   GenerateOrganizationImageOutput 
 } from '@/schemas';
-import { generateImage } from '@/services/replicate';
+import { generateImage } from '@/services/images';
 import { generateNameInstruction } from '@/utils/nameStyleSelector';
 import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/utils/entityPromptHelpers';
 
@@ -18,7 +18,7 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateOrganizationInputSchema }, async (request: GenerateOrganizationRequest, _reply: FastifyReply): Promise<GenerateOrganizationOutput> => {
-    const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, createLongDescription, longDescriptionParagraphs, nameStyles } = request.body;
+    const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, createLongDescription, longDescriptionParagraphs, nameStyles, model } = request.body;
   
     const system = generateEntitySystemPrompt('organization',genre, settingFeeling);
 
@@ -48,7 +48,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       You should only take the world feeling and species description into account in ways that do not contradict the other information.
     `;
   
-    const result = (await getCompletion(system, prompt, 1)) as { name: string, description: string } || { name: '', description: ''};
+    const result = (await getCompletion(system, prompt, 1, model)) as { name: string, description: string } || { name: '', description: ''};
     if (!result.name || !result.description) {
       throw new Error('Error in gptGenerateOrganization');
     }
@@ -62,7 +62,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
   });
 
   fastify.post('/generate-image', { schema: generateOrganizationImageInputSchema }, async (request: GenerateOrganizationImageRequest, _reply: FastifyReply): Promise<GenerateOrganizationImageOutput> => {
-    const { genre, settingFeeling, name, type, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription,briefDescription, } = request.body;
+    const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, model } = request.body;
 
     // get a good prompt
     const system = `
@@ -86,14 +86,14 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       You should only take the world feeling and species description into account in ways that do not contradict the other information.
     `;
 
-    const imagePrompt = await getCompletion(system, prompt, 1) as { prompt: string } | undefined;
+    const imagePrompt = await getCompletion(system, prompt, 1, model) as { prompt: string } | undefined;
 
     try {
       if (!imagePrompt?.prompt) {
         throw new Error('No prompt generated');
       }
 
-      const imageUrl = await generateImage(imagePrompt.prompt, 'organization-image');
+      const imageUrl = await generateImage(imagePrompt.prompt, 'organization-image', {}, model);
 
       return { filePath: imageUrl } as GenerateOrganizationImageOutput;
     } catch (error) {

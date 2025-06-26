@@ -11,6 +11,7 @@ export const generateStoreNamesRequestSchema = {
     settingFeeling: { type: 'string', description: 'The feeling or atmosphere of the world (e.g., dark, whimsical, gritty)', nullable: true },
     storeType: { type: 'string', description: 'Type of store (e.g., blacksmith, apothecary, general store)', nullable: true },
     nameStyles: { type: 'array', description: 'The styles of names to use', items: { type: 'string' }},
+    model: { type: 'number', description: 'The text generation model to use' },
   },
   required: ['count']
 } as const;

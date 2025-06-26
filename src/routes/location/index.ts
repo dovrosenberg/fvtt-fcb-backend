@@ -1,4 +1,4 @@
-import { getCompletion } from '@/services/openai';
+import { getCompletion } from '@/services/llm';
 import { FastifyInstance, FastifyReply, } from 'fastify';
 import { 
   generateLocationInputSchema, 
@@ -8,7 +8,7 @@ import {
   GenerateLocationImageOutput,
   GenerateLocationImageRequest
 } from '@/schemas';
-import { generateImage } from '@/services/replicate';
+import { generateImage } from '@/services/images';
 import { generateNameInstruction } from '@/utils/nameStyleSelector';
 import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/utils/entityPromptHelpers';
 
@@ -18,7 +18,7 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateLocationInputSchema }, async (request: GenerateLocationRequest, _reply: FastifyReply): Promise<GenerateLocationOutput> => {
-    const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, createLongDescription, longDescriptionParagraphs, nameStyles } = request.body;
+    const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, createLongDescription, longDescriptionParagraphs, nameStyles, model } = request.body;
 
     const system = generateEntitySystemPrompt('location', genre, settingFeeling);
 
@@ -48,7 +48,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       You should only take the world feeling and species description into account in ways that do not contradict the other information.
     `;
 
-    const result = (await getCompletion(system, prompt, 1)) as { name: string, description: string } || { name: '', description: ''};
+    const result = (await getCompletion(system, prompt, 1, model)) as { name: string, description: string } || { name: '', description: ''};
     if (!result.name || !result.description) {
       throw new Error('Error in gptGenerateLocation');
     }
@@ -63,7 +63,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
   });
 
   fastify.post('/generate-image', { schema: generateLocationImageInputSchema }, async (request: GenerateLocationImageRequest, _reply: FastifyReply): Promise<GenerateLocationImageOutput> => {
-    const { genre, settingFeeling, name, type, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription,briefDescription, nameStyles } = request.body;
+    const { genre, settingFeeling, name, type, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, briefDescription, model } = request.body;
 
     // get a good prompt
     const system = `
@@ -87,7 +87,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       You should only take the world feeling and species description into account in ways that do not contradict the other information.
     `;
 
-    const imagePrompt = await getCompletion(system, prompt, 1) as { prompt: string } | undefined;
+    const imagePrompt = await getCompletion(system, prompt, 1, model) as { prompt: string } | undefined;
 
     try {
       if (!imagePrompt?.prompt) {
@@ -95,7 +95,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       }
 
       // generate in landscape
-      const imageUrl = await generateImage(imagePrompt.prompt, 'location-image', { aspect_ratio: '4:3' });
+      const imageUrl = await generateImage(imagePrompt.prompt, 'location-image', { aspect_ratio: '4:3' }, model);
 
       return { filePath: imageUrl } as GenerateLocationImageOutput;
     } catch (error) {

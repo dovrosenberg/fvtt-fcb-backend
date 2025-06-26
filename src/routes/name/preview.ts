@@ -1,4 +1,4 @@
-import { getPreviewCompletion } from '@/services/openai';
+import { getPreviewCompletion } from '@/services/llm';
 import { FastifyInstance, FastifyReply, } from 'fastify';
 import {
   generatePreviewNamesInputSchema,

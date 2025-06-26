@@ -19,6 +19,7 @@ const generateOrganizationRequestSchema = {
     grandparentType: { type: 'string', description: 'The type of grandparent organization' },
     grandparentDescription: { type: 'string', description: 'The current description of the organization\'s grandparent' },
     nameStyles: { type: 'array', description: 'The styles of names to use', items: { type: 'string' }},
+    model: { type: 'number', description: 'The text generation model to use' },
   },
   required: ['genre'],
 } as const;

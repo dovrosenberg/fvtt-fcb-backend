@@ -1,8 +1,65 @@
 import { storageProvider } from '@/services/storage';
 import Replicate from 'replicate';
+import { imageModels, DEFAULT_IMAGE_MODEL_ID } from './models';
 
 // Replicate API client
 let replicate: Replicate;
+
+// Detailed model configurations specific to Replicate
+const replicateImageModels = {
+  'minimax/image-01': {
+    promptTrigger: '4k, 8k, masterpiece, trending on artstation, detailed, cinematic',
+    negativePrompt: 'ugly, disfigured, low quality, blurry, nsfw, text, watermark',
+    outputFormat: 'jpeg',
+    defaultOptions: {},
+    getOptions: function(prompt: string) {
+      return {
+        prompt: `${prompt}, ${this.promptTrigger}`,
+        negative_prompt: this.negativePrompt,
+        ...this.defaultOptions,
+      };
+    },
+  },
+  'black-forest-labs/flux-1.1-pro': {
+    promptTrigger: 'photorealistic, masterpiece, 8k, high quality',
+    negativePrompt: 'blurry, low quality, nsfw, text, watermark, cartoon, anime, ugly',
+    outputFormat: 'jpeg',
+    defaultOptions: {},
+    getOptions: function(prompt: string) {
+      return {
+        prompt: `${prompt}, ${this.promptTrigger}`,
+        negative_prompt: this.negativePrompt,
+        ...this.defaultOptions,
+      };
+    },
+  },
+  'black-forest-labs/flux-schnell': {
+    promptTrigger: 'fast, high quality, detailed',
+    negativePrompt: 'blurry, low quality, nsfw, text, watermark, ugly',
+    outputFormat: 'jpeg',
+    defaultOptions: {},
+    getOptions: function(prompt: string) {
+      return {
+        prompt: `${prompt}, ${this.promptTrigger}`,
+        negative_prompt: this.negativePrompt,
+        ...this.defaultOptions,
+      };
+    },
+  },
+  'black-forest-labs/flux-schnell-lora': {
+    promptTrigger: 'lora, stylized, high quality',
+    negativePrompt: 'blurry, low quality, nsfw, text, watermark, ugly',
+    outputFormat: 'jpeg',
+    defaultOptions: {},
+    getOptions: function(prompt: string) {
+      return {
+        prompt: `${prompt}, ${this.promptTrigger}`,
+        negative_prompt: this.negativePrompt,
+        ...this.defaultOptions,
+      };
+    },
+  },
+};
 
 const loadReplicate = async function(): Promise<void> {
   replicate = new Replicate({
@@ -14,103 +71,26 @@ const loadReplicate = async function(): Promise<void> {
   }
 };
 
-export const DEFAULT_MODEL = 0;
-export const models = [
-  // https://replicate.com/minimax/image-01?prediction=11hkfma171rme0cnvwpvn7tzac - Slow, variable (usually moderate to good) quality, but only $0.01
-  // https://replicate.com/minimax/image-01?prediction=gnfvbzt46hrmc0cnvwv8zw69xw - scenery
-  { 
-    name: 'Minimax image-01', 
-    modelId: 'minimax/image-01', 
-    description: 'Slow, variable (usually moderate to good) quality, but only $0.01',
-    outputFormat: 'jpg',
-    getOptions: (prompt: string) => ({ 
-      prompt: prompt,
-      aspect_ratio: '3:4',
-      number_of_images: 1,
-      prompt_optimizer: true
-    })
-  },
-  // https://replicate.com/black-forest-labs/flux-1.1-pro?prediction=bmahxcefn1rmc0cnvwraz0qk2w - fast, $0.04, high quality
-  // https://replicate.com/black-forest-labs/flux-1.1-pro?prediction=74343jyypxrmc0cnvwss1s380c - scenery
-  { 
-    name: 'Flux 1.1 Pro', 
-    modelId: 'black-forest-labs/flux-1.1-pro', 
-    description: 'Fast, high-quality, $0.04 per image',
-    outputFormat: 'webp',
-    getOptions: (prompt: string) => ({ 
-      prompt: prompt,
-      aspect_ratio: '3:4',
-      output_format: 'webp',
-      output_quality: 80,
-      safety_tolerance: 5,
-      prompt_upsampling: true
-    })
-  },
-  // https://replicate.com/black-forest-labs/flux-pro?prediction=xt8gs49dvhrmc0cnvwr8z7h5c0 - moderate speed, $0.55, high quality
-  // https://replicate.com/black-forest-labs/flux-pro?prediction=g8v540vjfnrm80cnvwssdeam1c - scenery
-  { 
-    name: 'Flux Pro', 
-    modelId: 'black-forest-labs/flux-schnell', 
-    description: 'Fairly Fast, high-quality, $0.055 per image.  Generally recommend 1.1 instead',
-    outputFormat: 'webp',
-    getOptions: (prompt: string) => ({ 
-      prompt: prompt,
-      steps: 25,
-      width: 1024,
-      height: 1024,
-      guidance: 3,
-      interval: 2,
-      aspect_ratio: '3:4',
-      output_format: 'webp',
-      output_quality: 80,
-      safety_tolerance: 5,
-      prompt_upsampling: false
-    })
-  },
-  // https://replicate.com/black-forest-labs/flux-schnell-lora - fast, $.02, medium quality
-  // https://replicate.com/black-forest-labs/flux-schnell-lora?prediction=jc61t5nw21rme0cnvwstmfm46m - scenery
-  { 
-    name: 'Flux Schnell LORA', 
-    modelId: 'black-forest-labs/flux-schnell-lora', 
-    description: 'Fairly Fast, high-quality, $0.055 per image.  Generally recommend 1.1 instead',
-    outputFormat: 'webp',
-    getOptions: (prompt: string) => ({ 
-      prompt: prompt,
-      go_fast: true,
-      lora_scale: 0.8,
-      megapixels: '1',
-      num_outputs: 1,
-      aspect_ratio: '3:4',
-      lora_weights: 'fofr/flux-black-light',
-      output_format: 'webp',
-      output_quality: 80,
-      num_inference_steps: 4
-    })
-  },
-] as {
-  name: string;
-  modelId: `${string}/${string}` | `${string}/${string}:${string}`;
-  description: string;
-  outputFormat: string;
-  getOptions: (prompt: string) => Record<string, any>;
-}[];
-
 /**
- * Generates an image using Replicate's flux-schnell model and stores it in the configured bucket
+ * Generates an image using a Replicate model and stores it in the configured bucket
  * @returns URL to the generated image
  */
-const generateImage = async (prompt: string, filenamePrefix: string, overrideOptions?: Record<string, any>, modelID?: number): Promise<string> => {
+const getReplicateImage = async (prompt: string, filenamePrefix: string, modelId: string,overrideOptions?: Record<string, any>): Promise<string> => {
   if (!replicate) {
     throw new Error('Replicate not configured');
   }
-
+  
   overrideOptions ||= {};
 
   try {
-    // Prepare the request body for Replicate API
-    const model = models[modelID ?? DEFAULT_MODEL];
+    // Get the detailed Replicate-specific model configuration
+    const replicateModel = replicateImageModels[modelId as keyof typeof replicateImageModels];
+    if (!replicateModel) {
+      throw new Error(`Configuration for model ${modelId} not found in replicate.ts`);
+    }
 
-    const output = await replicate.run(model.modelId, { input: { ...model.getOptions(prompt), ...overrideOptions }});
+    // Prepare the request body for Replicate API
+    const output = await replicate.run(modelId as keyof typeof replicateImageModels, { input: { ...replicateModel.getOptions(prompt), ...overrideOptions }});
 
     // Get the image URL or FileOutput object from the response
     const imageUrl = Array.isArray(output) ? output[0] : output;
@@ -130,13 +110,13 @@ const generateImage = async (prompt: string, filenamePrefix: string, overrideOpt
 
     // Generate a unique filename with the correct extension
     // put it in the fcb folder
-    const fileName = `fcb/${filenamePrefix}-${Date.now()}.${model.outputFormat}`;
+    const fileName = `fcb/${filenamePrefix}-${Date.now()}.${replicateModel.outputFormat}`;
 
     // Save the image using the storage provider
     const publicUrl = await storageProvider.saveFile(
       fileName,
       imageBuffer,
-      `image/${model.outputFormat}`
+      `image/${replicateModel.outputFormat}`
     );
     return publicUrl;
   } catch (error) {
@@ -147,5 +127,5 @@ const generateImage = async (prompt: string, filenamePrefix: string, overrideOpt
 
 export {
   loadReplicate,
-  generateImage
+  getReplicateImage
 };

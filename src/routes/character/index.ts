@@ -1,5 +1,5 @@
-import { getCompletion } from '@/services/openai';
-import { generateImage } from '@/services/replicate';
+import { getCompletion } from '@/services/llm';
+import { generateImage } from '@/services/images';
 import { FastifyInstance, FastifyReply, } from 'fastify';
 import {
   generateCharacterInputSchema,
@@ -18,7 +18,7 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateCharacterInputSchema }, async (request: GenerateCharacterRequest, _reply: FastifyReply): Promise<GenerateCharacterOutput> => {
-    const { name, genre, settingFeeling, type, species, speciesDescription, briefDescription, createLongDescription, longDescriptionParagraphs, nameStyles } = request.body;
+    const { name, genre, settingFeeling, type, species, speciesDescription, briefDescription, createLongDescription, longDescriptionParagraphs, nameStyles, model } = request.body;
 
     const system = generateEntitySystemPrompt('character', genre, settingFeeling);
 
@@ -48,7 +48,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       You should only take the world feeling and species description into account in ways that do not contradict the other information.
     `;
 
-    const result = (await getCompletion(system, prompt, 1)) as { name: string, description: string } || { name: '', description: ''};
+    const result = (await getCompletion(system, prompt, 1, model)) as { name: string, description: string } || { name: '', description: ''};
     if (!result.name || !result.description) {
       throw new Error('Error in generateCharacter');
     }
@@ -63,7 +63,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
   // Add the new endpoint for generating character images
   fastify.post('/generate-image', { schema: generateCharacterImageInputSchema }, async (request: GenerateCharacterImageRequest, _reply: FastifyReply): Promise<GenerateCharacterImageOutput> => {
-    const { genre, settingFeeling, name, type, species, speciesDescription, briefDescription, } = request.body;
+    const { genre, settingFeeling, name, type, species, speciesDescription, briefDescription, model } = request.body;
 
     // Construct a detailed prompt 
     const prompt = `
@@ -79,7 +79,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     // TODO: consider if we should use GPT to create a better prompt vs the description
 
     try {
-      const imageUrl = await generateImage(prompt, 'character-image');
+      const imageUrl = await generateImage(prompt, 'character-image', {}, model);
 
       return { filePath: imageUrl } as GenerateCharacterImageOutput;
     } catch (error) {
