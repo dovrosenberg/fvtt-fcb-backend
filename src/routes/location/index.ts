@@ -17,7 +17,7 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 //    to inject HTML, etc. it's unclear there's any risk
 
 async function routes (fastify: FastifyInstance): Promise<void> {
-  fastify.post('/generate', { schema: generateLocationInputSchema }, async (request: GenerateLocationRequest, _reply: FastifyReply): Promise<GenerateLocationOutput> => {
+  fastify.post('/generate', { schema: generateLocationInputSchema }, async (request: GenerateLocationRequest, reply: FastifyReply): Promise<GenerateLocationOutput> => {
     const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, createLongDescription, longDescriptionParagraphs, nameStyles, model } = request.body;
 
     const system = generateEntitySystemPrompt('location', genre, settingFeeling);
@@ -48,21 +48,26 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       You should only take the world feeling and species description into account in ways that do not contradict the other information.
     `;
 
-    const result = (await getCompletion(system, prompt, 1, model)) as { name: string, description: string } || { name: '', description: ''};
-    if (!result.name || !result.description) {
-      throw new Error('Error in gptGenerateLocation');
+    try {
+      const result = (await getCompletion(system, prompt, 1, model)) as { name: string, description: string } || { name: '', description: ''};
+      if (!result.name || !result.description) {
+        return reply.status(500).send({ error: 'Failed to generate location due to an invalid response from the provider.' });
+      }
+
+      const location = {
+        name: result.name,
+        description: result.description,
+        type: type || null,
+      } as GenerateLocationOutput;
+
+      return location;
+    } catch (error) {
+      console.error('Error generating location:', error);
+      return reply.status(503).send({ error: (error as Error).message });
     }
-
-    const location = {
-      name: result.name,
-      description: result.description,
-      type: type || null,
-    } as GenerateLocationOutput;
-
-    return location;
   });
 
-  fastify.post('/generate-image', { schema: generateLocationImageInputSchema }, async (request: GenerateLocationImageRequest, _reply: FastifyReply): Promise<GenerateLocationImageOutput> => {
+  fastify.post('/generate-image', { schema: generateLocationImageInputSchema }, async (request: GenerateLocationImageRequest, reply: FastifyReply): Promise<GenerateLocationImageOutput> => {
     const { genre, settingFeeling, name, type, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, briefDescription, model } = request.body;
 
     // get a good prompt
@@ -87,11 +92,11 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       You should only take the world feeling and species description into account in ways that do not contradict the other information.
     `;
 
-    const imagePrompt = await getCompletion(system, prompt, 1, model) as { prompt: string } | undefined;
-
     try {
+      const imagePrompt = await getCompletion(system, prompt, 1, model) as { prompt: string } | undefined;
+
       if (!imagePrompt?.prompt) {
-        throw new Error('No prompt generated');
+        return reply.status(500).send({ error: 'Failed to generate location image prompt due to an invalid response from the provider.' });
       }
 
       // generate in landscape
@@ -100,7 +105,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       return { filePath: imageUrl } as GenerateLocationImageOutput;
     } catch (error) {
       console.error('Error generating location image:', error);
-      throw new Error(`Failed to generate location image: ${(error as Error)?.message}`);
+      return reply.status(503).send({ error: `Failed to generate location image: ${(error as Error)?.message}` });
     }
   });
 }

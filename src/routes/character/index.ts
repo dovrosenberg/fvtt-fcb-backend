@@ -17,7 +17,7 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 //    to inject HTML, etc. it's unclear there's any risk
 
 async function routes (fastify: FastifyInstance): Promise<void> {
-  fastify.post('/generate', { schema: generateCharacterInputSchema }, async (request: GenerateCharacterRequest, _reply: FastifyReply): Promise<GenerateCharacterOutput> => {
+  fastify.post('/generate', { schema: generateCharacterInputSchema }, async (request: GenerateCharacterRequest, reply: FastifyReply): Promise<GenerateCharacterOutput> => {
     const { name, genre, settingFeeling, type, species, speciesDescription, briefDescription, createLongDescription, longDescriptionParagraphs, nameStyles, model } = request.body;
 
     const system = generateEntitySystemPrompt('character', genre, settingFeeling);
@@ -48,21 +48,26 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       You should only take the world feeling and species description into account in ways that do not contradict the other information.
     `;
 
-    const result = (await getCompletion(system, prompt, 1, model)) as { name: string, description: string } || { name: '', description: ''};
-    if (!result.name || !result.description) {
-      throw new Error('Error in generateCharacter');
+    try {
+      const result = (await getCompletion(system, prompt, 1, model)) as { name: string, description: string } || { name: '', description: ''};
+      if (!result.name || !result.description) {
+        return reply.status(500).send({ error: 'Failed to generate character due to an invalid response from the provider.' });
+      }
+
+      const character = {
+        name: result.name,
+        description: result.description
+      } as GenerateCharacterOutput;
+
+      return character;
+    } catch (error) {
+      console.error('Error generating character:', error);
+      return reply.status(503).send({ error: (error as Error).message });
     }
-
-    const character = {
-      name: result.name,
-      description: result.description
-    } as GenerateCharacterOutput;
-
-    return character;
   });
 
   // Add the new endpoint for generating character images
-  fastify.post('/generate-image', { schema: generateCharacterImageInputSchema }, async (request: GenerateCharacterImageRequest, _reply: FastifyReply): Promise<GenerateCharacterImageOutput> => {
+  fastify.post('/generate-image', { schema: generateCharacterImageInputSchema }, async (request: GenerateCharacterImageRequest, reply: FastifyReply): Promise<GenerateCharacterImageOutput> => {
     const { genre, settingFeeling, name, type, species, speciesDescription, briefDescription, model } = request.body;
 
     // Construct a detailed prompt 
@@ -84,7 +89,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       return { filePath: imageUrl } as GenerateCharacterImageOutput;
     } catch (error) {
       console.error('Error generating character image:', error);
-      throw new Error(`Failed to generate character image: ${(error as Error)?.message}`);
+      return reply.status(503).send({ error: `Failed to generate character image: ${(error as Error)?.message}` });
     }
   });
 };

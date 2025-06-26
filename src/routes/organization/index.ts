@@ -17,7 +17,7 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 //    to inject HTML, etc. it's unclear there's any risk
 
 async function routes (fastify: FastifyInstance): Promise<void> {
-  fastify.post('/generate', { schema: generateOrganizationInputSchema }, async (request: GenerateOrganizationRequest, _reply: FastifyReply): Promise<GenerateOrganizationOutput> => {
+  fastify.post('/generate', { schema: generateOrganizationInputSchema }, async (request: GenerateOrganizationRequest, reply: FastifyReply): Promise<GenerateOrganizationOutput> => {
     const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, createLongDescription, longDescriptionParagraphs, nameStyles, model } = request.body;
   
     const system = generateEntitySystemPrompt('organization',genre, settingFeeling);
@@ -48,20 +48,25 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       You should only take the world feeling and species description into account in ways that do not contradict the other information.
     `;
   
-    const result = (await getCompletion(system, prompt, 1, model)) as { name: string, description: string } || { name: '', description: ''};
-    if (!result.name || !result.description) {
-      throw new Error('Error in gptGenerateOrganization');
-    }
+    try {
+      const result = (await getCompletion(system, prompt, 1, model)) as { name: string, description: string } || { name: '', description: ''};
+      if (!result.name || !result.description) {
+        return reply.status(500).send({ error: 'Failed to generate organization due to an invalid response from the provider.' });
+      }
+      
+      const organization = {
+        name: result.name,
+        description: result.description,
+      } as GenerateOrganizationOutput;
     
-    const organization = {
-      name: result.name,
-      description: result.description,
-    } as GenerateOrganizationOutput;
-  
-    return organization;
+      return organization;
+    } catch (error) {
+      console.error('Error generating organization:', error);
+      return reply.status(503).send({ error: (error as Error).message });
+    }
   });
 
-  fastify.post('/generate-image', { schema: generateOrganizationImageInputSchema }, async (request: GenerateOrganizationImageRequest, _reply: FastifyReply): Promise<GenerateOrganizationImageOutput> => {
+  fastify.post('/generate-image', { schema: generateOrganizationImageInputSchema }, async (request: GenerateOrganizationImageRequest, reply: FastifyReply): Promise<GenerateOrganizationImageOutput> => {
     const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, model } = request.body;
 
     // get a good prompt
@@ -86,11 +91,11 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       You should only take the world feeling and species description into account in ways that do not contradict the other information.
     `;
 
-    const imagePrompt = await getCompletion(system, prompt, 1, model) as { prompt: string } | undefined;
-
     try {
+      const imagePrompt = await getCompletion(system, prompt, 1, model) as { prompt: string } | undefined;
+
       if (!imagePrompt?.prompt) {
-        throw new Error('No prompt generated');
+        return reply.status(500).send({ error: 'Failed to generate organization image prompt due to an invalid response from the provider.' });
       }
 
       const imageUrl = await generateImage(imagePrompt.prompt, 'organization-image', {}, model);
@@ -98,7 +103,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       return { filePath: imageUrl } as GenerateOrganizationImageOutput;
     } catch (error) {
       console.error('Error generating organization image:', error);
-      throw new Error(`Failed to generate organization image: ${(error as Error)?.message}`);
+      return reply.status(503).send({ error: `Failed to generate organization image: ${(error as Error)?.message}` });
     }
   });
 }

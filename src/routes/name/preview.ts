@@ -7,7 +7,7 @@ import {
 } from '@/schemas';
 
 async function routes (fastify: FastifyInstance): Promise<void> {
-  fastify.post('/preview', { schema: generatePreviewNamesInputSchema }, async (request: GeneratePreviewNamesRequest, _reply: FastifyReply): Promise<GeneratePreviewNamesOutput> => {
+  fastify.post('/preview', { schema: generatePreviewNamesInputSchema }, async (request: GeneratePreviewNamesRequest, reply: FastifyReply): Promise<GeneratePreviewNamesOutput> => {
     const { genre, settingFeeling, nameStyles } = request.body;
 
     let prompt = `
@@ -31,15 +31,20 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       `;
 
 
-    const result = await getPreviewCompletion(nameStyles, prompt, 0.9);
-    
-    if (result.length!==nameStyles.length) {
-      throw new Error('Error in /names/preview');
+    try {
+      const result = await getPreviewCompletion(nameStyles, prompt, 0.9);
+      
+      if (result.length!==nameStyles.length) {
+        return reply.status(500).send({ error: 'Failed to generate name previews due to an invalid response from the provider.' });
+      }
+          
+      return {
+        preview: result,
+      };
+    } catch (error) {
+      console.error('Error generating name previews:', error);
+      return reply.status(503).send({ error: (error as Error).message });
     }
-        
-    return {
-      preview: result,
-    };
   });
 }
 
