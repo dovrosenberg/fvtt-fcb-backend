@@ -1,9 +1,9 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { getTodoItems } from '@/services/gmail';
 import { todoItemsInputSchema, TodoItemsOutput } from '@/schemas/gmail';
 
 async function routes(fastify: FastifyInstance): Promise<void> {
-  fastify.get('/todo', { schema: todoItemsInputSchema }, async (_request: FastifyReply, reply: FastifyReply): Promise<TodoItemsOutput> => {
+  fastify.get('/todo', { schema: todoItemsInputSchema }, async (_request: FastifyRequest, reply: FastifyReply): Promise<TodoItemsOutput> => {
     try {
       const items = await getTodoItems();
       
