@@ -9,6 +9,12 @@ type TodoItem = TodoItemsOutput['items'][0];
 let whitelistedEmails: Set<string> = new Set();
 
 const loadGmail = async function(): Promise<void> {
+  // make sure we're using gmail
+  if (process.env.INCLUDE_EMAIL_SETUP !== 'true') {
+    console.log('Email functionality is disabled');
+    return;
+  }    
+
   if (!process.env.GMAIL_CLIENT_ID || !process.env.GMAIL_CLIENT_SECRET || !process.env.GMAIL_REFRESH_TOKEN) {
     throw new Error('Missing Gmail credentials in environment variables');
   }
@@ -47,7 +53,7 @@ const getTodoItems = async (): Promise<TodoItem[]> => {
   const inboxLabel = 'INBOX';
 
   // Return error if email functionality is disabled
-  if (process.env.INCLUDE_EMAIL_SETUP === 'false') {
+  if (process.env.INCLUDE_EMAIL_SETUP !== 'true') {
     throw new Error('Email functionality is disabled');
   }
 
