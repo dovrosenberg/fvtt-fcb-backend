@@ -1,6 +1,6 @@
 {
   "name": "foundry-ai-backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Backend for Foundry Campaign Builder module",
   "main": "server.js",
   "scripts": {
