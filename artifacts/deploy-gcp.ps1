@@ -70,38 +70,42 @@ function Test-BucketExists {
 }
 
 # Create a Cloud Storage bucket if it doesn't exist
-if (-not (Test-BucketExists $env:GCS_BUCKET_NAME)) {
-    Write-Host "Creating Cloud Storage bucket: $env:GCS_BUCKET_NAME..."
-    $output = gcloud storage buckets create "gs://$env:GCS_BUCKET_NAME" --location=$env:GCP_REGION 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        if ($output -match "HTTPError 409") {
-            Write-Host "❌ ERROR: The bucket name '$env:GCS_BUCKET_NAME' is already in use.  GCS bucket names have to be unique globally (not just within your project)."
-            Write-Host "Please choose a different bucket name in your .env file and try again."
-            exit 1
-        }
-        else {
-            Write-Host "❌ Failed to create bucket $env:GCS_BUCKET_NAME. Please check the error message above."
-            exit 1
-        }
-    }
-    
-    Write-Host "✅ Bucket $env:GCS_BUCKET_NAME created successfully!"
-    
-    # Set up CORS for the bucket
-    Write-Host "Setting up CORS configuration..."
-    '[{"origin": ["*"], "method": ["GET"], "responseHeader": ["Content-Type"], "maxAgeSeconds": 3600}]' | Out-File -Encoding utf8 cors.json
-
-    if (gcloud storage buckets update gs://$env:GCS_BUCKET_NAME --cors-file=cors.json) {
-        Write-Host "✅ CORS updated."
-    } else {
-        Write-Host "❌ Failed to update CORS configuration."
-        Write-Host "Please verify that the service account has the 'Storage Admin' role and try again."
-        Remove-Item cors.json
-        exit 1
-    }
-    Remove-Item cors.json
+if ($env:STORAGE_TYPE -eq 'aws') {
+    Write-Host "STORAGE_TYPE is 'aws', skipping Google Cloud Storage bucket setup."
 } else {
-    Write-Host "✅ Cloud Storage bucket $env:GCS_BUCKET_NAME already exists."
+    if (-not (Test-BucketExists $env:GCS_BUCKET_NAME)) {
+        Write-Host "Creating Cloud Storage bucket: $env:GCS_BUCKET_NAME..."
+        $output = gcloud storage buckets create "gs://$env:GCS_BUCKET_NAME" --location=$env:GCP_REGION 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            if ($output -match "HTTPError 409") {
+                Write-Host "❌ ERROR: The bucket name '$env:GCS_BUCKET_NAME' is already in use.  GCS bucket names have to be unique globally (not just within your project)."
+                Write-Host "Please choose a different bucket name in your .env file and try again."
+                exit 1
+            }
+            else {
+                Write-Host "❌ Failed to create bucket $env:GCS_BUCKET_NAME. Please check the error message above."
+                exit 1
+            }
+        }
+        
+        Write-Host "✅ Bucket $env:GCS_BUCKET_NAME created successfully!"
+        
+        # Set up CORS for the bucket
+        Write-Host "Setting up CORS configuration..."
+        '[{"origin": ["*"], "method": ["GET"], "responseHeader": ["Content-Type"], "maxAgeSeconds": 3600}]' | Out-File -Encoding utf8 cors.json
+
+        if (gcloud storage buckets update gs://$env:GCS_BUCKET_NAME --cors-file=cors.json) {
+            Write-Host "✅ CORS updated."
+        } else {
+            Write-Host "❌ Failed to update CORS configuration."
+            Write-Host "Please verify that the service account has the 'Storage Admin' role and try again."
+            Remove-Item cors.json
+            exit 1
+        }
+        Remove-Item cors.json
+    } else {
+        Write-Host "✅ Cloud Storage bucket $env:GCS_BUCKET_NAME already exists."
+    }
 }
 
 # Verify service account permissions
