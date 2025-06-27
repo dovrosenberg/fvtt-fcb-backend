@@ -17,7 +17,11 @@ async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.register(bearerAuthPlugin, { keys: [process.env.API_TOKEN as string] });
 
   // provide the version
-  fastify.get('/version', { schema: versionInputSchema }, async (): Promise<VersionOutput> => ({ version: version }));
+  fastify.get('/version', { schema: versionInputSchema }, async (): Promise<VersionOutput> => ({ 
+    // for 1.0.1 just return 1.0.0
+    // starting in 1.1.0 start to return just major.minor
+    version: '1.0.0', // version 
+  }));
 
   fastify.register(characterRoutes, { prefix: '/character' });
   fastify.register(organizationRoutes, { prefix: '/organization' });
