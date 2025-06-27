@@ -81,50 +81,54 @@ check_bucket_ownership() {
     fi
 }
 
-# Create a Cloud Storage bucket if it doesn't exist
-check_bucket_ownership "$GCS_BUCKET_NAME"
-BUCKET_STATUS=$?
+if [ "$STORAGE_TYPE" = "aws" ]; then
+    echo "STORAGE_TYPE is 'aws', skipping Google Cloud Storage bucket setup."
+else
+    # Create a Cloud Storage bucket if it doesn't exist
+    check_bucket_ownership "$GCS_BUCKET_NAME"
+    BUCKET_STATUS=$?
 
-case $BUCKET_STATUS in
-    0)
-        echo "✅ Cloud Storage bucket $GCS_BUCKET_NAME already exists."
-        ;;
-    1)
-        echo "Creating Cloud Storage bucket: $GCS_BUCKET_NAME..."
+    case $BUCKET_STATUS in
+        0)
+            echo "✅ Cloud Storage bucket $GCS_BUCKET_NAME already exists."
+            ;;
+        1)
+            echo "Creating Cloud Storage bucket: $GCS_BUCKET_NAME..."
 
-        # Create a pipe to capture both output and exit status
-        set -o pipefail
+            # Create a pipe to capture both output and exit status
+            set -o pipefail
 
-        if ! gcloud storage buckets create gs://$GCS_BUCKET_NAME --location=$GCP_REGION 2>&1 | tee /tmp/bucket_create.log; then
-            if grep -q "HTTPError 409" /tmp/bucket_create.log; then
-                echo "❌ ERROR: The bucket name '$GCS_BUCKET_NAME' is already in use.  GCS bucket names have to be unique globally (not just within your project)."
-                echo "Please choose a different bucket name in your .env file and try again."
-                rm /tmp/bucket_create.log
-                exit 1
+            if ! gcloud storage buckets create gs://$GCS_BUCKET_NAME --location=$GCP_REGION 2>&1 | tee /tmp/bucket_create.log; then
+                if grep -q "HTTPError 409" /tmp/bucket_create.log; then
+                    echo "❌ ERROR: The bucket name '$GCS_BUCKET_NAME' is already in use.  GCS bucket names have to be unique globally (not just within your project)."
+                    echo "Please choose a different bucket name in your .env file and try again."
+                    rm /tmp/bucket_create.log
+                    exit 1
+                else
+                    echo "❌ Failed to create bucket $GCS_BUCKET_NAME. Please check the error message above."
+                    rm /tmp/bucket_create.log
+                    exit 1
+                fi
+            fi
+            
+            echo "✅ Bucket $GCS_BUCKET_NAME created successfully!"
+            
+            # Set up CORS for the bucket
+            echo "Setting up CORS configuration..."
+            echo '[{"origin": ["*"], "method": ["GET"], "responseHeader": ["Content-Type"], "maxAgeSeconds": 3600}]' > cors.json
+
+            if gcloud storage buckets update gs://$GCS_BUCKET_NAME --cors-file=cors.json; then
+                echo "✅ CORS configuration updated successfully."
             else
-                echo "❌ Failed to create bucket $GCS_BUCKET_NAME. Please check the error message above."
-                rm /tmp/bucket_create.log
+                echo "❌ Failed to update CORS configuration."
+                echo "Please verify that the service account has the 'Storage Admin' role and try again."
+                rm cors.json
                 exit 1
             fi
-        fi
-        
-        echo "✅ Bucket $GCS_BUCKET_NAME created successfully!"
-        
-        # Set up CORS for the bucket
-        echo "Setting up CORS configuration..."
-        echo '[{"origin": ["*"], "method": ["GET"], "responseHeader": ["Content-Type"], "maxAgeSeconds": 3600}]' > cors.json
-
-        if gcloud storage buckets update gs://$GCS_BUCKET_NAME --cors-file=cors.json; then
-            echo "✅ CORS configuration updated successfully."
-        else
-            echo "❌ Failed to update CORS configuration."
-            echo "Please verify that the service account has the 'Storage Admin' role and try again."
             rm cors.json
-            exit 1
-        fi
-        rm cors.json
-        ;;
-esac
+            ;;
+    esac
+fi
 
 # Verify service account permissions
 echo "Verifying service account permissions..."
