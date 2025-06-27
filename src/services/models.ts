@@ -25,13 +25,13 @@ export const textModels = {
     name: 'GPT-4o Mini',
     provider: ModelProvider.OpenAI,
     modelId: 'gpt-4o-mini',
-    description: 'High-quality, $0.15/million tokens, but subject to $5/year minimum. Best if you are using your OpenAI token for other things so the minimum doesn\'t matter',
+    description: 'From OpenAI. High-quality, $0.15/million tokens, but subject to $5/year minimum. Best if you are using your OpenAI token for other things so the minimum doesn\'t matter',
   },
   [TextModels.Claude_3_haiku]: {
     name: 'Claude 3 Haiku',
     provider: ModelProvider.Anthropic,
     modelId: 'claude-3-haiku-20240307',
-    description: 'High-quality, $0.25/million tokens, but subject to $5/year minimum. Best if you are using your Anthropic token for other things so the minimum doesn\'t matter',
+    description: 'From Anthropic. High-quality, $0.25/million tokens, but subject to $5/year minimum. Best if you are using your Anthropic token for other things so the minimum doesn\'t matter',
   },
 };
 
@@ -40,24 +40,41 @@ export const imageModels = {
     name: 'Minimax Image',
     provider: ModelProvider.Replicate,
     modelId: 'minimax/image-01',
-    description: 'Slow, variable (usually moderate to good) quality, but only $0.01',
+    description: 'From Replicate. Slow, variable (usually moderate to good) quality, but only $0.01',
   },
   [ImageModels.Flux_1_1_Pro]: {
     name: 'Flux 1.1 Pro',
     provider: ModelProvider.Replicate,
     modelId: 'black-forest-labs/flux-1.1-pro',
-    description: 'Fast, high-quality, $0.04 per image',
+    description: 'From Replicate. Fast, high-quality, $0.04 per image',
   },
   [ImageModels.Flux_Pro]: {
     name: 'Flux Pro',
     provider: ModelProvider.Replicate,
     modelId: 'black-forest-labs/flux-schnell',
-    description: 'Fairly Fast, high-quality, $0.055 per image.  Generally recommend 1.1 instead',
+    description: 'From Replicate. Fairly Fast, high-quality, $0.055 per image.  Generally recommend 1.1 instead',
   },
   [ImageModels.Flux_Schnell_Lora]: {
     name: 'Flux Schnell Lora',
     provider: ModelProvider.Replicate,
     modelId: 'black-forest-labs/flux-schnell-lora',
-    description: 'Fairly Fast, high-quality, $0.055 per image.  Generally recommend 1.1 instead',
+    description: 'From Replicate. Fairly Fast, high-quality, $0.055 per image.  Generally recommend 1.1 instead',
   },
 };
+
+export const getTextModels = () => {
+  return Object.entries(textModels).map(([id, model]) => ({
+    id: id as TextModels,
+    name: model.name,
+    description: model.description,
+  }));
+};
+
+export const getImageModels = () => {
+  return Object.entries(imageModels).map(([id, model]) => ({
+    id: id as ImageModels,
+    name: model.name,
+    description: model.description,
+  }));
+};
+
