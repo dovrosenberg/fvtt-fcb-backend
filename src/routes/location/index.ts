@@ -18,7 +18,7 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateLocationInputSchema }, async (request: GenerateLocationRequest, reply: FastifyReply): Promise<GenerateLocationOutput> => {
-    const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, createLongDescription, longDescriptionParagraphs, nameStyles, model } = request.body;
+    const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, createLongDescription, longDescriptionParagraphs, nameStyles, textModel } = request.body;
 
     const system = generateEntitySystemPrompt('location', genre, settingFeeling);
 
@@ -49,7 +49,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     `;
 
     try {
-      const result = (await getCompletion(system, prompt, 1, model)) as { name: string, description: string } || { name: '', description: ''};
+      const result = (await getCompletion(system, prompt, 1, textModel)) as { name: string, description: string } || { name: '', description: ''};
       if (!result.name || !result.description) {
         return reply.status(500).send({ error: 'Failed to generate location due to an invalid response from the provider.' });
       }
@@ -68,7 +68,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
   });
 
   fastify.post('/generate-image', { schema: generateLocationImageInputSchema }, async (request: GenerateLocationImageRequest, reply: FastifyReply): Promise<GenerateLocationImageOutput> => {
-    const { genre, settingFeeling, name, type, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, briefDescription, model } = request.body;
+    const { genre, settingFeeling, name, type, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, briefDescription, textModel, imageModel } = request.body;
 
     // get a good prompt
     const system = `
@@ -76,7 +76,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       Your job is to write prompts for AI image generators like DALL-E or Stable Diffusion.  It should be very detailed - about a paragraph
       Each response must contain ONLY ONE PROMPT FOR AN IMAGE AND NOTHING ELSE.  THE IMAGE TYPE DESCRIPTION SHOULD BE:
       fantasy art, photorealistic, cinematic lighting, ultra detail, sharp focus 
-      EACH RESPONSE SHOULD CONTAIN ONE FIELDS:
+      EACH RESPONSE SHOULD CONTAIN ONE FIELD:
       1. "prompt": THE PROMPT YOU WROTE
     `;
 
@@ -89,18 +89,18 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       ${parentName || grandparentName ? 'ONLY USE INFORMATION ON THE BROADER PLACES IF IT DOESN\'T CONFLICT WITH THE LOCATION DESCRIPTION. IT IS ONLY SUPPLEMENTAL' : ''}
       ${briefDescription ? `Here is a brief description of the location that you should use as a starting point.
         THIS IS THE MOST IMPORTANT THING! DESCRIPTION: ${briefDescription}` : ''}
-      You should only take the world feeling and species description into account in ways that do not contradict the other information.
+      You should only take the world feeling and species description into account in ways that DO NOT contradict the other information.
     `;
 
     try {
-      const imagePrompt = await getCompletion(system, prompt, 1, model) as { prompt: string } | undefined;
+      const imagePrompt = await getCompletion(system, prompt, 1, textModel) as { prompt: string } | undefined;
 
       if (!imagePrompt?.prompt) {
         return reply.status(500).send({ error: 'Failed to generate location image prompt due to an invalid response from the provider.' });
       }
 
       // generate in landscape
-      const imageUrl = await generateImage(imagePrompt.prompt, 'location-image', { aspect_ratio: '4:3' }, model);
+      const imageUrl = await generateImage(imagePrompt.prompt, 'location-image', { aspect_ratio: '4:3' }, imageModel);
 
       return { filePath: imageUrl } as GenerateLocationImageOutput;
     } catch (error) {

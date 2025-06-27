@@ -1,4 +1,5 @@
 import { getCompletion } from '@/services/llm';
+import { TextModels } from '@/services/models';
 
 interface PromptConfig {
   entityType: string;
@@ -9,7 +10,7 @@ interface PromptConfig {
   settingFeeling?: string;
   nameStyles?: string[];
   storeType?: string; // For stores specifically
-  model?: number;
+  textModel?: TextModels;
 }
 
 export function generateSystemPrompt(config: PromptConfig): string {
@@ -80,7 +81,7 @@ export function generatePrompts(config: PromptConfig): { systemPrompt: string; u
 export async function generateRollTableCompletions(config: PromptConfig): Promise<{ names: string[] } | null> {
   const { systemPrompt, userPrompt } = generatePrompts(config);
 
-  const result = await getCompletion(systemPrompt, userPrompt, 0.9, config.model) as { names: string[] } || { names: []};
+  const result = await getCompletion(systemPrompt, userPrompt, 0.9, config.textModel) as { names: string[] } || { names: []};
 
   if (!result)
     return null;

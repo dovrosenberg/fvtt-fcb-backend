@@ -39,16 +39,16 @@ const getCompletionWithTemperatureStepdown = async(system: string, prompt: strin
   const finalModelId = modelId ?? DEFAULT_TEXT_MODEL_ID;
   const model = textModels[finalModelId];
 
+  if (!model) {
+    throw new Error(`Invalid modelId: ${modelId}`);
+  }
+
   if (model.provider === ModelProvider.Anthropic && process.env.USE_ANTHROPIC === 'false') {
     throw new Error('Anthropic provider is disabled. Please enable it in your environment variables.');
   }
 
   if (model.provider === ModelProvider.OpenAI && process.env.USE_OPENAI === 'false') {
     throw new Error('OpenAI provider is disabled. Please enable it in your environment variables.');
-  }
-
-  if (!model) {
-    throw new Error(`Invalid modelId: ${modelId}`);
   }
 
   // if we get back invalid JSON, try stepping down temperature

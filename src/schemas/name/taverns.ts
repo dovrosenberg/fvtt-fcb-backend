@@ -1,6 +1,7 @@
 import { FastifyRequest, } from 'fastify';
 import { FromSchema } from 'json-schema-to-ts';
 import { createPostInputSchema } from '@/schemas/utils';
+import { TextModels } from '@/services/models';
 
 // Tavern Names Schema
 export const generateTavernNamesRequestSchema = {
@@ -10,7 +11,7 @@ export const generateTavernNamesRequestSchema = {
     genre: { type: 'string', description: 'Genre of the setting (e.g., fantasy, sci-fi, western)', nullable: true },
     settingFeeling: { type: 'string', description: 'The feeling or atmosphere of the world (e.g., dark, whimsical, gritty)', nullable: true },
     nameStyles: { type: 'array', description: 'The styles of names to use', items: { type: 'string' }},
-    model: { type: 'number', description: 'The text generation model to use' },
+    textModel: { type: 'string', enum: Object.values(TextModels), description: 'The text generation model to use' },
   },
   required: ['count']
 } as const;
