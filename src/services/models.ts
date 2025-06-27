@@ -62,19 +62,37 @@ export const imageModels = {
   },
 };
 
+// if we don't have a key in the config, leave that provider out
 export const getTextModels = () => {
-  return Object.entries(textModels).map(([id, model]) => ({
-    id: id as TextModels,
-    name: model.name,
-    description: model.description,
-  }));
+  return Object.entries(textModels)
+    .filter(([, model]) => {
+      if (model.provider === ModelProvider.OpenAI) {
+        return !!process.env.OPENAI_API_KEY;
+      }
+      if (model.provider === ModelProvider.Anthropic) {
+        return !!process.env.ANTHROPIC_API_KEY;
+      }
+      return false;
+    })
+    .map(([id, model]) => ({
+      id: id as TextModels,
+      name: model.name,
+      description: model.description,
+    }));
 };
 
 export const getImageModels = () => {
-  return Object.entries(imageModels).map(([id, model]) => ({
-    id: id as ImageModels,
-    name: model.name,
-    description: model.description,
-  }));
+  return Object.entries(imageModels)
+    .filter(([, model]) => {
+      if (model.provider === ModelProvider.Replicate) {
+        return !!process.env.REPLICATE_API_KEY;
+      }
+      return false;
+    })
+    .map(([id, model]) => ({
+      id: id as ImageModels,
+      name: model.name,
+      description: model.description,
+    }));
 };
 

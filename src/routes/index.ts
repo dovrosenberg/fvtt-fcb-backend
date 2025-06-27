@@ -19,7 +19,8 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
   // provide the version
   fastify.get('/version', { schema: versionInputSchema }, async (): Promise<VersionOutput> => ({ 
-    version: '1.1', // version 
+    // get just the major/minor version
+    version: version.split('.').slice(0, 2).join('.'), 
   }));
 
   fastify.register(characterRoutes, { prefix: '/character' });

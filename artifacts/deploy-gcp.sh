@@ -10,6 +10,12 @@ else
     exit 1
 fi
 
+# Check for API keys
+if [ -z "$REPLICATE_API_KEY" ] || { [ -z "$OPENAI_API_KEY" ] && [ -z "$ANTHROPIC_API_KEY" ]; }; then
+    echo "❌ ERROR: You must provide a REPLICATE_API_KEY, and also at least one of OPENAI_API_KEY or ANTHROPIC_API_KEY in your .env file."
+    exit 1
+fi
+
 # Check for required dependencies
 echo "Checking for required dependencies..."
 

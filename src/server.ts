@@ -5,6 +5,7 @@ import swagger from '@fastify/swagger';
 import swaggerUI from '@fastify/swagger-ui';
 
 import { loadOpenAI } from '@/services/openai';
+import { loadAnthropic } from '@/services/anthropic';
 import { loadStorage } from '@/services/storage';
 import { loadReplicate } from '@/services/replicate';
 import { loadGmail } from '@/services/gmail';
@@ -18,7 +19,12 @@ void (async () => {
   console.log(`Starting server version ${version}`);
 
   // setup any services
-  await loadOpenAI();
+  if (process.env.OPENAI_API_KEY) {
+    await loadOpenAI();
+  }
+  if (process.env.ANTHROPIC_API_KEY) {
+    await loadAnthropic();
+  }
   await loadStorage();
   await loadReplicate();
   await loadGmail();
