@@ -3,9 +3,17 @@ import OpenAI from 'openai';
 let openai: OpenAI;
 
 const loadOpenAI = async function () {
+  if (!process.env.OPENAI_API_KEY) {
+    return;
+  }
+
   openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
   });
+
+  if (!openai)
+    throw new Error('Failed to initialize OpenAI');
+
 };
 
 /** Try to parse the json and handle common errors */
@@ -65,6 +73,9 @@ const getCompletionWithTemperatureStepdown = async(system: string, prompt: strin
 
 /** Run the completion against OpenAI API... will step down temperature if JSON comes back unformed */
 const getCompletion = async (system: string, prompt: string, temperature: number): Promise<Record<string, any>> => {
+  if (!openai) 
+    throw new Error('OpenAI not loaded in getCompletion()');
+
   const fullSystem = `
     ${system}
     ALL OF YOUR RESPONSES MUST BE VALID JSON CAPABLE OF BEING PARSED BY JSON.parse() IN JAVASCRIPT.  THAT MEANS NO ESCAPE CHARACTERS OR NEW LINES
@@ -80,6 +91,9 @@ const getCompletion = async (system: string, prompt: string, temperature: number
 
 /** This uses a different system prompt because the return response is different */
 const getPreviewCompletion = async (namingStyles: string[], prompt: string, temperature: number): Promise<{ people: string[]; locations: string[]}[]> => {
+  if (!openai) 
+    throw new Error('OpenAI not loaded in getPreviewCompletion()');
+  
   let previewSystem = `
     You are a creative name generator for fictional worlds.
     You will generate ${namingStyles.length} objects, each representing a different naming style.
