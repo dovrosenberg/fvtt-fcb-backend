@@ -117,9 +117,6 @@ const loadStorage = async function(): Promise<void> {
     }
   }
 
-  if (!storageProvider) {
-    throw new Error('Unable to initialize storage provider');
-  }
 };
 
 export {
