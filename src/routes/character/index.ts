@@ -27,10 +27,10 @@ async function routes (fastify: FastifyInstance): Promise<void> {
             Keep each section to a single short sentence or list.
             Avoid fictional character references or long explanations.
             Write clearly, vividly, and efficiently.
-            Follow this structure (SEPARATING SECTIONS AND ANY LISTS WITH \n and MAKING SURE to include the field labels and asterisks):
+            Follow this structure (SEPARATING SECTIONS AND ANY LISTS WITH \\n and MAKING SURE to include the field labels and asterisks):
             first line (don't include this header): a 1-sentence summary of who the NPC is and their general vibe.
-            **Personality Snapshot:** list of 3 key traits separated by commas.
-            **Role-play Hooks:** 2 tips on how to role-play them.
+            **Personality snapshot:** list of 3 key traits separated by commas.
+            **Role-play hooks:** 2 tips on how to role-play them.
             **Appearance:** a quick description of their look.
           `, longDescriptionParagraphs);
 

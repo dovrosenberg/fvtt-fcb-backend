@@ -16,7 +16,7 @@ export const loadOpenAI = async function () {
   }
 };
 
-export const getOpenAICompletion = async(system: string, prompt: string, temperature: number, model: string): Promise<string | null> => {
+export const getCompletion = async(system: string, prompt: string, temperature: number, model: string): Promise<string | null> => {
   try {
     const chat_completion = await openai.chat.completions.create({
       model: model,
