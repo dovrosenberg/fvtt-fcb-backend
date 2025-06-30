@@ -3,6 +3,10 @@ import Anthropic from '@anthropic-ai/sdk';
 let anthropic: Anthropic;
 
 export const loadAnthropic = async function(): Promise<void> {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return;
+  }
+
   anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY
   });
