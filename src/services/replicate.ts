@@ -78,7 +78,7 @@ const loadReplicate = async function(): Promise<void> {
  * Generates an image using a Replicate model and stores it in the configured bucket
  * @returns URL to the generated image
  */
-const getReplicateImage = async (prompt: string, filenamePrefix: string, modelId: string,overrideOptions?: Record<string, any>): Promise<string> => {
+const generateImage = async (prompt: string, filenamePrefix: string, modelId: string,overrideOptions?: Record<string, any>): Promise<string> => {
   if (!replicate) {
     throw new Error('Replicate not loaded in generateImage()');
   }
@@ -130,5 +130,5 @@ const getReplicateImage = async (prompt: string, filenamePrefix: string, modelId
 
 export {
   loadReplicate,
-  getReplicateImage
+  generateImage
 };
