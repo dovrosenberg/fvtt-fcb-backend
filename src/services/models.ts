@@ -40,25 +40,25 @@ export const imageModels = {
     name: 'Minimax Image',
     provider: ModelProvider.Replicate,
     modelId: 'minimax/image-01',
-    description: 'From Replicate. Slow, variable (usually moderate to good) quality, but only $0.01',
+    description: 'From Replicate. High quality (almost always), but only $0.01',
   },
   [ImageModels.Flux_1_1_Pro]: {
     name: 'Flux 1.1 Pro',
     provider: ModelProvider.Replicate,
     modelId: 'black-forest-labs/flux-1.1-pro',
-    description: 'From Replicate. Fast, high-quality, $0.04 per image',
+    description: 'From Replicate. Very fast (~10x Minimax), consistent, high-quality, $0.04 per image',
   },
   [ImageModels.Flux_Pro]: {
     name: 'Flux Pro',
     provider: ModelProvider.Replicate,
     modelId: 'black-forest-labs/flux-schnell',
-    description: 'From Replicate. Fairly Fast, high-quality, $0.055 per image.  Generally recommend 1.1 instead',
+    description: 'From Replicate. Fairly Fast, high quality, $0.055 per image.  Generally recommend 1.1 instead',
   },
   [ImageModels.Flux_Schnell_Lora]: {
     name: 'Flux Schnell Lora',
     provider: ModelProvider.Replicate,
     modelId: 'black-forest-labs/flux-schnell-lora',
-    description: 'From Replicate. Fairly Fast, high-quality, $0.055 per image.  Generally recommend 1.1 instead',
+    description: 'From Replicate. Fairly Fast, high quality, $0.055 per image.  Generally recommend 1.1 instead',
   },
 };
 
