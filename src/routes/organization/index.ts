@@ -29,10 +29,10 @@ async function routes (fastify: FastifyInstance): Promise<void> {
         Keep it brief, vivid, and immediately usable at the table with original descriptions a game master can use at a glance.
         Follow this structure (SEPARATING SECTIONS AND ANY LISTS WITH \\n and MAKING SURE to include the field labels and asterisks):
         first line (don't include this header): a 1-sentence summary of who they are and what they want
-        **Symbols, Colors, or Style:** a quick description of their visual identity
-        **Core Beliefs or Goals:** list of 3 things that motivate them
-        **Methods and Behavior:** 3 bullet points on how they operate
-        **Roleplay hooks:** 2 ideas for how characters might interact with or feel about the organization
+        **Symbols, colors, or style:** a quick description of their visual identity
+        **Core beliefs or goals:** list of 3 things that motivate them
+        **Methods and behavior:** 3 bullet points on how they operate
+        **Role-play hooks:** 2 ideas for how characters might interact with or feel about the organization
       `, longDescriptionParagraphs);
 
     const nameInstruction = generateNameInstruction(name, nameStyles);
