@@ -2,7 +2,11 @@ import OpenAI from 'openai';
 
 let openai: OpenAI;
 
-export const loadOpenAI = async function(): Promise<void> {
+export const loadOpenAI = async function () {
+  if (!process.env.OPENAI_API_KEY) {
+    return;
+  }
+
   openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
   });
@@ -12,7 +16,7 @@ export const loadOpenAI = async function(): Promise<void> {
   }
 };
 
-export const getCompletion = async(system: string, prompt: string, temperature: number, model: string): Promise<string | null> => {
+export const getOpenAICompletion = async(system: string, prompt: string, temperature: number, model: string): Promise<string | null> => {
   try {
     const chat_completion = await openai.chat.completions.create({
       model: model,

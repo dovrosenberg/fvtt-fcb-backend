@@ -62,13 +62,16 @@ const replicateImageModels = {
 };
 
 const loadReplicate = async function(): Promise<void> {
+  if (!process.env.REPLICATE_API_KEY) {
+    throw new Error('REPLICATE_API_KEY not set');
+  }
+
   replicate = new Replicate({
-    auth: process.env.REPLICATE_API_KEY as string
+    auth: process.env.REPLICATE_API_KEY,
   });
 
-  if (!replicate) {
-    console.error('Issue initializing Replicate API client');
-  }
+  if (!replicate)
+    throw new Error('Failed to initialize Replicate');
 };
 
 /**
@@ -77,7 +80,7 @@ const loadReplicate = async function(): Promise<void> {
  */
 const getReplicateImage = async (prompt: string, filenamePrefix: string, modelId: string,overrideOptions?: Record<string, any>): Promise<string> => {
   if (!replicate) {
-    throw new Error('Replicate not configured');
+    throw new Error('Replicate not loaded in generateImage()');
   }
   
   overrideOptions ||= {};
