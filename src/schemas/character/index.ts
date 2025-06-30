@@ -1,6 +1,7 @@
 import { FastifyRequest, } from 'fastify';
 import { FromSchema } from 'json-schema-to-ts';
 import { createPostInputSchema } from '@/schemas/utils';
+import { ImageModels, TextModels } from '@/services/models';
 
 const generateCharacterRequestSchema = {
   type: 'object',
@@ -15,11 +16,19 @@ const generateCharacterRequestSchema = {
     createLongDescription: { type: 'boolean', description: 'Create a detailed description or a digestible summary'},
     longDescriptionParagraphs: { type: 'integer', minimum: 1, maximum: 4, default: 1, description: 'The number of paragraphs to produce in the output when using a long description' },
     nameStyles: { type: 'array', description: 'The styles of names to use', items: { type: 'string' }},
+    textModel: { type: 'string', enum: Object.values(TextModels), description: 'The text generation model to use' },
   },
   required: ['genre'],
 } as const;
 
-const generateCharacterImageRequestSchema = generateCharacterRequestSchema;
+const generateCharacterImageRequestSchema = {
+  type: 'object',
+  properties: {
+    ...generateCharacterRequestSchema.properties,
+    imageModel: { type: 'string', enum: Object.values(ImageModels), description: 'The image generation model to use' },
+  },
+  required: generateCharacterRequestSchema.required
+} as const;
 
 export const generateCharacterResponseSchema = {
   type: 'object',

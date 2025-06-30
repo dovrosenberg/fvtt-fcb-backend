@@ -6,6 +6,7 @@ import organizationRoutes from './organization';
 import locationRoutes from './location';
 import nameRoutes from './name';
 import gmailRoutes from './gmail';
+import modelRoutes from './models';
 import { versionInputSchema, VersionOutput } from '@/schemas';
 
 /**
@@ -18,9 +19,8 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
   // provide the version
   fastify.get('/version', { schema: versionInputSchema }, async (): Promise<VersionOutput> => ({ 
-    // for 1.0.1 just return 1.0.0
-    // starting in 1.1.0 start to return just major.minor
-    version: '1.0.0', // version 
+    // get just the major/minor version
+    version: version.split('.').slice(0, 2).join('.'), 
   }));
 
   fastify.register(characterRoutes, { prefix: '/character' });
@@ -28,6 +28,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.register(locationRoutes, { prefix: '/location' });
   fastify.register(nameRoutes, { prefix: '/name' });
   fastify.register(gmailRoutes, { prefix: '/pollEmail' });
+  fastify.register(modelRoutes, { prefix: '/models' });
 }
 
 export default routes;

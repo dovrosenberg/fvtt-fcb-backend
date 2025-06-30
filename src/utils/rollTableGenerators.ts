@@ -1,4 +1,5 @@
-import { getCompletion } from '@/services/openai';
+import { getCompletion } from '@/services/llm';
+import { TextModels } from '@/services/models';
 
 interface PromptConfig {
   entityType: string;
@@ -9,6 +10,7 @@ interface PromptConfig {
   settingFeeling?: string;
   nameStyles?: string[];
   storeType?: string; // For stores specifically
+  textModel?: TextModels;
 }
 
 export function generateSystemPrompt(config: PromptConfig): string {
@@ -34,7 +36,7 @@ export function generateSystemPrompt(config: PromptConfig): string {
       system += `\n${i + 1}. "${cleanedNameStyles[i]}" style: Generate EXACTLY ${countForThisStyle} names`;
     }
     
-    system += `\n\nIMPORTANT: You must generate the exact number of names specified for each style. Mix the styles throughout your response - do NOT group all names of one style together.`;
+    system += '\n\nIMPORTANT: You must generate the exact number of names specified for each style. Mix the styles throughout your response - do NOT group all names of one style together.';
   } else {
     system += `\nThe names MUST follow the following naming style: "${cleanedNameStyles[0]}"`;
   }
@@ -79,7 +81,7 @@ export function generatePrompts(config: PromptConfig): { systemPrompt: string; u
 export async function generateRollTableCompletions(config: PromptConfig): Promise<{ names: string[] } | null> {
   const { systemPrompt, userPrompt } = generatePrompts(config);
 
-  const result = await getCompletion(systemPrompt, userPrompt, 0.9) as { names: string[] } || { names: []};
+  const result = await getCompletion(systemPrompt, userPrompt, 0.9, config.textModel) as { names: string[] } || { names: []};
 
   if (!result)
     return null;

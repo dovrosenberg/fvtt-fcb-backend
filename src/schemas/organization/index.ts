@@ -1,6 +1,7 @@
 import { FastifyRequest, } from 'fastify';
 import { FromSchema } from 'json-schema-to-ts';
 import { createPostInputSchema } from '@/schemas/utils';
+import { ImageModels, TextModels } from '@/services/models';
 
 const generateOrganizationRequestSchema = {
   type: 'object',
@@ -19,11 +20,19 @@ const generateOrganizationRequestSchema = {
     grandparentType: { type: 'string', description: 'The type of grandparent organization' },
     grandparentDescription: { type: 'string', description: 'The current description of the organization\'s grandparent' },
     nameStyles: { type: 'array', description: 'The styles of names to use', items: { type: 'string' }},
+    textModel: { type: 'string', enum: Object.values(TextModels), description: 'The text generation model to use' },
   },
   required: ['genre'],
 } as const;
 
-export const generateOrganizationImageRequestSchema = generateOrganizationRequestSchema; 
+export const generateOrganizationImageRequestSchema = {
+  type: 'object',
+  properties: {
+    ...generateOrganizationRequestSchema.properties,
+    imageModel: { type: 'string', enum: Object.values(ImageModels), description: 'The image generation model to use' },
+  },
+  required: generateOrganizationRequestSchema.required
+} as const; 
 
 export const generateOrganizationResponseSchema = {
   type: 'object',

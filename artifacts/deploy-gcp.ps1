@@ -48,6 +48,12 @@ if (Test-Path ".env") {
     exit 1
 }
 
+# Check for API keys
+if (-not $env:REPLICATE_API_KEY -or (-not $env:OPENAI_API_KEY -and -not $env:ANTHROPIC_API_KEY)) {
+    Write-Host "❌ ERROR: You must provide a REPLICATE_API_KEY, and also at least one of OPENAI_API_KEY or ANTHROPIC_API_KEY in your .env file."
+    exit 1
+}
+
 # Check if service account key file exists
 if (-not (Test-Path "gcp-service-key.json")) {
     Write-Host "❌ ERROR: Service account key file 'gcp-service-key.json' not found!"
