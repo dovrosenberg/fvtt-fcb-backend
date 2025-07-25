@@ -18,12 +18,12 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateCharacterInputSchema }, async (request: GenerateCharacterRequest, reply: FastifyReply): Promise<GenerateCharacterOutput> => {
-    const { name, genre, settingFeeling, type, species, speciesDescription, briefDescription, createLongDescription, longDescriptionParagraphs, nameStyles, textModel } = request.body;
+    const { name, genre, settingFeeling, type, species, speciesDescription, briefDescription, longDescriptionParagraphs, nameStyles, textModel } = request.body;
 
     const system = generateEntitySystemPrompt('character', genre, settingFeeling);
 
-    const descriptionDefinition = generateDescriptionDefinition(createLongDescription || false, `
-            The description should be in the style of a brief NPC description for a tabletop RPG.
+    const descriptionDefinition = generateDescriptionDefinition(`
+            The role-play notes should be in the style of a brief NPC description for a tabletop RPG.
             Keep each section to a single short sentence or list.
             Avoid fictional character references or long explanations.
             Write clearly, vividly, and efficiently.
@@ -37,7 +37,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     const nameInstruction = generateNameInstruction(name, nameStyles);
     
     const prompt = `
-      I need you to suggest one name and one description for a character. ${descriptionDefinition} 
+      I need you to suggest one name and two descriptions for a character. ${descriptionDefinition} 
       ${nameInstruction ? `${nameInstruction}` : ''}
       ${type ? `The type of character is a ${type}. Give this moderate weight.` : ''}
           ${species ? `It should be a description of a ${species}.` : ''}
@@ -49,14 +49,17 @@ async function routes (fastify: FastifyInstance): Promise<void> {
         `;
 
     try {
-      const result = (await getCompletion(system, prompt, 1, textModel)) as { name: string, description: string } || { name: '', description: ''};
-      if (!result.name || !result.description) {
+      const result = (await getCompletion(system, prompt, 1, textModel)) as { name: string, roleplayNotes: string, longDescription: string } || { name: '', roleplayNotes: '', longDescription: ''};
+      if (!result.name || !result.roleplayNotes || !result.longDescription) {
         return reply.status(500).send({ error: 'Failed to generate character due to an invalid response from the provider.' });
       }
 
       const character = {
         name: result.name,
-        description: result.description
+        description: {
+          roleplayNotes: result.roleplayNotes,
+          long: result.longDescription,
+        }
       } as GenerateCharacterOutput;
 
       return character;
