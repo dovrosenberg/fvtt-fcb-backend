@@ -14,7 +14,6 @@ const generateOrganizationRequestSchema = {
     parentName: { type: 'string', description: 'The type of the parent organization' },
     parentType: { type: 'string', description: 'The type of parent organization' },
     parentDescription: { type: 'string', description: 'The current description of the organization\'s parent' },
-    createLongDescription: { type: 'boolean', description: 'Create a detailed description or a digestible summary'},
     longDescriptionParagraphs: { type: 'integer', minimum: 1, maximum: 4, default: 1, description: 'The number of paragraphs to produce in the output when using a long description' },
     grandparentName: { type: 'string', description: 'The type of the grandparent organization' },
     grandparentType: { type: 'string', description: 'The type of grandparent organization' },
@@ -38,7 +37,14 @@ export const generateOrganizationResponseSchema = {
   type: 'object',
   properties: {
     name: { type: 'string', description: 'The generated organizations\'s name' },
-    description: { type: 'string', description: 'A generated description of the organization' }
+    description: { 
+      type: 'object',
+      properties: {
+        roleplayNotes: { type: 'string', description: 'Quick notes useful during game sessions' },
+        long: { type: 'string', description: 'A long, detailed description of the organization.' }
+      },
+      required: ['roleplayNotes', 'long']
+    }
   },
   required: ['name', 'description']
 } as const;

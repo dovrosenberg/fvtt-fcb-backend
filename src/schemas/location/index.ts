@@ -17,7 +17,6 @@ const generateLocationRequestSchema = {
     grandparentName: { type: 'string', description: 'The type of the grandparent location' },
     grandparentType: { type: 'string', description: 'The type of grandparent location' },
     grandparentDescription: { type: 'string', description: 'The current description of the location\'s grandparent' },
-    createLongDescription: { type: 'boolean', description: 'Create a detailed description or a digestible summary'},
     longDescriptionParagraphs: { type: 'integer', minimum: 1, maximum: 4, default: 1, description: 'The number of paragraphs to produce in the output when using a long description' },
     nameStyles: { type: 'array', description: 'The styles of names to use', items: { type: 'string' }},
     textModel: { type: 'string', enum: Object.values(TextModels), description: 'The text generation model to use' },
@@ -38,7 +37,14 @@ export const generateLocationResponseSchema = {
   type: 'object',
   properties: {
     name: { type: 'string', description: 'The generated locations\'s name' },
-    description: { type: 'string', description: 'A generated description of the location' }
+    description: { 
+      type: 'object',
+      properties: {
+        roleplayNotes: { type: 'string', description: 'Quick notes useful during game sessions' },
+        long: { type: 'string', description: 'A long, detailed description of the location.' }
+      },
+      required: ['roleplayNotes', 'long']
+    }
   },
   required: ['name', 'description']
 } as const;

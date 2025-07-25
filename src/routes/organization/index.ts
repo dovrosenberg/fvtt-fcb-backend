@@ -18,11 +18,11 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateOrganizationInputSchema }, async (request: GenerateOrganizationRequest, reply: FastifyReply): Promise<GenerateOrganizationOutput> => {
-    const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, createLongDescription, longDescriptionParagraphs, nameStyles, textModel } = request.body;
+    const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, longDescriptionParagraphs, nameStyles, textModel } = request.body;
   
     const system = generateEntitySystemPrompt('organization',genre, settingFeeling);
 
-    const descriptionDefinition = generateDescriptionDefinition(createLongDescription || false, `
+    const descriptionDefinition = generateDescriptionDefinition(`
         The description should be in the style of a concise, fast-to-use organization description for a tabletop RPG. 
         Keep each section to a single short sentence or list.
         Avoid fictional comparisons.
@@ -38,7 +38,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     const nameInstruction = generateNameInstruction(name, nameStyles);
     
     const prompt = `
-      I need you to suggest one name and one description for an organization. ${descriptionDefinition}
+      I need you to suggest one name and two descriptions for an organization. ${descriptionDefinition}
       ${nameInstruction ? `${nameInstruction}` : ''}
       ${type ? `The type of organization is a ${type}.` : ''}
       ${parentName ? `The organization is a part of an organization called ${parentName + (parentName ? ' (which is a ' + parentType + ')' : '') + '. ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
@@ -49,14 +49,17 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     `;
   
     try {
-      const result = (await getCompletion(system, prompt, 1, textModel)) as { name: string, description: string } || { name: '', description: ''};
-      if (!result.name || !result.description) {
+      const result = (await getCompletion(system, prompt, 1, textModel)) as { name: string, roleplayNotes: string, longDescription: string } || { name: '', roleplayNotes: '', longDescription: ''};
+      if (!result.name || !result.roleplayNotes || !result.longDescription) {
         return reply.status(500).send({ error: 'Failed to generate organization due to an invalid response from the provider.' });
       }
       
       const organization = {
         name: result.name,
-        description: result.description,
+        description: {
+          roleplayNotes: result.roleplayNotes,
+          long: result.longDescription,
+        },
       } as GenerateOrganizationOutput;
     
       return organization;
