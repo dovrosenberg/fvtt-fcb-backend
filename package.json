@@ -1,5 +1,5 @@
 {
-  "name": "foundry-ai-backend",
+  "name": "fvtt-fcb-backend",
   "version": "1.2.0",
   "description": "Backend for Foundry Campaign Builder module",
   "main": "server.js",
