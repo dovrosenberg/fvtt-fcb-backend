@@ -29,9 +29,10 @@ async function routes (fastify: FastifyInstance): Promise<void> {
             Write clearly, vividly, and efficiently.
             Follow this structure (SEPARATING SECTIONS AND ANY LISTS WITH \\n and MAKING SURE to include the field labels and asterisks):
             first line (don't include this header): a 1-sentence summary of who the NPC is and their general vibe.
-            **Personality snapshot:** list of 3 key traits separated by commas.
-            **Role-play hooks:** 2 tips on how to role-play them.
-            **Appearance:** a quick description of their look.
+            \\n**Appearance:** a 1-2 sentence description of their appearance suitable for description to players in a game.
+            \\n**Voice:** a suggestion to a non-professional voice actor about how to voice them without an accent; this should have 4 parts: 1) the pitch, 2) the pace, 3) suggested use/positioning of the lips, jaw, and tongue (for example a "nasal voice" or "a breathy voice" or "tongue wide across bottom of mouth", or "thrust jaw forward", or "move lips to the side"), and 4) a suggestion for a distinct phrase or dialect.
+            \\n**Personality snapshot:** list of 3 key traits separated by commas.
+            \\n**Role-play hooks:** 2 tips on how to role-play them.
           `, longDescriptionParagraphs);
 
     const nameInstruction = generateNameInstruction(name, nameStyles);
