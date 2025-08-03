@@ -22,26 +22,32 @@ async function routes (fastify: FastifyInstance): Promise<void> {
 
     const system = generateEntitySystemPrompt('character', genre, settingFeeling);
 
+    // see https://www.reddit.com/r/VoiceActing/comments/jwkufz/how_to_create_100_distinctly_different_voices/ for more info on voices
     const descriptionDefinition = generateDescriptionDefinition(`
             The role-play notes should be in the style of a brief NPC description for a tabletop RPG.
             Keep each section to a single short sentence or list.
             Avoid fictional character references or long explanations.
             Write clearly, vividly, and efficiently.
-            Follow this structure (SEPARATING SECTIONS AND ANY LISTS WITH \\n and MAKING SURE to include the field labels and asterisks):
+            THIS FIELD SHOULD NOT BE A NESTED JSON STRUCTURE - IT SHOULD JUST BE A STRING!  Follow this structure (SEPARATING SECTIONS AND ANY LISTS WITH \\n and MAKING SURE to include the field labels and asterisks):
+            
             first line (don't include this header): a 1-sentence summary of who the NPC is and their general vibe.
-            **Personality snapshot:** list of 3 key traits separated by commas.
-            **Role-play hooks:** 2 tips on how to role-play them.
-            **Appearance:** a quick description of their look.
+            \\n**Appearance:** a 1-2 sentence description of their appearance suitable for description to players in a game.
+            \\n**Voice:** generate a unique and easy-to-replicate voice style that does not rely on regional or ethnic accents. The voice should be suitable for tabletop roleplaying and easy for a Dungeon Master to repeat across sessions. Use the following elements to make it distinctive: 1) Pace: (e.g., slow, rapid, halting, smooth), 2) Tone: (e.g., gravelly, nasal, airy, booming, whispery), 3) Pitch: (e.g., high, low, medium), and 4) Rhythm or Quirk: (e.g., pauses often, speaks in rhyming phrases, repeats key words, ends sentences with a sigh or chuckle).  Combine those traits into a single sentence describes how the character sounds in a way that helps a DM perform the voice consistently. Avoid accents and instead focus on vocal characteristics and speech patterns.  For example: "\\n**Voice:** Speaks in a smooth, low tone with deliberate pacing, often pausing to choose their words and ending sentences with a knowing hum.
+            \\n**Commonly used phrases:** several phrases they character might use repeatedly
+            \\n**Personality snapshot:** list of 3 key traits separated by commas.
+            \\n**Role-play hooks:** 2 tips on how to role-play them.
           `, longDescriptionParagraphs);
 
     const nameInstruction = generateNameInstruction(name, nameStyles);
-    
+
+    // \\n**Voice:** a suggestion to a non-professional voice actor about how to produce a distinct voice suitable for the character without an accent; this should have 5 parts: 1) one of the following basic voice types that describe each syllable: dabbing (light, direct, sudden), flicking (light, indirect, sudden), pressing (strong, direct, sustained), thrusting (strong, direct, sudden), wringing (strong, indirect, sustained), slashing (strong, indirect, sudden), gliding (light, direct, sustained), or floating (light, indirect, sustained), 2) nasally, throaty, or normal, 3) breathy or dry, 4) child (high pitch), adult, or old (raspy) voice, 5) overall speaking slowly, quickly, or normally
+
     const prompt = `
       I need you to suggest one name and two descriptions for a character. ${descriptionDefinition} 
       ${nameInstruction ? `${nameInstruction}` : ''}
       ${type ? `The type of character is a ${type}. Give this moderate weight.` : ''}
           ${species ? `It should be a description of a ${species}.` : ''}
-          ${species && speciesDescription ? `Here is a description of what a ${species} is. Give it light weight: ${speciesDescription}` : ''}
+          ${species && speciesDescription && species.trim()!==speciesDescription.trim() ? `Here is a description of what a ${species} is. Give it light weight: ${speciesDescription}` : ''}
           ${briefDescription ? `Here is a brief description of the character that you should use as a starting point.
             THIS IS THE MOST IMPORTANT THING! EVEN MORE IMPORTANT THAN SPECIES DESCRIPTION/STEREOTYPES. YOUR GENERATED DESCRIPTION MUST
             INCLUDE ALL OF THESE FACTS. REQUIRED FACTS: ${briefDescription}` : ''}
@@ -89,12 +95,12 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       ${name ? `The character is named ${name}` : ''}.
       ${type ? `The type of character is a ${type}.` : ''}.
       ${species ? `It should be a description of a ${species}.` : ''}
-          ${species && speciesDescription ? `Here is a description of what a ${species} is. Give it light weight: ${speciesDescription}` : ''}
-          ${briefDescription ? `Here is a brief description of the character that you should use as a starting point.
-            THIS IS THE MOST IMPORTANT THING! EVEN MORE IMPORTANT THAN SPECIES DESCRIPTION/STEREOTYPES. YOUR GENERATED DESCRIPTION MUST
-            INCLUDE ALL OF THESE FACTS. REQUIRED FACTS: ${briefDescription}` : ''}
-          You should only take the world feeling and species description into account in ways that DO NOT contradict the other information.
-        `;
+      ${species && speciesDescription && species.trim()!==speciesDescription.trim() ? `Here is a description of what a ${species} is. Give it light weight: ${speciesDescription}` : ''}
+      ${briefDescription ? `Here is a brief description of the character that you should use as a starting point.
+        THIS IS THE MOST IMPORTANT THING! EVEN MORE IMPORTANT THAN SPECIES DESCRIPTION/STEREOTYPES. YOUR GENERATED DESCRIPTION MUST
+        INCLUDE ALL OF THESE FACTS. REQUIRED FACTS: ${briefDescription}` : ''}
+        You should only take the world feeling and species description into account in ways that DO NOT contradict the other information.
+      `;
 
     try {
       const imagePrompt = await getCompletion(system, prompt, 1, textModel) as { prompt: string } | undefined;
