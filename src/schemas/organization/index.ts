@@ -1,6 +1,7 @@
 import { FastifyRequest, } from 'fastify';
 import { FromSchema } from 'json-schema-to-ts';
 import { createPostInputSchema } from '@/schemas/utils';
+import { ImageModels, TextModels } from '@/services/models';
 
 const generateOrganizationRequestSchema = {
   type: 'object',
@@ -13,23 +14,37 @@ const generateOrganizationRequestSchema = {
     parentName: { type: 'string', description: 'The type of the parent organization' },
     parentType: { type: 'string', description: 'The type of parent organization' },
     parentDescription: { type: 'string', description: 'The current description of the organization\'s parent' },
-    createLongDescription: { type: 'boolean', description: 'Create a detailed description or a digestible summary'},
     longDescriptionParagraphs: { type: 'integer', minimum: 1, maximum: 4, default: 1, description: 'The number of paragraphs to produce in the output when using a long description' },
     grandparentName: { type: 'string', description: 'The type of the grandparent organization' },
     grandparentType: { type: 'string', description: 'The type of grandparent organization' },
     grandparentDescription: { type: 'string', description: 'The current description of the organization\'s grandparent' },
     nameStyles: { type: 'array', description: 'The styles of names to use', items: { type: 'string' }},
+    textModel: { type: 'string', enum: Object.values(TextModels), description: 'The text generation model to use' },
   },
   required: ['genre'],
 } as const;
 
-export const generateOrganizationImageRequestSchema = generateOrganizationRequestSchema; 
+export const generateOrganizationImageRequestSchema = {
+  type: 'object',
+  properties: {
+    ...generateOrganizationRequestSchema.properties,
+    imageModel: { type: 'string', enum: Object.values(ImageModels), description: 'The image generation model to use' },
+  },
+  required: generateOrganizationRequestSchema.required
+} as const; 
 
 export const generateOrganizationResponseSchema = {
   type: 'object',
   properties: {
     name: { type: 'string', description: 'The generated organizations\'s name' },
-    description: { type: 'string', description: 'A generated description of the organization' }
+    description: { 
+      type: 'object',
+      properties: {
+        roleplayNotes: { type: 'string', description: 'Quick notes useful during game sessions' },
+        long: { type: 'string', description: 'A long, detailed description of the organization.' }
+      },
+      required: ['roleplayNotes', 'long']
+    }
   },
   required: ['name', 'description']
 } as const;
