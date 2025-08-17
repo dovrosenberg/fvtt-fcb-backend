@@ -34,6 +34,27 @@ const loadGmail = async function(): Promise<void> {
     throw new Error('Failed to initialize Gmail client');
   }
 
+  // Proactively validate that our refresh token is usable so we fail fast with a clear message
+  try {
+    // This triggers a token refresh if needed
+    await oauth2Client.getAccessToken();
+  } catch (err: any) {
+    const code = err?.code || err?.response?.status;
+    const data = err?.response?.data;
+    const googleError = data?.error || err?.errors?.[0]?.reason;
+    const googleDescription = data?.error_description || err?.message;
+
+    // Surface common case explicitly
+    if (googleError === 'invalid_grant') {
+      throw new Error(
+        'Gmail OAuth refresh token is invalid or revoked.  Remove the refresh token from the .env file and rerun the install script.'
+      );
+    }
+
+    // Generic auth failure
+    throw new Error(`Failed to obtain Gmail access token${code ? ` (HTTP ${code})` : ''}: ${googleDescription || 'unknown error'}`);
+  }
+
   // Initialize whitelist
   if (process.env.INBOUND_WHITELIST) {
     whitelistedEmails = new Set(
@@ -93,9 +114,14 @@ const getTodoItems = async (): Promise<TodoItem[]> => {
           }
         }
 
+        if (!fromEmail) {
+          console.log(`Skipping message from unknown sender: ${sender}`);
+          continue;
+        }
+
         if (fromEmail) {
           const headers = email.data.payload.headers;
-          const subject = headers.find((h: any) => h.name === 'Subject')?.value || '';
+          // const subject = headers.find((h: any) => h.name === 'Subject')?.value || '';
           const date = headers.find((h: any) => h.name === 'Date')?.value || '';
           
           const timestamp = date ? new Date(date) : new Date();
@@ -115,7 +141,7 @@ const getTodoItems = async (): Promise<TodoItem[]> => {
           //    types of messages or different campaigns or something
           todoItems.push({
             timestamp: timestamp.toISOString(),
-            text: `${body}`.trim()
+            text: body.trim()
           });
     
           // Delete the message after processing
