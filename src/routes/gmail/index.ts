@@ -7,6 +7,7 @@ async function routes(fastify: FastifyInstance): Promise<void> {
     try {
       const items = await getTodoItems();
       
+      console.log(`Sent ${items.length} todo items to client`);
       return { items };
     } catch (error) {
       console.error('Error getting todo items:', error);
