@@ -10,7 +10,7 @@ import {
 } from '@/schemas';
 import { generateImage } from '@/services/images';
 import { generateNameInstruction } from '@/utils/nameStyleSelector';
-import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/utils/entityPromptHelpers';
+import { generateEntitySystemPrompt, generateDescriptionHeader } from '@/utils/entityPromptHelpers';
 
 
 // note: we don't clean briefDescription in these functions because there generally shouldn't be any HTML in it and if someone goes out of their way
@@ -18,21 +18,19 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateOrganizationInputSchema }, async (request: GenerateOrganizationRequest, reply: FastifyReply): Promise<GenerateOrganizationOutput> => {
-    const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, longDescriptionParagraphs, nameStyles, textModel } = request.body;
+    const { genre, settingFeeling, type, rpgStyle, briefDescription, name, parentName, parentType, parentDescription, longDescriptionParagraphs, nameStyles, textModel } = request.body;
   
-    const system = generateEntitySystemPrompt('organization',genre, settingFeeling);
+    const system = generateEntitySystemPrompt('organization', rpgStyle, genre, settingFeeling);
 
-    const descriptionDefinition = generateDescriptionDefinition(`
-        The description should be in the style of a concise, fast-to-use organization description for a tabletop RPG. 
-        Keep each section to a single short sentence or list.
-        Avoid fictional comparisons.
-        Keep it brief, vivid, and immediately usable at the table with original descriptions a game master can use at a glance.
-        THIS FIELD SHOULD NOT BE A NESTED JSON STRUCTURE - IT SHOULD JUST BE A STRING!  Follow this structure (SEPARATING SECTIONS AND ANY LISTS WITH \\n and MAKING SURE to include the field labels and asterisks):
+    const descriptionDefinition = generateDescriptionHeader('organization', rpgStyle, 
+      'Focus on how the organization is perceived publicly, the “surface layer” the PCs would know or sense. Think of what might be said in a tavern or seen in a city square. Include: Symbols / colors / uniforms / insignia. Reputation / rumors (what the average person thinks of them). Public presence (guards in the streets, banners, ceremonies, recruiters, pamphlets, etc.). Mood / impression (fearsome, respected, charitable, shadowy). Avoid inner workings, true motives, or mechanics — it’s just what PCs would pick up without special investigation.', 
+      'True goals, secret agendas, and hidden influence. Structure / leadership / key figures. Methods / tactics / resources (what they control, how they operate). How they interact with the PCs (potential allies, patrons, enemies, or rivals). Adventure hooks (quests, conflicts, or events tied to them).',
+      `
         first line (don't include this header): a 1-sentence summary of who they are and what they want
-        **Symbols, colors, or style:** a quick description of their visual identity
-        **Core beliefs or goals:** list of 3 things that motivate them
-        **Methods and behavior:** 3 bullet points on how they operate
-        **Role-play hooks:** 2 ideas for how characters might interact with or feel about the organization
+        \\n**Symbols, colors, or style:** a quick description of their visual identity
+        \\n**Core beliefs or goals:** list of 3 things that motivate them
+        \\n**Methods and behavior:** 3 bullet points on how they operate
+        \\n**Role-play hooks:** 2 ideas for how characters might interact with or feel about the organization
       `, longDescriptionParagraphs);
 
     const nameInstruction = generateNameInstruction(name, nameStyles);
