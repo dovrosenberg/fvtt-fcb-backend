@@ -3,7 +3,7 @@
  * @param entityType The type of entity being generated
  * @param rpgStyle Whether the long description should be RPG text (true) or something more suitable for a novel (false)
  * @param genre The genre of the world
- * @param settingFeeling The feeling of the world 
+ * @param settingFeeling The feeling of the world
  */
 export function generateEntitySystemPrompt(entityType: string, rpgStyle: boolean, genre: string, settingFeeling?: string): string {
   let intro = '';
