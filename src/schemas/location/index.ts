@@ -7,6 +7,7 @@ const generateLocationRequestSchema = {
   type: 'object',
   properties: {
     genre: { type: 'string', description: 'Genre of the world (ex. "fantasy" or "science fiction")' },
+    rpgStyle: { type: 'boolean', description: 'Whether to create text suitable for reading to players (true) or a more narrative description (false).' },
     settingFeeling: { type: 'string', description: 'The feeling of the setting (ex. "humorous" or "apocalyptic")' },
     type: { type: 'string', description: 'The type of location (ex. "town" or "kingdom" or "swamp")' },
     name: { type: 'string', description: 'The generated location\'s name.  If blank, one will be generated (text gen only)' },
@@ -21,7 +22,7 @@ const generateLocationRequestSchema = {
     nameStyles: { type: 'array', description: 'The styles of names to use', items: { type: 'string' }},
     textModel: { type: 'string', enum: Object.values(TextModels), description: 'The text generation model to use' },
   },
-  required: ['genre'],
+  required: ['genre', 'rpgStyle'],
 } as const;
 
 export const generateLocationImageRequestSchema = {

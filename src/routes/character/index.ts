@@ -10,7 +10,7 @@ import {
   GenerateCharacterImageRequest
 } from '@/schemas';
 import { generateNameInstruction } from '@/utils/nameStyleSelector';
-import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/utils/entityPromptHelpers';
+import { generateEntitySystemPrompt, generateDescriptionHeader } from '@/utils/entityPromptHelpers';
 
 
 // note: we don't clean briefDescription in these functions because there generally shouldn't be any HTML in it and if someone goes out of their way
@@ -18,24 +18,21 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateCharacterInputSchema }, async (request: GenerateCharacterRequest, reply: FastifyReply): Promise<GenerateCharacterOutput> => {
-    const { name, genre, settingFeeling, type, species, speciesDescription, briefDescription, longDescriptionParagraphs, nameStyles, textModel } = request.body;
+    const { name, genre, settingFeeling, rpgStyle, type, species, speciesDescription, briefDescription, longDescriptionParagraphs, nameStyles, textModel } = request.body;
 
-    const system = generateEntitySystemPrompt('character', genre, settingFeeling);
+    const system = generateEntitySystemPrompt('character', rpgStyle, genre, settingFeeling);
 
     // see https://www.reddit.com/r/VoiceActing/comments/jwkufz/how_to_create_100_distinctly_different_voices/ for more info on voices
-    const descriptionDefinition = generateDescriptionDefinition(`
-            The role-play notes should be in the style of a brief NPC description for a tabletop RPG.
-            Keep each section to a single short sentence or list.
-            Avoid fictional character references or long explanations.
-            Write clearly, vividly, and efficiently.
-            THIS FIELD SHOULD NOT BE A NESTED JSON STRUCTURE - IT SHOULD JUST BE A STRING!  Follow this structure (SEPARATING SECTIONS AND ANY LISTS WITH \\n and MAKING SURE to include the field labels and asterisks):
-            
-            first line (don't include this header): a 1-sentence summary of who the NPC is and their general vibe.
-            \\n**Appearance:** a 1-2 sentence description of their appearance suitable for description to players in a game.
-            \\n**Voice:** generate a unique and easy-to-replicate voice style that does not rely on regional or ethnic accents. The voice should be suitable for tabletop roleplaying and easy for a Dungeon Master to repeat across sessions. Use the following elements to make it distinctive: 1) Pace: (e.g., slow, rapid, halting, smooth), 2) Tone: (e.g., gravelly, nasal, airy, booming, whispery), 3) Pitch: (e.g., high, low, medium), and 4) Rhythm or Quirk: (e.g., pauses often, speaks in rhyming phrases, repeats key words, ends sentences with a sigh or chuckle).  Combine those traits into a single sentence describes how the character sounds in a way that helps a DM perform the voice consistently. Avoid accents and instead focus on vocal characteristics and speech patterns.  For example: "\\n**Voice:** Speaks in a smooth, low tone with deliberate pacing, often pausing to choose their words and ending sentences with a knowing hum.
-            \\n**Commonly used phrases:** several phrases they character might use repeatedly
-            \\n**Personality snapshot:** list of 3 key traits separated by commas.
-            \\n**Role-play hooks:** 2 tips on how to role-play them.
+    const descriptionDefinition = generateDescriptionHeader('NPC', rpgStyle, 
+      'Focus on immediate sensory impressions: Appearance (what they look like at first glance: clothing, posture, expression). Behavior / presence (mannerisms, how they carry themselves, the “vibe” they give off). Mood / emotional impression (how the characters make the PCs feel on meeting them).  Avoid backstory, stats, secret motives, or mechanical detail — keep it to what the PCs see, hear, and sense right now, before interacting with them. DO NOT describe anything about the location - just the character.',
+      'Hidden details, history, or lore.',
+      `first line (don't include this header): a 1-sentence summary of who the NPC is and their general vibe.
+        \\n**Appearance:** a 1-2 sentence description of their appearance suitable for description to players in a game.
+        \\n**Voice:** generate a unique and easy-to-replicate voice style that does not rely on regional or ethnic accents. The voice should be suitable for tabletop roleplaying and easy for a Dungeon Master to repeat across sessions. Use the following elements to make it distinctive: 1) Pace: (e.g., slow, rapid, halting, smooth), 2) Tone: (e.g., gravelly, nasal, airy, booming, whispery), 3) Pitch: (e.g., high, low, medium), and 4) Rhythm or Quirk: (e.g., pauses often, speaks in rhyming phrases, repeats key words, ends sentences with a sigh or chuckle).  Combine those traits into a single sentence describes how the character sounds in a way that helps a DM perform the voice consistently. Avoid accents and instead focus on vocal characteristics and speech patterns.  For example: 
+        \\n**Voice:** Speaks in a smooth, low tone with deliberate pacing, often pausing to choose their words and ending sentences with a knowing hum.
+        \\n**Commonly used phrases:** several phrases they character might use repeatedly
+        \\n**Personality snapshot:** list of 3 key traits separated by commas.
+        \\n**Role-play hooks:** 2 tips on how to role-play them.
           `, longDescriptionParagraphs);
 
     const nameInstruction = generateNameInstruction(name, nameStyles);
@@ -47,7 +44,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       ${nameInstruction ? `${nameInstruction}` : ''}
       ${type ? `The type of character is a ${type}. Give this moderate weight.` : ''}
           ${species ? `It should be a description of a ${species}.` : ''}
-          ${species && speciesDescription && species.trim()!==speciesDescription.trim() ? `Here is a description of what a ${species} is. Give it light weight: ${speciesDescription}` : ''}
+          ${species && speciesDescription && species.trim()!==speciesDescription.trim() ? `Here is a description of what a ${species} is. Give it light weight but DO NOT take into account any traditional stereotypes or tropes that are not included here: ${speciesDescription}` : ''}
           ${briefDescription ? `Here is a brief description of the character that you should use as a starting point.
             THIS IS THE MOST IMPORTANT THING! EVEN MORE IMPORTANT THAN SPECIES DESCRIPTION/STEREOTYPES. YOUR GENERATED DESCRIPTION MUST
             INCLUDE ALL OF THESE FACTS. REQUIRED FACTS: ${briefDescription}` : ''}

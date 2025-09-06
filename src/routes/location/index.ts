@@ -10,7 +10,7 @@ import {
 } from '@/schemas';
 import { generateImage } from '@/services/images';
 import { generateNameInstruction } from '@/utils/nameStyleSelector';
-import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/utils/entityPromptHelpers';
+import { generateEntitySystemPrompt, generateDescriptionHeader } from '@/utils/entityPromptHelpers';
 
 
 // note: we don't clean briefDescription in these functions because there generally shouldn't be any HTML in it and if someone goes out of their way
@@ -18,20 +18,17 @@ import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/uti
 
 async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.post('/generate', { schema: generateLocationInputSchema }, async (request: GenerateLocationRequest, reply: FastifyReply): Promise<GenerateLocationOutput> => {
-    const { genre, settingFeeling, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, longDescriptionParagraphs, nameStyles, textModel } = request.body;
+    const { genre, settingFeeling, rpgStyle, type, briefDescription, name, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, longDescriptionParagraphs, nameStyles, textModel } = request.body;
 
-    const system = generateEntitySystemPrompt('location', genre, settingFeeling);
+    const system = generateEntitySystemPrompt('location', rpgStyle, genre, settingFeeling);
 
-    const descriptionDefinition = generateDescriptionDefinition(`
-        The description should be in the style of a concise, fast-to-use location description for a tabletop RPG. 
-        Keep each section to a single short sentence or list.
-        Avoid fictional comparisons.
-        Keep it brief, vivid, and immediately usable at the table with original descriptions a game master can use at a glance.
-        THIS FIELD SHOULD NOT BE A NESTED JSON STRUCTURE - IT SHOULD JUST BE A STRING!  Follow this structure (SEPARATING SECTIONS AND ANY LISTS WITH \\n and MAKING SURE to include the field labels and asterisks):
-        first line (don't include this header): a 1-sentence summary of what the location is and its main vibe.
-        **Notable features:** list of 3 key physical or cultural details, separated by commas.
-        **Sights, sounds, smells:** 3 quick sensory cues for immersion, separated by commas.
-        **Role-play hooks:** 2 ideas for how characters might interact with or feel about the location
+    const descriptionDefinition = generateDescriptionHeader('location', rpgStyle, 
+      'Focus on sensory details (sight, sound, smell, mood) without explaining history, mechanics, or secrets. Avoid backstory, stats, secret motives, or mechanical detail — keep it to what the PCs see, hear, and sense right now.',
+      'Hidden details, history, or lore. You do not need to include interactive elements like NPCs, traps, etc. unless provided in the brief description I give you.',
+      `first line (don't include this header): a 1-sentence summary of what the location is and its main vibe.
+        \\n**Notable features:** list of 3 key physical or cultural details, separated by commas.
+        \\n**Sights, sounds, smells:** 3 quick sensory cues for immersion, separated by commas.
+        \\n**Role-play hooks:** 2 ideas for how characters might interact with or feel about the location
       `, longDescriptionParagraphs);
 
     const nameInstruction = generateNameInstruction(name, nameStyles);
