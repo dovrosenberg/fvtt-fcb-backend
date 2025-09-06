@@ -25,13 +25,15 @@ const generateOrganizationRequestSchema = {
   required: ['genre', 'rpgStyle'],
 } as const;
 
+// need to remove the rpgStyle property
+const { rpgStyle: _rpgStyle, ...imageProperties } = generateOrganizationRequestSchema.properties;
 export const generateOrganizationImageRequestSchema = {
   type: 'object',
   properties: {
-    ...generateOrganizationRequestSchema.properties,
+    ...imageProperties,
     imageModel: { type: 'string', enum: Object.values(ImageModels), description: 'The image generation model to use' },
   },
-  required: generateOrganizationRequestSchema.required
+  required: generateOrganizationRequestSchema.required.filter((prop) => prop !== 'rpgStyle'),
 } as const; 
 
 export const generateOrganizationResponseSchema = {

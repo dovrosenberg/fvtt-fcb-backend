@@ -25,13 +25,15 @@ const generateLocationRequestSchema = {
   required: ['genre', 'rpgStyle'],
 } as const;
 
+// need to remove the rpgStyle property
+const { rpgStyle: _rpgStyle, ...imageProperties } = generateLocationRequestSchema.properties;
 export const generateLocationImageRequestSchema = {
   type: 'object',
   properties: {
-    ...generateLocationRequestSchema.properties,
+    ...imageProperties,
     imageModel: { type: 'string', enum: Object.values(ImageModels), description: 'The image generation model to use' },
   },
-  required: generateLocationRequestSchema.required
+  required: generateLocationRequestSchema.required.filter((prop) => prop !== 'rpgStyle'),
 } as const; 
 
 export const generateLocationResponseSchema = {

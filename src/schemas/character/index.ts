@@ -21,13 +21,16 @@ const generateCharacterRequestSchema = {
   required: ['genre', 'rpgStyle'],
 } as const;
 
+// need to remove the rpgStyle property
+const { rpgStyle: _rpgStyle, ...imageProperties } = generateCharacterRequestSchema.properties;
 const generateCharacterImageRequestSchema = {
   type: 'object',
+
   properties: {
-    ...generateCharacterRequestSchema.properties,
+    ...imageProperties,
     imageModel: { type: 'string', enum: Object.values(ImageModels), description: 'The image generation model to use' },
   },
-  required: generateCharacterRequestSchema.required
+  required: generateCharacterRequestSchema.required.filter((prop) => prop !== 'rpgStyle'),
 } as const;
 
 export const generateCharacterResponseSchema = {

@@ -51,6 +51,10 @@ export function generateDescriptionHeader(entityType: string, rpgStyle: boolean,
       The longDescription should have two, distinct sections.  Avoid filler, keep both sections practical and immediately game-ready. The sections are:
       1. Boxed Text (for players): A short, vivid description that a GM can read aloud. ${rpgFormatBox} Write in the present tense and keep it tight (3–6 sentences).
       2. GM Notes (for the DM only): Clear, concise bullet points or short paragraphs with: ${rpgFormatNotes}
+
+      THIS FIELD SHOULD NOT BE A NESTED JSON STRUCTURE - IT SHOULD JUST BE A STRING!  Follow this structure (SEPARATING SECTIONS AND ANY LISTS WITH \n and MAKING SURE to include the field labels and asterisks):
+      ** Boxed Text: ** <Boxed Text>
+      \\n** GM Notes: ** <GM Notes>
     `;
   } else {
     longDescriptionInstructions = `
