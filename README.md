@@ -117,7 +117,9 @@ If you want to use email there are a few extra steps you need to take.  I highly
 
     (Step 3 - Contact info) - your email address again.  Then agree to the question on step 4 and finish then hit Create.
 
-4. Add "test" user - go to https://console.cloud.google.com/auth/audience and under "Test users" hit add users and enter the gmail address you created to receive emails way back in step a.  We use "test" users because this is an external app that we won't ever publish.
+4. Set the publishing status to production.  This will in theory open it to anyone to use the app, but there's not really any way for them to do that, since it's tied directly to your account.  For the more security-minded, here is my rationale for why this is safe:
+  * The app redirects to an invalid link (localhost) so it's not actually providing access to anything directly - it can only be used to generate a refresh token, and it can only do that for a user who logs in with valid gmail credentials (and it will only be able to access that account)
+  * You're creating your own client credentials, so there's no ability to mimic the app to do something else (make sure to keep your client id and secret secret)
 
 5. Add OAuth Client - go to https://console.cloud.google.com/auth/clients, hit "Create Client" and pick "Web Application" as the type.  Give it a name - again something lik fcb-backend is fine.  Under "Authorized redirect URIs, add a URI and enter http://localhost:3000/oauth2callback.  Hit create.
 
