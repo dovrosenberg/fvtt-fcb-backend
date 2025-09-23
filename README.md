@@ -69,7 +69,16 @@ There are lot of steps here, but if you follow the directions below, it should b
 ### Set environment variables (You generally only need to do this once, but will need to update the file if you ever change any of your tokens)
   
 1. Run this to download a template variable file.  Run it from the directory where you downloaded the key file in step 4 above.
-    ```sh
+
+    *Windows (Powershell):*
+
+    ```
+    curl.exe -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
+    ```
+
+    *Everything else:*
+
+    ```
     curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
     ```
 
@@ -92,7 +101,7 @@ There are lot of steps here, but if you follow the directions below, it should b
   - Open PowerShell as Administrator
   - Run the following command:
     ```powershell
-    curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.ps1 | powershell
+    curl.exe -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.ps1 | powershell
     ```
     ```powershell
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
@@ -126,9 +135,18 @@ If you want to use email there are a few extra steps you need to take.  I highly
 6. **VERY IMPORTANT!!!** Copy the Client ID and Client secret into your .env file.  If you can't do that right now, copy them somewhere else safe in the meantime -- you won't be able to get the secret again later.  Then hit OK
 
 7. Don't forget to set INCLUDE_EMAIL_SETUP to true in your env file.  Then rerun the deploy script 
+
+    *Windows (Powershell):*
+
+    ```
+    curl.exe -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
+    ```
+
+    *Everything else:*
+
     ```
     curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
-    ```
+    ```    
 
     It will ask you to open a URL in the browser and prompt for a code.  Open that URL.  You will be asked to login.  **IMPORTANT!!!** You need to login with the gmail account you created for this - not your normal one. You will get a security warning.  Hit Continue.  You'll get another security warning.  Hit continue again.  You will get a "refused to connect" message - totally fine - don't close the window and see the next step.  
 
