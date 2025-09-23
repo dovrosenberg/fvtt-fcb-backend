@@ -11,6 +11,7 @@ import {
 import { generateImage } from '@/services/images';
 import { generateNameInstruction } from '@/utils/nameStyleSelector';
 import { generateEntitySystemPrompt, generateDescriptionDefinition } from '@/utils/entityPromptHelpers';
+import { cleanText } from '@/utils/fileNames';
 
 
 // note: we don't clean briefDescription in these functions because there generally shouldn't be any HTML in it and if someone goes out of their way
@@ -101,7 +102,8 @@ async function routes (fastify: FastifyInstance): Promise<void> {
         return reply.status(500).send({ error: 'Failed to generate organization image prompt due to an invalid response from the provider.' });
       }
 
-      const imageUrl = await generateImage(imagePrompt.prompt, 'organization-image', {}, imageModel);
+      const prefix = name ? cleanText(name) : 'organization';
+      const imageUrl = await generateImage(imagePrompt.prompt, prefix, {}, imageModel);
 
       return { filePath: imageUrl } as GenerateOrganizationImageOutput;
     } catch (error) {
