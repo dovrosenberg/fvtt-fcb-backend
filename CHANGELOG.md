@@ -1,8 +1,12 @@
 # Change Log
 
-## 1.3.0 - 
+## v1.4 - Better file naming
 
-- Better RPG descriptions
+- Image file names now include the name of the entry (if provided) rather than just a generic 'character-image' or 'location-image'
+
+## 1.3.0 - Better RPG descriptions
+
+- RPG-style (boxed text) descriptions now available
 
 ## 1.2.1 - Gmail grant fix
 

@@ -11,6 +11,7 @@ import {
 import { generateImage } from '@/services/images';
 import { generateNameInstruction } from '@/utils/nameStyleSelector';
 import { generateEntitySystemPrompt, generateDescriptionHeader } from '@/utils/entityPromptHelpers';
+import { cleanText } from '@/utils/fileNames';
 
 
 // note: we don't clean briefDescription in these functions because there generally shouldn't be any HTML in it and if someone goes out of their way
@@ -100,7 +101,8 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       }
 
       // generate in landscape
-      const imageUrl = await generateImage(imagePrompt.prompt, 'location-image', { aspect_ratio: '4:3' }, imageModel);
+      const prefix = name ? cleanText(name) : 'location'; 
+      const imageUrl = await generateImage(imagePrompt.prompt, prefix, { aspect_ratio: '4:3' }, imageModel);
 
       return { filePath: imageUrl } as GenerateLocationImageOutput;
     } catch (error) {
