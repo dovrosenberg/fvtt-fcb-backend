@@ -70,7 +70,8 @@ There are lot of steps here, but if you follow the directions below, it should b
   
 1. Run this to download a template variable file.  Run it from the directory where you downloaded the key file in step 4 above.
 
-    *Windows (Powershell):*  *NOTE! you have to use `curl.exe` and not `curl`... Powershell is weird that way*
+    *Windows (Powershell):*  **NOTE! you have to use `curl.exe` and not `curl`... Powershell is weird that way.  If this still gives you issues with curl, you can do
+   `Remove-item alias:curl` in Powershell before running the `curl`.  You'll have to do it again in every new Powershell instance.**
 
     ```
     curl.exe -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
@@ -82,7 +83,7 @@ There are lot of steps here, but if you follow the directions below, it should b
     curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
     ```
 
-2. Edit the newly created .env file (in your favorite editor) to put in the needed settings (explained in more detail in the comments in the .env file).
+3. Edit the newly created .env file (in your favorite editor) to put in the needed settings (explained in more detail in the comments in the .env file).
       
 ### Deploy the backend (You'll also do just this part whenever you want to upgrade to a new release of this backend)
 
