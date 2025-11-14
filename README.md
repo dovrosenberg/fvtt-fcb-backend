@@ -70,7 +70,7 @@ There are lot of steps here, but if you follow the directions below, it should b
   
 1. Run this to download a template variable file.  Run it from the directory where you downloaded the key file in step 4 above.
 
-    *Windows (Powershell):*
+    *Windows (Powershell):*  *NOTE! you have to use `curl.exe` and not `curl`... Powershell is weird that way*
 
     ```
     curl.exe -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
@@ -84,7 +84,7 @@ There are lot of steps here, but if you follow the directions below, it should b
 
 2. Edit the newly created .env file (in your favorite editor) to put in the needed settings (explained in more detail in the comments in the .env file).
       
-### Deploy the backend (You'll just do this part whenever you want to upgrade to a new release of this backend)
+### Deploy the backend (You'll also do just this part whenever you want to upgrade to a new release of this backend)
 
 **Notes:**
   - The next step might take a few minutes to run - especially after the line around Setting IAM Policy.
