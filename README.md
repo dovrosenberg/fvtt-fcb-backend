@@ -90,7 +90,7 @@ There are lot of steps here, but if you follow the directions below, it should b
   - The next step might take a few minutes to run - especially after the line around Setting IAM Policy.
   - You may also see a warning: *Your active project does not match the quota project in your local Application Default Credentials file. This might result in unexpected quota issues*  You can ignore this.
 
- **For Ubuntu/Debian/WSL (recommended for Windows) or MacOS**
+ **For Ubuntu/Debian/WSL (WSL is recommended for Windows, if you have it) or MacOS**
   - Run the following in your terminal (in MacOS, this requires Homebrew):
       ```sh
       curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.sh | bash
