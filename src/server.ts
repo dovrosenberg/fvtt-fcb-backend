@@ -3,6 +3,8 @@ import helmet from '@fastify/helmet';
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUI from '@fastify/swagger-ui';
+import fastifyStatic from '@fastify/static';
+import * as path from 'path';
 
 import { loadOpenAI } from '@/services/openai';
 import { loadAnthropic } from '@/services/anthropic';
@@ -33,6 +35,12 @@ void (async () => {
     logger: {
       level: 'warn',   // 'info'
     }
+  });
+
+  // register fastify static to serve static files
+  fastify.register(fastifyStatic, {
+    root: path.resolve('/app/files'),
+    prefix: '/files/',
   });
 
   // tell swagger plugin to start watching routes created
@@ -88,7 +96,13 @@ void (async () => {
     },
   });
 
-  fastify.register(helmet);   // security best practices
+  /**
+   * we relax security here and allow images inside /files folder to be embedded
+   * DO NOT store sensitive info inside /files folder, only static images
+  */
+  fastify.register(helmet, {
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  }); // security best practices
 
   // have to allow all origins, but try to lock it down a bit
   fastify.register(cors, {

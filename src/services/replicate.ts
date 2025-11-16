@@ -1,4 +1,4 @@
-import { storageProvider } from '@/services/storage';
+import { getStorageProvider } from '@/services/storage';
 import Replicate from 'replicate';
 import { imageModels, DEFAULT_IMAGE_MODEL_ID } from './models';
 
@@ -116,11 +116,8 @@ const generateImage = async (prompt: string, filenamePrefix: string, modelId: st
     const fileName = `fcb/${filenamePrefix}-${Date.now()}.${replicateModel.outputFormat}`;
 
     // Save the image using the storage provider
-    const publicUrl = await storageProvider.saveFile(
-      fileName,
-      imageBuffer,
-      `image/${replicateModel.outputFormat}`
-    );
+    const storage = getStorageProvider();
+    const publicUrl = await storage.saveFile(fileName, imageBuffer, `image/${replicateModel.outputFormat}`);
     return publicUrl;
   } catch (error) {
     console.error('Error generating image with Replicate:', error);
