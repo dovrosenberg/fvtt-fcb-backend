@@ -1,6 +1,6 @@
 {
   "name": "fvtt-fcb-backend",
-  "version": "1.4.0",
+  "version": "1.8.0",
   "description": "Backend for Foundry Campaign Builder module",
   "main": "server.js",
   "scripts": {

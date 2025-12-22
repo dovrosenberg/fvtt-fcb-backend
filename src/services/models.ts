@@ -6,6 +6,7 @@ export enum ModelProvider {
 
 export enum TextModels {
   GPT_4o_mini = 'GPT_4o_mini',
+  GPT_5_mini = 'GPT_5_mini',
   Claude_3_haiku = 'Claude_3_haiku',
 }
 
@@ -16,7 +17,7 @@ export enum ImageModels {
   Flux_Schnell_Lora = 'Flux_Schnell_Lora',
 }
 
-export const DEFAULT_TEXT_MODEL_ID = TextModels.GPT_4o_mini;
+export const DEFAULT_TEXT_MODEL_ID = TextModels.GPT_5_mini;
 export const DEFAULT_IMAGE_MODEL_ID = ImageModels.Minimax_Image;
 
 
@@ -26,6 +27,12 @@ export const textModels = {
     provider: ModelProvider.OpenAI,
     modelId: 'gpt-4o-mini',
     description: 'From OpenAI. High-quality, $0.15/million tokens, but subject to $5/year minimum. Best if you are using your OpenAI token for other things so the minimum doesn\'t matter',
+  },
+  [TextModels.GPT_5_mini]: {
+    name: 'GPT-5 Mini',
+    provider: ModelProvider.OpenAI,
+    modelId: 'gpt-5-mini',
+    description: 'From OpenAI. High-quality, $0.25/million tokens, but subject to $5/year minimum. Best if you are using your OpenAI token for other things so the minimum doesn\'t matter',
   },
   [TextModels.Claude_3_haiku]: {
     name: 'Claude 3 Haiku',
