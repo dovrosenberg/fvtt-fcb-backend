@@ -5,17 +5,19 @@
  * @param genre The genre of the world
  * @param settingFeeling The feeling of the world 
  */
+import { LLM_ALLOWED_HTML_TAGS } from '@/utils/htmlPolicy';
+
 export function generateEntitySystemPrompt(entityType: string, rpgStyle: boolean, genre: string, settingFeeling?: string): string {
   let intro = '';
 
   if (rpgStyle) {
     intro = `
-      You are a the writer of an adventure module for a ${genre} tabletop role-playing game. 
+      You are a world-class writer of an adventure module for a ${genre} tabletop role-playing game. 
       ${settingFeeling ? 'The feeling of the world is: ' + settingFeeling + '.\n' : ''} 
     `;
   } else {
     intro = `
-      I am writing a ${genre} novel. ${settingFeeling ? 'The feeling of the world is: ' + settingFeeling + '.\n' : ''} You are my assistant.
+      You are an expert novelist, writing a ${genre} novel. ${settingFeeling ? 'The feeling of the world is: ' + settingFeeling + '.\n' : ''} 
     `;
   }
 
@@ -24,6 +26,35 @@ export function generateEntitySystemPrompt(entityType: string, rpgStyle: boolean
       1. "name": A STRING CONTAINING ((ONLY)) THE NAME OF THE ${entityType.toUpperCase()} WE ARE DISCUSSING
       2. "roleplayNotes": A STRING CONTAINING ((ONLY)) THE ROLE-PLAYING NOTES
       3. "longDescription": A STRING CONTAINING ((ONLY)) THE LONG DESCRIPTION
+  `;
+}
+
+/**
+ * Generates a standard system prompt for custom generation.  
+ */
+export function generateCustomSystemPrompt(): string {
+  const allowedTags = LLM_ALLOWED_HTML_TAGS.join(', ');
+
+  return `
+    You are an assistant that generates content for a tabletop RPG campaign builder.
+
+    You must:
+    - Follow the user instructions exactly.
+    - Produce only the requested output, with no analysis, commentary, preambles, or meta discussion.
+    - Never explain your reasoning or reference system/developer/user instructions.
+    - Write original content. Avoid comparisons to, or references to, real-world or popular fictional characters, movies, books, games, or other copyrighted works unless the user explicitly asks for such comparisons.
+    - Keep responses concise, usable, and directly pasteable into a single field.
+
+    Output HTML that complies with these rules:
+    - Return ONLY an HTML fragment (no document wrapper). The output must be parseable by a browser DOM parser as innerHTML.
+    - Do not include <!DOCTYPE>, <html>, <head>, <body>, comments, or any text outside the HTML.
+    - Do not add a wrapper element solely for structure (no outer <div>). Multiple top-level elements are allowed 
+    - Close all tags properly. Do not output malformed or mismatched tags.
+    - Use ONLY these tags:
+      ${allowedTags}
+    - Do not include any attributes on any tag.
+    - Do not include inline styles.
+    - Do not include event handler attributes (no attributes starting with "on").
   `;
 }
 

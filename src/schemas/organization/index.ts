@@ -12,7 +12,7 @@ const generateOrganizationRequestSchema = {
     type: { type: 'string', description: 'The type of organization (ex. "family" or "cult")' },
     name: { type: 'string', description: 'The generated organization\'s name.  If blank, one will be generated (text gen only)' },
     briefDescription: { type: 'string', description: 'A brief description of the organization to factor into the produced text' },
-    parentName: { type: 'string', description: 'The type of the parent organization' },
+    parentName: { type: 'string', description: 'The name of the parent organization' },
     parentType: { type: 'string', description: 'The type of parent organization' },
     parentDescription: { type: 'string', description: 'The current description of the organization\'s parent' },
     longDescriptionParagraphs: { type: 'integer', minimum: 1, maximum: 4, default: 1, description: 'The number of paragraphs to produce in the output when using a long description' },

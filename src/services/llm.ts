@@ -21,9 +21,11 @@ const tryParseJson = (str: string): unknown => {
   }
 };
 
-/** Run the completion against LLM API... will step down temperature if JSON comes back unformed */
-const getCompletion = async (system: string, prompt: string, temperature: number, modelId?: TextModels | undefined): Promise<Record<string, any>> => {
-  const fullSystem = `
+/** Run the completion against LLM API... will step down temperature if JSON comes back unformed 
+ * @param simpleString if true, the response will be a simple string instead of a JSON object
+*/
+const getCompletion = async (system: string, prompt: string, temperature: number, modelId?: TextModels | undefined, simpleString = false): Promise<Record<string, any> | string> => {
+  const fullSystem = simpleString ? system : `
     ${system}
     ALL OF YOUR RESPONSES MUST BE VALID JSON CAPABLE OF BEING PARSED BY JSON.parse() IN JAVASCRIPT.  THAT MEANS NO ESCAPE CHARACTERS OR NEW LINES
     OUTSIDE OF VALID STRINGS VALUES AND PROPERLY FORMED JSON WITH KEY VALUE PAIRS. 
@@ -32,10 +34,11 @@ const getCompletion = async (system: string, prompt: string, temperature: number
     {"keyone":"value one", "keytwo":"Values can have newlines\n\nin them"}
   `;
 
-  return getCompletionWithTemperatureStepdown(fullSystem, prompt, temperature, modelId) as Record<string, any>;  
+  return getCompletionWithTemperatureStepdown(fullSystem, prompt, temperature, modelId, simpleString) as Record<string, any> | string;  
 };
 
-const getCompletionWithTemperatureStepdown = async(system: string, prompt: string, temperature: number, modelId?: TextModels | undefined): Promise<unknown> => {
+/** @param simpleString if true, the response will be a simple string instead of a JSON object (note: prompt must ensure right format) */
+const getCompletionWithTemperatureStepdown = async(system: string, prompt: string, temperature: number, modelId?: TextModels | undefined, simpleString = false): Promise<unknown> => {
   const finalModelId = modelId ?? DEFAULT_TEXT_MODEL_ID;
   const model = textModels[finalModelId];
 
@@ -73,6 +76,10 @@ const getCompletionWithTemperatureStepdown = async(system: string, prompt: strin
       console.log(content);
     }
 
+    if (simpleString) {
+      return content;
+    }
+    
     if (!content)
       continue;
     

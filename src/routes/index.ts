@@ -2,6 +2,7 @@ import { version } from '../../package.json';
 import { FastifyInstance, } from 'fastify';
 import bearerAuthPlugin from '@fastify/bearer-auth';
 import characterRoutes from './character';
+import customRoutes from './custom';
 import organizationRoutes from './organization';
 import locationRoutes from './location';
 import nameRoutes from './name';
@@ -26,6 +27,7 @@ async function routes (fastify: FastifyInstance): Promise<void> {
   fastify.register(characterRoutes, { prefix: '/character' });
   fastify.register(organizationRoutes, { prefix: '/organization' });
   fastify.register(locationRoutes, { prefix: '/location' });
+  fastify.register(customRoutes, { prefix: '/custom' });
   fastify.register(nameRoutes, { prefix: '/name' });
   fastify.register(gmailRoutes, { prefix: '/pollEmail' });
   fastify.register(modelRoutes, { prefix: '/models' });

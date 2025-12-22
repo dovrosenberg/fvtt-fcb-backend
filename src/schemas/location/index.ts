@@ -12,7 +12,7 @@ const generateLocationRequestSchema = {
     type: { type: 'string', description: 'The type of location (ex. "town" or "kingdom" or "swamp")' },
     name: { type: 'string', description: 'The generated location\'s name.  If blank, one will be generated (text gen only)' },
     briefDescription: { type: 'string', description: 'A brief description of the location to factor into the produced text' },
-    parentName: { type: 'string', description: 'The type of the parent location' },
+    parentName: { type: 'string', description: 'The namew of the parent location' },
     parentType: { type: 'string', description: 'The type of parent location' },
     parentDescription: { type: 'string', description: 'The current description of the location\'s parent' },
     grandparentName: { type: 'string', description: 'The type of the grandparent location' },
