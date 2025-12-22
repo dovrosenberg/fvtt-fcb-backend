@@ -38,10 +38,11 @@ void (async () => {
   });
 
   // register fastify static to serve static files
-  fastify.register(fastifyStatic, {
-    root: path.resolve('/app/files'),
-    prefix: '/files/',
-  });
+  if (process.env.STORAGE_LOCAL_DIR) {
+    fastify.register(fastifyStatic, {
+      root: path.resolve('/app/files/'),
+    });
+  }
 
   // tell swagger plugin to start watching routes created
   await fastify.register(swagger, {
