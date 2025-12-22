@@ -41,6 +41,7 @@ void (async () => {
   if (process.env.STORAGE_LOCAL_DIR) {
     fastify.register(fastifyStatic, {
       root: path.resolve('/app/files/'),
+      prefix: '/files/',
     });
   }
 
