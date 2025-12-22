@@ -70,7 +70,8 @@ There are lot of steps here, but if you follow the directions below, it should b
   
 1. Run this to download a template variable file.  Run it from the directory where you downloaded the key file in step 4 above.
 
-    *Windows (Powershell):*
+    *Windows (Powershell):*  **NOTE! you have to use `curl.exe` and not `curl`... Powershell is weird that way.  If this still gives you issues with curl, you can do
+   `Remove-item alias:curl` in Powershell before running the `curl`.  You'll have to do it again in every new Powershell instance.**
 
     ```
     curl.exe -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
@@ -82,15 +83,15 @@ There are lot of steps here, but if you follow the directions below, it should b
     curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
     ```
 
-2. Edit the newly created .env file (in your favorite editor) to put in the needed settings (explained in more detail in the comments in the .env file).
+3. Edit the newly created .env file (in your favorite editor) to put in the needed settings (explained in more detail in the comments in the .env file).
       
-### Deploy the backend (You'll just do this part whenever you want to upgrade to a new release of this backend)
+### Deploy the backend (You'll also do just this part whenever you want to upgrade to a new release of this backend)
 
 **Notes:**
   - The next step might take a few minutes to run - especially after the line around Setting IAM Policy.
   - You may also see a warning: *Your active project does not match the quota project in your local Application Default Credentials file. This might result in unexpected quota issues*  You can ignore this.
 
- **For Ubuntu/Debian/WSL (recommended for Windows) or MacOS**
+ **For Ubuntu/Debian/WSL (WSL is recommended for Windows, if you have it) or MacOS**
   - Run the following in your terminal (in MacOS, this requires Homebrew):
       ```sh
       curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.sh | bash
