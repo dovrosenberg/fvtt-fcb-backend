@@ -87,7 +87,7 @@ const getCompletionWithTemperatureStepdown = async(system: string, prompt: strin
 
     // set this manually in the GCP production "revision" if you want to see the raw response
     if (process.env.DEBUG==='true') {
-      console.log(`DEBUG: Ran completion.\nSystem: ${system}\nPrompt: ${prompt}\nTemperature: ${testTemp}\nresult: ${content}`);
+      console.log(`DEBUG: Ran completion.\nSystem: ${system}\nPrompt: ${prompt}\nTemperature: ${testTemp}\nresult: ${JSON.stringify(content)}`);
     }
 
     if (parsed !== null)

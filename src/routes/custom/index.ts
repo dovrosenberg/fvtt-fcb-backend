@@ -2,6 +2,7 @@ import { getCompletion } from '@/services/llm';
 import { FastifyInstance, FastifyReply, } from 'fastify';
 import {
   ContentTypeDescriptions,
+  ContentTypes,
   generateCustomInputSchema,
   GenerateCustomOutput,
   GenerateCustomRequest,
@@ -51,21 +52,23 @@ async function routes (fastify: FastifyInstance): Promise<void> {
  * Goal: maximize consistency across many content types + user-configured fields.
  */
 function buildMasterPrompt(request: GenerateCustomRequest): string {
-  // Output shape constraints (sane defaults)
-  const outputFormat = "HTML"; // "HTML" | "plain" - note: for now the system prompt always generates HTML 
-  const minWords = 120;
-  const maxWords = 250;
-  const tone = "evocative, practical, table-ready";
-  const tense = "present";
-  const pov = "third-person";
-  const contentRating = "PG-13";
-  const includeHeadings = false;
-  const includeBullets = true;
-  const avoidListsLongerThan = 5;
 
   const { name, genre, contentType, settingFeeling, fieldLabel, type, species, speciesDescription, 
     parentName, parentType, parentDescription, grandparentName, grandparentType, 
-    prompt, grandparentDescription, description, nameStyles } = request.body;
+    prompt, grandparentDescription, description, nameStyles, configuration } = request.body;
+
+  // set defaults for anything not provided
+  const outputFormat = "HTML"; // "HTML" | "plain" - note: for now the system prompt always generates HTML 
+  const minWords = configuration?.minWords || 120;
+  const maxWords = configuration?.maxWords || 250;
+  const tone = configuration?.tone || "evocative, practical, table-ready";
+  const tense = configuration?.tense || "present";
+  const pov = configuration?.pov || "third person";
+  const contentRating = configuration?.contentRating || "PG-13";
+  const includeHeadings = configuration?.includeHeadings ?? false;
+  const includeBullets = configuration?.includeBullets ?? true;
+  const avoidListsLongerThan = configuration?.avoidListsLongerThan || 5;
+
 
   // Helpers: only include blocks if we actually have content
   const blocks = [];
@@ -93,25 +96,26 @@ function buildMasterPrompt(request: GenerateCustomRequest): string {
     - Tone: ${tone}
     - Point of view: ${pov}
     - Tense: ${tense}
-    - ${includeHeadings ? "You may use short headings if helpful." : "Do not add headings unless the user prompt explicitly asks for them."}
-    - ${includeBullets ? `Bullets are allowed, but avoid lists longer than ${avoidListsLongerThan}.` : "Avoid bullets unless the user prompt explicitly asks for them."}
+    - ${includeHeadings ? "You may use short headings if helpful, and if you do should use <h4> tags." : "Do not add headings unless the user prompt explicitly asks for them."}
+    - ${includeBullets ? `Bullets are allowed if helpful, but avoid lists longer than ${avoidListsLongerThan}.` : "Avoid bullets unless the user prompt explicitly asks for them."}
   `);
 
   // 3) Entity targeting (so the model knows what it’s writing “into”)
+  const hierarchy = [ContentTypes.Location, ContentTypes.Organization].includes(contentType) && parentName;
   blocks.push(`
     Context about the entity this request relates to: 
     - Entity type: ${contentType} - ${ContentTypeDescriptions[contentType!]}
     - Entity name: ${name}
     ${type ? `- Type: ${type}` : ''}
     ${description ? `- Description: ${description}` : ''}
-    ${species ? `- Species: ${species}` : ''}
-    ${speciesDescription ? `- Species Description: ${speciesDescription}` : ''}
-    ${parentName ? `- Parent: ${parentName}` : ''}
-    ${parentName && parentType ? `- Parent Type: ${parentType}` : ''}
-    ${parentName && parentDescription ? `- Parent Description: ${parentDescription}` : ''}
-    ${grandparentName ? `- Grandparent: ${grandparentName}` : ''}
-    ${grandparentName && grandparentType ? `- Grandparent Type: ${grandparentType}` : ''}
-    ${grandparentName && grandparentDescription ? `- Grandparent Description: ${grandparentDescription}` : ''}
+    ${contentType === ContentTypes.Character && species ? `- Species: ${species}` : ''}
+    ${contentType === ContentTypes.Character && species && speciesDescription ? `- Species Description: ${speciesDescription}` : ''}
+    ${hierarchy ? `- Parent: ${parentName}` : ''}
+    ${hierarchy && parentType ? `- Parent Type: ${parentType}` : ''}
+    ${hierarchy && parentDescription ? `- Parent Description: ${parentDescription}` : ''}
+    ${hierarchy && grandparentName ? `- Grandparent: ${grandparentName}` : ''}
+    ${hierarchy && grandparentName && grandparentType ? `- Grandparent Type: ${grandparentType}` : ''}
+    ${hierarchy && grandparentName && grandparentDescription ? `- Grandparent Description: ${grandparentDescription}` : ''}
 
     - The field you are being asked to populate: ${fieldLabel}
   `);

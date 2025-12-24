@@ -5,8 +5,8 @@ export enum ModelProvider {
 }
 
 export enum TextModels {
-  GPT_4o_mini = 'GPT_4o_mini',
   GPT_5_mini = 'GPT_5_mini',
+  GPT_4o_mini = 'GPT_4o_mini',
   Claude_3_haiku = 'Claude_3_haiku',
 }
 
