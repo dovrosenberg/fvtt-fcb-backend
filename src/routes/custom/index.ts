@@ -1,14 +1,19 @@
 import { getCompletion } from '@/services/llm';
+import { generateImage } from '@/services/images';
 import { FastifyInstance, FastifyReply, } from 'fastify';
 import {
   ContentTypeDescriptions,
   ContentTypes,
   generateCustomInputSchema,
+  generateCustomImageInputSchema,
   GenerateCustomOutput,
   GenerateCustomRequest,
+  GenerateCustomImageOutput,
+  GenerateCustomImageRequest,
 } from '@/schemas';
 import { generateCustomSystemPrompt } from '@/utils/entityPromptHelpers';
 import { sanitizeHtml } from '@/utils/sanitizeHtml';
+import { cleanText } from '@/utils/fileNames';
 
 
 // note: we don't clean inputs in these functions because there generally shouldn't be any HTML in it and if someone goes out of their way
@@ -43,6 +48,122 @@ async function routes (fastify: FastifyInstance): Promise<void> {
       return reply.status(503).send({ error: (error as Error).message });
     }
   });
+
+  fastify.post('/generate-image', { schema: generateCustomImageInputSchema }, async (request: GenerateCustomImageRequest, reply: FastifyReply): Promise<GenerateCustomImageOutput> => {
+    const { textModel, imageModel, contentType, name, imageConfiguration } = request.body;
+
+    const system = buildCustomImageSystemPrompt();
+    const prompt = buildCustomImagePrompt(request);
+
+    try {
+      const imagePrompt = await getCompletion(system, prompt, 1, textModel) as { prompt?: string } | undefined;
+
+      if (!imagePrompt?.prompt) {
+        return reply.status(500).send({ error: 'Failed to generate custom image prompt due to an invalid response from the provider.' });
+      }
+
+      const prefix = cleanText(`${contentType ?? 'custom'}_${name ?? 'image'}`);
+      const overrideOptions = {
+        ...(imageConfiguration?.negativePrompt 
+          ? { negative_prompt: imageConfiguration.negativePrompt }
+          : {}),
+        ...(imageConfiguration?.providerOptions ?? {}),
+      };
+      const imageUrl = await generateImage(imagePrompt.prompt, prefix, overrideOptions, imageModel);
+
+      return { filePath: imageUrl } as GenerateCustomImageOutput;
+    } catch (error) {
+      console.error('Error generating custom image:', error);
+      return reply.status(503).send({ error: `Failed to generate custom image: ${(error as Error)?.message}` });
+    }
+  });
+}
+
+function buildCustomImageSystemPrompt(): string {
+  return `
+    You are an assistant that writes prompts for AI image generators like Stable Diffusion.
+
+    Hard rules:
+    - Produce ONLY valid JSON.
+    - Do not include analysis, commentary, preambles, or code fences.
+    - Return exactly one field: "prompt".
+
+    Output format:
+    {"prompt":"..."}
+  `;
+}
+
+function buildCustomImagePrompt(request: GenerateCustomImageRequest): string {
+  const {
+    name,
+    genre,
+    contentType,
+    settingFeeling,
+    type,
+    species,
+    speciesDescription,
+    parentName,
+    parentType,
+    parentDescription,
+    grandparentName,
+    grandparentType,
+    grandparentDescription,
+    prompt,
+    description,
+    imageConfiguration,
+  } = request.body;
+
+  const hierarchy = [ContentTypes.Location, ContentTypes.Organization].includes(contentType) && parentName;
+
+  const effectiveImageConfiguration = {
+    contentRating: imageConfiguration?.contentRating ?? 'PG-13',
+    artStyle: imageConfiguration?.artStyle ?? '',
+    medium: imageConfiguration?.medium ?? '',
+    modelStyle: imageConfiguration?.modelStyle ?? '',
+    camera: imageConfiguration?.camera ?? '',
+    composition: imageConfiguration?.composition ?? '',
+    lighting: imageConfiguration?.lighting ?? '',
+    colorPalette: imageConfiguration?.colorPalette ?? '',
+    mood: imageConfiguration?.mood ?? '',
+  };
+
+  return `
+    Write a single, highly detailed image generation prompt (about a paragraph) for an illustration.
+
+    The prompt should be vivid, specific, and incorporate all the context below without contradicting it.
+    Include: composition, subject appearance, environment/background, lighting, color palette, camera/lens framing, and art style.
+    Avoid IP/copyrighted characters; keep it original.
+
+    Context about the entity:
+    - Genre: ${genre}
+    ${settingFeeling ? `- Setting Feeling: ${settingFeeling}` : ''}
+    - Entity type: ${contentType} - ${ContentTypeDescriptions[contentType!]}
+    - Entity name: ${name}
+    ${type ? `- Type: ${type}` : ''}
+    ${description ? `- Description: ${description}` : ''}
+    ${contentType === ContentTypes.Character && species ? `- Species: ${species}` : ''}
+    ${contentType === ContentTypes.Character && species && speciesDescription ? `- Species Description: ${speciesDescription}` : ''}
+    ${hierarchy ? `- Parent: ${parentName}` : ''}
+    ${hierarchy && parentType ? `- Parent Type: ${parentType}` : ''}
+    ${hierarchy && parentDescription ? `- Parent Description: ${parentDescription}` : ''}
+    ${hierarchy && grandparentName ? `- Grandparent: ${grandparentName}` : ''}
+    ${hierarchy && grandparentName && grandparentType ? `- Grandparent Type: ${grandparentType}` : ''}
+    ${hierarchy && grandparentName && grandparentDescription ? `- Grandparent Description: ${grandparentDescription}` : ''}
+
+    User request (highest priority - you MUST ensure the final prompt ensures every part of this is included in the final image):
+    """${prompt}"""
+
+    Image configuration (follow these preferences; if it indicates "you choose", specify something random in the prompt you create, ensuring that the fully specified configuration makes sense and is consistent with the user's request):
+    ${effectiveImageConfiguration.contentRating ? `- Content rating: ${effectiveImageConfiguration.contentRating}` : ''}
+    ${effectiveImageConfiguration.artStyle ? `- Art style: ${effectiveImageConfiguration.artStyle}` : 'you choose'}
+    ${effectiveImageConfiguration.medium ? `- Medium/technique: ${effectiveImageConfiguration.medium}` : 'you choose'}
+    ${effectiveImageConfiguration.modelStyle ? `- Style keyword(s): ${effectiveImageConfiguration.modelStyle}` : 'you choose'}
+    ${effectiveImageConfiguration.composition ? `- Composition: ${effectiveImageConfiguration.composition}` : 'you choose'}
+    ${effectiveImageConfiguration.lighting ? `- Lighting: ${effectiveImageConfiguration.lighting}` : 'you choose'}
+    ${effectiveImageConfiguration.colorPalette ? `- Color palette: ${effectiveImageConfiguration.colorPalette}` : 'you choose'}
+    ${effectiveImageConfiguration.camera ? `- Camera/framing: ${effectiveImageConfiguration.camera}` : 'you choose'}
+    ${effectiveImageConfiguration.mood ? `- Mood: ${effectiveImageConfiguration.mood}` : 'you choose'}
+  `;
 }
 
 /**

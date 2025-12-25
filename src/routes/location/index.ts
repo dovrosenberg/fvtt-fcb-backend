@@ -68,48 +68,48 @@ async function routes (fastify: FastifyInstance): Promise<void> {
     }
   });
 
-  fastify.post('/generate-image', { schema: generateLocationImageInputSchema }, async (request: GenerateLocationImageRequest, reply: FastifyReply): Promise<GenerateLocationImageOutput> => {
-    const { genre, settingFeeling, name, type, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, briefDescription, textModel, imageModel } = request.body;
+  // fastify.post('/generate-image', { schema: generateLocationImageInputSchema }, async (request: GenerateLocationImageRequest, reply: FastifyReply): Promise<GenerateLocationImageOutput> => {
+  //   const { genre, settingFeeling, name, type, parentName, parentType, parentDescription, grandparentName, grandparentType, grandparentDescription, briefDescription, textModel, imageModel } = request.body;
 
-    // get a good prompt
-    const system = `
-      I am writing a ${genre} novel. ${settingFeeling ? 'The feeling of the world is: ' + settingFeeling + '.\n' : ''} You are my assistant.
-      Your job is to write prompts for AI image generators like DALL-E or Stable Diffusion.  It should be very detailed - about a paragraph
-      Each response must contain ONLY ONE PROMPT FOR AN IMAGE AND NOTHING ELSE.  THE IMAGE TYPE DESCRIPTION SHOULD BE:
-      fantasy art, photorealistic, cinematic lighting, ultra detail, sharp focus 
-      EACH RESPONSE SHOULD CONTAIN ONE FIELD:
-      1. "prompt": THE PROMPT YOU WROTE
-    `;
+  //   // get a good prompt
+  //   const system = `
+  //     I am writing a ${genre} novel. ${settingFeeling ? 'The feeling of the world is: ' + settingFeeling + '.\n' : ''} You are my assistant.
+  //     Your job is to write prompts for AI image generators like DALL-E or Stable Diffusion.  It should be very detailed - about a paragraph
+  //     Each response must contain ONLY ONE PROMPT FOR AN IMAGE AND NOTHING ELSE.  THE IMAGE TYPE DESCRIPTION SHOULD BE:
+  //     fantasy art, photorealistic, cinematic lighting, ultra detail, sharp focus 
+  //     EACH RESPONSE SHOULD CONTAIN ONE FIELD:
+  //     1. "prompt": THE PROMPT YOU WROTE
+  //   `;
 
-    const prompt = `
-      I need you to suggest a prompt for creating an image of a location.  
-      ${name ? `The location is named ${name}.` : ''}
-      ${type ? `The type of location is a ${type}.` : ''}
-      ${parentName ? `The location is in ${parentName + (parentName ? ' (which is a ' + parentType + ')' : '') + '. ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
-      ${grandparentName ? `${parentName} is located in ${grandparentName + (grandparentType ? ' (which is a ' + grandparentType + ')' : '')}. ${(grandparentDescription ? 'Here is some information about ' + grandparentName + ': ' + grandparentDescription + '.' : '.')}` : ''}
-      ${parentName || grandparentName ? 'ONLY USE INFORMATION ON THE BROADER PLACES IF IT DOESN\'T CONFLICT WITH THE LOCATION DESCRIPTION. IT IS ONLY SUPPLEMENTAL' : ''}
-      ${briefDescription ? `Here is a brief description of the location that you should use as a starting point.
-        THIS IS THE MOST IMPORTANT THING! DESCRIPTION: ${briefDescription}` : ''}
-      You should only take the world feeling and species description into account in ways that DO NOT contradict the other information.
-    `;
+  //   const prompt = `
+  //     I need you to suggest a prompt for creating an image of a location.  
+  //     ${name ? `The location is named ${name}.` : ''}
+  //     ${type ? `The type of location is a ${type}.` : ''}
+  //     ${parentName ? `The location is in ${parentName + (parentName ? ' (which is a ' + parentType + ')' : '') + '. ' + (parentDescription ? 'Here is some information about ' + parentName + ': ' + parentDescription + '.' : '.')}` : ''}
+  //     ${grandparentName ? `${parentName} is located in ${grandparentName + (grandparentType ? ' (which is a ' + grandparentType + ')' : '')}. ${(grandparentDescription ? 'Here is some information about ' + grandparentName + ': ' + grandparentDescription + '.' : '.')}` : ''}
+  //     ${parentName || grandparentName ? 'ONLY USE INFORMATION ON THE BROADER PLACES IF IT DOESN\'T CONFLICT WITH THE LOCATION DESCRIPTION. IT IS ONLY SUPPLEMENTAL' : ''}
+  //     ${briefDescription ? `Here is a brief description of the location that you should use as a starting point.
+  //       THIS IS THE MOST IMPORTANT THING! DESCRIPTION: ${briefDescription}` : ''}
+  //     You should only take the world feeling and species description into account in ways that DO NOT contradict the other information.
+  //   `;
 
-    try {
-      const imagePrompt = await getCompletion(system, prompt, 1, textModel) as { prompt: string } | undefined;
+  //   try {
+  //     const imagePrompt = await getCompletion(system, prompt, 1, textModel) as { prompt: string } | undefined;
 
-      if (!imagePrompt?.prompt) {
-        return reply.status(500).send({ error: 'Failed to generate location image prompt due to an invalid response from the provider.' });
-      }
+  //     if (!imagePrompt?.prompt) {
+  //       return reply.status(500).send({ error: 'Failed to generate location image prompt due to an invalid response from the provider.' });
+  //     }
 
-      // generate in landscape
-      const prefix = name ? cleanText(name) : 'location'; 
-      const imageUrl = await generateImage(imagePrompt.prompt, prefix, { aspect_ratio: '4:3' }, imageModel);
+  //     // generate in landscape
+  //     const prefix = name ? cleanText(name) : 'location'; 
+  //     const imageUrl = await generateImage(imagePrompt.prompt, prefix, { aspect_ratio: '4:3' }, imageModel);
 
-      return { filePath: imageUrl } as GenerateLocationImageOutput;
-    } catch (error) {
-      console.error('Error generating location image:', error);
-      return reply.status(503).send({ error: `Failed to generate location image: ${(error as Error)?.message}` });
-    }
-  });
+  //     return { filePath: imageUrl } as GenerateLocationImageOutput;
+  //   } catch (error) {
+  //     console.error('Error generating location image:', error);
+  //     return reply.status(503).send({ error: `Failed to generate location image: ${(error as Error)?.message}` });
+  //   }
+  // });
 }
 
 export default routes;

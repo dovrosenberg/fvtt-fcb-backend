@@ -1,7 +1,7 @@
 import { FastifyRequest, } from 'fastify';
 import { FromSchema } from 'json-schema-to-ts';
 import { createPostInputSchema } from '@/schemas/utils';
-import { TextModels } from '@/services/models';
+import { TextModels, ImageModels } from '@/services/models';
 
 export enum ContentTypes {
   Setting = 'Setting',
@@ -42,6 +42,25 @@ const configurationSchema = {
   }
 } as const;
 
+ const imageConfigurationSchema = {
+  type: 'object',
+  properties: {
+    artStyle: { type: 'string', description: 'High-level art style / aesthetic (ex. "watercolor", "hand-drawn", "oil painting", "pixel art"). Default: "" (no preference)', default: '' },
+    medium: { type: 'string', description: 'Medium / technique (ex. "ink", "gouache", "pencil sketch", "3D render"). Default: "" (no preference)', default: '' },
+    modelStyle: { type: 'string', description: 'Model-specific style hint (ex. "cinematic", "anime", "comic"). Default: "" (no preference)', default: '' },
+    contentRating: { type: 'string', description: 'Content rating / safety level (ex. "G", "PG", "PG-13", "R"). Default: "PG-13"', default: 'PG-13' },
+ //  aspectRatio: { type: 'string', description: 'Aspect ratio hint (ex. "1:1", "16:9", "2:3")' },
+    composition: { type: 'string', description: 'Composition direction (ex. "close-up portrait", "wide establishing shot", "rule of thirds"). Default: "" (no preference)', default: '' },
+    lighting: { type: 'string', description: 'Lighting direction (ex. "golden hour", "moody rim light", "soft studio lighting"). Default: "" (no preference)', default: '' },
+    colorPalette: { type: 'string', description: 'Color palette direction (ex. "muted earth tones", "vibrant neon"). Default: "" (no preference)', default: '' },
+    camera: { type: 'string', description: 'Camera framing / lens hints (ex. "35mm", "telephoto", "shallow depth of field"). Default: "" (no preference)', default: '' },
+    mood: { type: 'string', description: 'Mood / emotion (ex. "ominous", "whimsical", "serene"). Default: "" (no preference)', default: '' },
+    negativePrompt: { type: 'string', description: 'Things to explicitly avoid in the image (ex. "text, watermark, extra limbs"). Default: "" (no negative prompt)', default: '' },
+ //  styleTags: { type: 'array', description: 'Extra comma-separated style tags to include. Default: []', items: { type: 'string' }, default: [] },
+    providerOptions: { type: 'object', description: 'Advanced provider/model options passed through to the image generator (model-specific). Default: {}', additionalProperties: true, default: {} },
+  },
+} as const;
+
 const generateCustomRequestSchema = {
   type: 'object',
   properties: {
@@ -65,9 +84,22 @@ const generateCustomRequestSchema = {
     textModel: { type: 'string', enum: Object.values(TextModels), description: 'The text generation model to use' },
     configuration: configurationSchema,
   },
-  required: ['genre', 'contentType', 'name', 'fieldLabel', 'prompt'],
+  required: ['genre', 'contentType', 'name', 'prompt', 'fieldLabel' ],
 } as const;
 
+// Remove text-only configuration for image generation
+const { configuration: _configuration, nameStyles: _nameStyles, fieldLabel: _fieldLabel, ...generateCustomImageProperties } = generateCustomRequestSchema.properties;
+const required = generateCustomRequestSchema.required.filter((x) => x !== 'fieldLabel');
+
+const generateCustomImageRequestSchema = {
+  type: 'object',
+  properties: {
+    ...generateCustomImageProperties,
+    imageModel: { type: 'string', enum: Object.values(ImageModels), description: 'The image generation model to use' },
+    imageConfiguration: imageConfigurationSchema,
+  },
+  required: required,
+} as const;
 
 export const generateCustomResponseSchema = {
   type: 'object',
@@ -77,12 +109,28 @@ export const generateCustomResponseSchema = {
   required: ['response']
 } as const;
 
+export const generateCustomImageResponseSchema = {
+  type: 'object',
+  properties: {
+    filePath: { type: 'string', description: 'The path of the new image' },
+  },
+  required: ['filePath']
+} as const;
+
 export const generateCustomInputSchema = createPostInputSchema(
   'Generate custom text', 
   generateCustomRequestSchema, 
   generateCustomResponseSchema
 );
 
+export const generateCustomImageInputSchema = createPostInputSchema(
+  'Generate custom image',
+  generateCustomImageRequestSchema,
+  generateCustomImageResponseSchema
+);
+
 export type GenerateCustomRequest = FastifyRequest<{ Body: FromSchema<typeof generateCustomRequestSchema> }>;
+export type GenerateCustomImageRequest = FastifyRequest<{ Body: FromSchema<typeof generateCustomImageRequestSchema> }>;
 
 export type GenerateCustomOutput = FromSchema<typeof generateCustomResponseSchema>;
+export type GenerateCustomImageOutput = FromSchema<typeof generateCustomImageResponseSchema>;
