@@ -7,11 +7,12 @@ on:
       - dev
     types:
       - closed  # Runs only when a PR is closed
+  workflow_dispatch:  # Allows manual triggering from GitHub Actions UI
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true  # Ensures the PR was merged, not just closed
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'  # Runs on merged PRs or manual trigger
     permissions:
       contents: write
     steps:
