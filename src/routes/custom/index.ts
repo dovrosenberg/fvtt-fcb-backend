@@ -150,7 +150,7 @@ function buildCustomImagePrompt(request: GenerateCustomImageRequest): string {
     ${hierarchy && grandparentName && grandparentType ? `- Grandparent Type: ${grandparentType}` : ''}
     ${hierarchy && grandparentName && grandparentDescription ? `- Grandparent Description: ${grandparentDescription}` : ''}
 
-    User request (highest priority - you MUST ensure the final prompt ensures every part of this is included in the final image):
+    User request (highest priority - you MUST ensure the final prompt ensures the image will achieve every part of this):
     """${prompt}"""
 
     Image configuration (follow these preferences; if it indicates "you choose", specify something random in the prompt you create, ensuring that the fully specified configuration makes sense and is consistent with the user's request):
