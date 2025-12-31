@@ -1,0 +1,28 @@
+export const LLM_ALLOWED_HTML_TAGS = [
+  'p',
+  'br',
+  'strong',
+  'em',
+  'mark',
+  'small',
+  'del',
+  'ins',
+  'sub',
+  'sup',
+  'ul',
+  'ol',
+  'li',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'blockquote',
+  'pre',
+  'code',
+  'span',
+  's',
+] as const;
+
+export type LlmAllowedHtmlTag = (typeof LLM_ALLOWED_HTML_TAGS)[number];

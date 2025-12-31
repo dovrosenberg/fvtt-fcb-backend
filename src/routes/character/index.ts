@@ -74,49 +74,49 @@ async function routes (fastify: FastifyInstance): Promise<void> {
   });
 
   // Add the new endpoint for generating character images
-  fastify.post('/generate-image', { schema: generateCharacterImageInputSchema }, async (request: GenerateCharacterImageRequest, reply: FastifyReply): Promise<GenerateCharacterImageOutput> => {
-    const { genre, settingFeeling, name, type, species, speciesDescription, briefDescription, textModel, imageModel } = request.body;
+  // fastify.post('/generate-image', { schema: generateCharacterImageInputSchema }, async (request: GenerateCharacterImageRequest, reply: FastifyReply): Promise<GenerateCharacterImageOutput> => {
+  //   const { genre, settingFeeling, name, type, species, speciesDescription, briefDescription, textModel, imageModel } = request.body;
 
-    // get a good prompt
-    const system = `
-          I am writing a ${genre} novel. ${settingFeeling ? 'The feeling of the world is: ' + settingFeeling + '.\n' : ''} You are my assistant.
-          Your job is to write prompts for AI image generators like DALL-E or Stable Diffusion.  It should be very detailed - about a paragraph
-          Each response must contain ONLY ONE PROMPT FOR AN IMAGE AND NOTHING ELSE.  THE IMAGE TYPE DESCRIPTION SHOULD BE:
-          fantasy art, photorealistic, cinematic lighting, ultra detail, sharp focus 
-          EACH RESPONSE SHOULD CONTAIN ONE FIELDS:
-          1. "prompt": THE PROMPT YOU WROTE
-        `;
+  //   // get a good prompt
+  //   const system = `
+  //         I am writing a ${genre} novel. ${settingFeeling ? 'The feeling of the world is: ' + settingFeeling + '.\n' : ''} You are my assistant.
+  //         Your job is to write prompts for AI image generators like DALL-E or Stable Diffusion.  It should be very detailed - about a paragraph
+  //         Each response must contain ONLY ONE PROMPT FOR AN IMAGE AND NOTHING ELSE.  THE IMAGE TYPE DESCRIPTION SHOULD BE:
+  //         fantasy art, photorealistic, cinematic lighting, ultra detail, sharp focus 
+  //         EACH RESPONSE SHOULD CONTAIN ONE FIELDS:
+  //         1. "prompt": THE PROMPT YOU WROTE
+  //       `;
 
-    // Construct a detailed prompt 
-    const prompt = `
-      I need you to suggest a prompt for creating an image of a character.
-      ${name ? `The character is named ${name}` : ''}.
-      ${type ? `The type of character is a ${type}.` : ''}.
-      ${species ? `It should be a description of a ${species}.` : ''}
-      ${species && speciesDescription && species.trim()!==speciesDescription.trim() ? `Here is a description of what a ${species} is. Give it light weight: ${speciesDescription}` : ''}
-      ${briefDescription ? `Here is a brief description of the character that you should use as a starting point.
-        THIS IS THE MOST IMPORTANT THING! EVEN MORE IMPORTANT THAN SPECIES DESCRIPTION/STEREOTYPES. YOUR GENERATED DESCRIPTION MUST
-        INCLUDE ALL OF THESE FACTS. REQUIRED FACTS: ${briefDescription}` : ''}
-        You should only take the world feeling and species description into account in ways that DO NOT contradict the other information.
-      `;
+  //   // Construct a detailed prompt 
+  //   const prompt = `
+  //     I need you to suggest a prompt for creating an image of a character.
+  //     ${name ? `The character is named ${name}` : ''}.
+  //     ${type ? `The type of character is a ${type}.` : ''}.
+  //     ${species ? `It should be a description of a ${species}.` : ''}
+  //     ${species && speciesDescription && species.trim()!==speciesDescription.trim() ? `Here is a description of what a ${species} is. Give it light weight: ${speciesDescription}` : ''}
+  //     ${briefDescription ? `Here is a brief description of the character that you should use as a starting point.
+  //       THIS IS THE MOST IMPORTANT THING! EVEN MORE IMPORTANT THAN SPECIES DESCRIPTION/STEREOTYPES. YOUR GENERATED DESCRIPTION MUST
+  //       INCLUDE ALL OF THESE FACTS. REQUIRED FACTS: ${briefDescription}` : ''}
+  //       You should only take the world feeling and species description into account in ways that DO NOT contradict the other information.
+  //     `;
 
-    try {
-      const imagePrompt = await getCompletion(system, prompt, 1, textModel) as { prompt: string } | undefined;
+  //   try {
+  //     const imagePrompt = await getCompletion(system, prompt, 1, textModel) as { prompt: string } | undefined;
 
-      if (!imagePrompt?.prompt) {
-        return reply.status(500).send({ error: 'Failed to generate character image prompt due to an invalid response from the provider.' });
-      }
+  //     if (!imagePrompt?.prompt) {
+  //       return reply.status(500).send({ error: 'Failed to generate character image prompt due to an invalid response from the provider.' });
+  //     }
 
-      console.log('name:', name);
-      const prefix = name ? cleanText(name) : 'character'; 
-      const imageUrl = await generateImage(imagePrompt.prompt, prefix, {}, imageModel);
+  //     console.log('name:', name);
+  //     const prefix = name ? cleanText(name) : 'character'; 
+  //     const imageUrl = await generateImage(imagePrompt.prompt, prefix, {}, imageModel);
 
-      return { filePath: imageUrl } as GenerateCharacterImageOutput;
-    } catch (error) {
-      console.error('Error generating character image:', error);
-      return reply.status(503).send({ error: `Failed to generate character image: ${(error as Error)?.message}` });
-    }
-  });
+  //     return { filePath: imageUrl } as GenerateCharacterImageOutput;
+  //   } catch (error) {
+  //     console.error('Error generating character image:', error);
+  //     return reply.status(503).send({ error: `Failed to generate character image: ${(error as Error)?.message}` });
+  //   }
+  // });
 };
 
 export default routes;
