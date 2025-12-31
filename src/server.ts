@@ -3,6 +3,8 @@ import helmet from '@fastify/helmet';
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUI from '@fastify/swagger-ui';
+import fastifyStatic from '@fastify/static';
+import * as path from 'path';
 
 import { loadOpenAI } from '@/services/openai';
 import { loadAnthropic } from '@/services/anthropic';
@@ -34,6 +36,19 @@ void (async () => {
       level: 'warn',   // 'info'
     }
   });
+
+  // register fastify static to serve static files
+  if (process.env.STORAGE_LOCAL_DIR) {
+    // Extract prefix from STORAGE_PUBLIC_BASE_URL
+    const publicBaseUrl = process.env.STORAGE_PUBLIC_BASE_URL || 'http://localhost:8080/files';
+    const url = new URL(publicBaseUrl);
+    const prefix = url.pathname.endsWith('/') ? url.pathname : url.pathname + '/';
+    
+    fastify.register(fastifyStatic, {
+      root: path.resolve(process.env.STORAGE_LOCAL_DIR || './files'),
+      prefix: prefix,
+    });
+  }
 
   // tell swagger plugin to start watching routes created
   await fastify.register(swagger, {
@@ -88,7 +103,13 @@ void (async () => {
     },
   });
 
-  fastify.register(helmet);   // security best practices
+  /**
+   * we relax security here and allow images inside /files folder to be embedded
+   * DO NOT store sensitive info inside /files folder, only static images
+  */
+  fastify.register(helmet, {
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  }); // security best practices
 
   // have to allow all origins, but try to lock it down a bit
   fastify.register(cors, {
