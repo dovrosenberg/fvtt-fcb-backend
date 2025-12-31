@@ -39,9 +39,14 @@ void (async () => {
 
   // register fastify static to serve static files
   if (process.env.STORAGE_LOCAL_DIR) {
+    // Extract prefix from STORAGE_PUBLIC_BASE_URL
+    const publicBaseUrl = process.env.STORAGE_PUBLIC_BASE_URL || 'http://localhost:8080/files';
+    const url = new URL(publicBaseUrl);
+    const prefix = url.pathname.endsWith('/') ? url.pathname : url.pathname + '/';
+    
     fastify.register(fastifyStatic, {
-      root: path.resolve('/app/files/'),
-      prefix: '/files/',
+      root: path.resolve(process.env.STORAGE_LOCAL_DIR || './files'),
+      prefix: prefix,
     });
   }
 
