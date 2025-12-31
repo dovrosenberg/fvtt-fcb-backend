@@ -2,7 +2,8 @@
 
 ## v1.8 - Support for custom fields
 
--Added support for the custom field and prompt capability of v1.8 of the front end.
+- Added support for the custom field and prompt capability of v1.8 of the front end.
+- Added support for saving and hosting files locally
 
 ## v1.4 - Better file naming
 
