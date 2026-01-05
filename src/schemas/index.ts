@@ -4,6 +4,7 @@ export * from './character';
 export * from './organization';
 export * from './location';
 export * from './name';
+export * from './custom';
 export * from './gmail';
 
 import { createGetInputSchema } from '@/schemas/utils';
