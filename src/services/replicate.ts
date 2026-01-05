@@ -1,4 +1,4 @@
-import { storageProvider } from '@/services/storage';
+import { getStorageProvider } from '@/services/storage';
 import Replicate from 'replicate';
 import { imageModels, DEFAULT_IMAGE_MODEL_ID } from './models';
 
@@ -9,7 +9,7 @@ let replicate: Replicate;
 const replicateImageModels = {
   'minimax/image-01': {
     promptTrigger: '4k, 8k, masterpiece, trending on artstation, detailed, cinematic',
-    negativePrompt: 'ugly, disfigured, low quality, blurry, nsfw, text, watermark',
+    negativePrompt: 'watermark, logo, signature',
     outputFormat: 'jpeg',
     defaultOptions: {},
     getOptions: function(prompt: string) {
@@ -22,7 +22,7 @@ const replicateImageModels = {
   },
   'black-forest-labs/flux-1.1-pro': {
     promptTrigger: 'photorealistic, masterpiece, 8k, high quality',
-    negativePrompt: 'blurry, low quality, nsfw, text, watermark, cartoon, anime, ugly',
+    negativePrompt: 'watermark, logo, signature',
     outputFormat: 'jpeg',
     defaultOptions: {},
     getOptions: function(prompt: string) {
@@ -35,7 +35,7 @@ const replicateImageModels = {
   },
   'black-forest-labs/flux-schnell': {
     promptTrigger: 'fast, high quality, detailed',
-    negativePrompt: 'blurry, low quality, nsfw, text, watermark, ugly',
+    negativePrompt: 'watermark, logo, signature',
     outputFormat: 'jpeg',
     defaultOptions: {},
     getOptions: function(prompt: string) {
@@ -48,7 +48,7 @@ const replicateImageModels = {
   },
   'black-forest-labs/flux-schnell-lora': {
     promptTrigger: 'lora, stylized, high quality',
-    negativePrompt: 'blurry, low quality, nsfw, text, watermark, ugly',
+    negativePrompt: 'watermark, logo, signature',
     outputFormat: 'jpeg',
     defaultOptions: {},
     getOptions: function(prompt: string) {
@@ -92,8 +92,23 @@ const generateImage = async (prompt: string, filenamePrefix: string, modelId: st
       throw new Error(`Configuration for model ${modelId} not found in replicate.ts`);
     }
 
+    const baseOptions = replicateModel.getOptions(prompt) as Record<string, any>;
+
+    if (typeof overrideOptions.negative_prompt === 'string') {
+      const overrideNeg = overrideOptions.negative_prompt;
+      if (overrideNeg.trim() === '') {
+        baseOptions.negative_prompt = '';
+      } else if (typeof baseOptions.negative_prompt === 'string' && baseOptions.negative_prompt.trim().length > 0) {
+        baseOptions.negative_prompt = `${baseOptions.negative_prompt}, ${overrideNeg}`;
+      } else {
+        baseOptions.negative_prompt = overrideNeg;
+      }
+    }
+
+    const { negative_prompt: _negativePrompt, ...overrideOptionsSansNegative } = overrideOptions;
+
     // Prepare the request body for Replicate API
-    const output = await replicate.run(modelId as keyof typeof replicateImageModels, { input: { ...replicateModel.getOptions(prompt), ...overrideOptions }});
+    const output = await replicate.run(modelId as keyof typeof replicateImageModels, { input: { ...baseOptions, ...overrideOptionsSansNegative }});
 
     // Get the image URL or FileOutput object from the response
     const imageUrl = Array.isArray(output) ? output[0] : output;
@@ -116,11 +131,8 @@ const generateImage = async (prompt: string, filenamePrefix: string, modelId: st
     const fileName = `fcb/${filenamePrefix}-${Date.now()}.${replicateModel.outputFormat}`;
 
     // Save the image using the storage provider
-    const publicUrl = await storageProvider.saveFile(
-      fileName,
-      imageBuffer,
-      `image/${replicateModel.outputFormat}`
-    );
+    const storage = getStorageProvider();
+    const publicUrl = await storage.saveFile(fileName, imageBuffer, `image/${replicateModel.outputFormat}`);
     return publicUrl;
   } catch (error) {
     console.error('Error generating image with Replicate:', error);

@@ -3,3 +3,4 @@ temp
 dist
 .env
 coverage
+/files
