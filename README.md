@@ -140,20 +140,29 @@ If you want to use email there are a few extra steps you need to take.  I highly
     *Windows (Powershell):*
 
     ```
-    curl.exe -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
+    curl.exe -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.ps1 | powershell
     ```
 
     *Everything else:*
 
     ```
-    curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
+    curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.sh | bash
     ```    
 
     It will ask you to open a URL in the browser and prompt for a code.  Open that URL.  You will be asked to login.  **IMPORTANT!!!** You need to login with the gmail account you created for this - not your normal one. You will get a security warning.  Hit Continue.  You'll get another security warning.  Hit continue again.  You will get a "refused to connect" message - totally fine - don't close the window and see the next step.  
 
 8. Find the code in the URL - it starts after the 'code=' and ends right before the '&scope'... copy everything in between and paste into the terminal where it's waiting for the auth code.  Copy the refresh token it gives you into your .env file. and rerun the deploy script 
+
+    *Windows (Powershell):*
+
     ```
-    curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/env.template -o .env
+    curl.exe -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.ps1 | powershell
+    ```
+
+    *Everything else:*
+
+    ```
+    curl -sSL https://github.com/dovrosenberg/fvtt-fcb-backend/releases/latest/download/deploy-gcp.sh | bash
     ```
 
 9. That's it!  You won't have to do this again for future deployments unless you wanted to change the email address.
