@@ -174,9 +174,8 @@ function buildCustomImagePrompt(request: GenerateCustomImageRequest): string {
  */
 function buildMasterPrompt(request: GenerateCustomRequest): string {
 
-  const { name, genre, contentType, settingFeeling, fieldLabel, type, species, speciesDescription, 
-    parentName, parentType, parentDescription, grandparentName, grandparentType, 
-    prompt, grandparentDescription, description, nameStyles, configuration } = request.body;
+  const { genre, contentType, settingFeeling, fieldLabel, contextSnippet,
+    prompt, nameStyles, configuration } = request.body;
 
   // set defaults for anything not provided
   const outputFormat = "HTML"; // "HTML" | "plain" - note: for now the system prompt always generates HTML 
@@ -222,21 +221,15 @@ function buildMasterPrompt(request: GenerateCustomRequest): string {
   `);
 
   // 3) Entity targeting (so the model knows what it’s writing “into”)
-  const hierarchy = [ContentTypes.Location, ContentTypes.Organization].includes(contentType) && parentName;
   blocks.push(`
-    Context about the entity this request relates to: 
-    - Entity type: ${contentType} - ${ContentTypeDescriptions[contentType!]}
-    - Entity name: ${name}
-    ${type ? `- Type: ${type}` : ''}
-    ${description ? `- Description: ${description}` : ''}
-    ${contentType === ContentTypes.Character && species ? `- Species: ${species}` : ''}
-    ${contentType === ContentTypes.Character && species && speciesDescription ? `- Species Description: ${speciesDescription}` : ''}
-    ${hierarchy ? `- Parent: ${parentName}` : ''}
-    ${hierarchy && parentType ? `- Parent Type: ${parentType}` : ''}
-    ${hierarchy && parentDescription ? `- Parent Description: ${parentDescription}` : ''}
-    ${hierarchy && grandparentName ? `- Grandparent: ${grandparentName}` : ''}
-    ${hierarchy && grandparentName && grandparentType ? `- Grandparent Type: ${grandparentType}` : ''}
-    ${hierarchy && grandparentName && grandparentDescription ? `- Grandparent Description: ${grandparentDescription}` : ''}
+    Entity type: ${contentType} - ${ContentTypeDescriptions[contentType!]}
+
+    Context about the entity and its world (TOON format, outermost context first).
+    The entry with \`primaryEntity: true\` is the entity you are writing for — treat
+    every other entry as background/world context, not the target:
+    """
+    ${contextSnippet}
+    """
 
     - The field you are being asked to populate: ${fieldLabel}
   `);

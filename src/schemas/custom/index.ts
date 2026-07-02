@@ -65,8 +65,24 @@ const generateCustomRequestSchema = {
   type: 'object',
   properties: {
     contentType: { type: 'string', enum: Object.values(ContentTypes), description: 'The type of content that we are generating text for (location, setting, etc.)' },
-    name: { type: 'string', description: 'The entity\'s name.' },
     fieldLabel: { type: 'string', description: 'The label of the field being populated' },
+    prompt: { type: 'string', description: 'The user\'s custom prompt to use for generation' },
+    genre: { type: 'string', description: 'Genre of the world (ex. "fantasy" or "science fiction")' },
+    settingFeeling: { type: 'string', description: 'The feeling of the setting (ex. "humorous" or "apocalyptic")' },
+    contextSnippet: { type: 'string', description: 'A TOON-encoded snippet describing the primary entity (marked `primaryEntity: true`) and all relevant world context (ancestors, referenced entities, session notes, etc.)' },
+    nameStyles: { type: 'array', description: 'The styles of names to use', items: { type: 'string' }},
+    textModel: { type: 'string', enum: Object.values(TextModels), description: 'The text generation model to use' },
+    configuration: configurationSchema,
+  },
+  required: ['genre', 'contentType', 'prompt', 'fieldLabel', 'contextSnippet'],
+} as const;
+
+// Image generation still uses the individual entity fields (not yet migrated to contextSnippet).
+const generateCustomImageRequestSchema = {
+  type: 'object',
+  properties: {
+    contentType: { type: 'string', enum: Object.values(ContentTypes), description: 'The type of content that we are generating text for (location, setting, etc.)' },
+    name: { type: 'string', description: 'The entity\'s name.' },
     prompt: { type: 'string', description: 'The user\'s custom prompt to use for generation' },
     genre: { type: 'string', description: 'Genre of the world (ex. "fantasy" or "science fiction")' },
     settingFeeling: { type: 'string', description: 'The feeling of the setting (ex. "humorous" or "apocalyptic")' },
@@ -80,25 +96,11 @@ const generateCustomRequestSchema = {
     grandparentType: { type: 'string', description: 'The type of grandparent entity' },
     grandparentDescription: { type: 'string', description: 'The current description of the entity\'s grandparent' },
     description: { type: 'string', description: 'A brief description of the entity to factor into the produced text' },
-    nameStyles: { type: 'array', description: 'The styles of names to use', items: { type: 'string' }},
     textModel: { type: 'string', enum: Object.values(TextModels), description: 'The text generation model to use' },
-    configuration: configurationSchema,
-  },
-  required: ['genre', 'contentType', 'name', 'prompt', 'fieldLabel' ],
-} as const;
-
-// Remove text-only configuration for image generation
-const { configuration: _configuration, nameStyles: _nameStyles, fieldLabel: _fieldLabel, ...generateCustomImageProperties } = generateCustomRequestSchema.properties;
-const required = generateCustomRequestSchema.required.filter((x) => x !== 'fieldLabel');
-
-const generateCustomImageRequestSchema = {
-  type: 'object',
-  properties: {
-    ...generateCustomImageProperties,
     imageModel: { type: 'string', enum: Object.values(ImageModels), description: 'The image generation model to use' },
     imageConfiguration: imageConfigurationSchema,
   },
-  required: required,
+  required: ['genre', 'contentType', 'name', 'prompt'],
 } as const;
 
 export const generateCustomResponseSchema = {
