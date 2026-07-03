@@ -8,6 +8,8 @@ export enum TextModels {
   GPT_5_mini = 'GPT_5_mini',
   GPT_4o_mini = 'GPT_4o_mini',
   Claude_3_haiku = 'Claude_3_haiku',
+  Claude_5_sonnet = 'Claude_5_sonnet',
+  Claude_45_haiku = 'Claude_45_haiku',
 }
 
 export enum ImageModels {
@@ -26,19 +28,31 @@ export const textModels = {
     name: 'GPT-4o Mini',
     provider: ModelProvider.OpenAI,
     modelId: 'gpt-4o-mini',
-    description: 'From OpenAI. High-quality, $0.15/million tokens, but subject to $5/year minimum. Best if you are using your OpenAI token for other things so the minimum doesn\'t matter',
+    description: 'From OpenAI. Moderate quality, but super cheap, $0.15/million tokens, but subject to $5/year minimum. Roughly 1300 text generations per dollar with default settings. Best if you are using your OpenAI token for other things so the minimum doesn\'t matter',
   },
   [TextModels.GPT_5_mini]: {
     name: 'GPT-5 Mini',
     provider: ModelProvider.OpenAI,
     modelId: 'gpt-5-mini',
-    description: 'From OpenAI. High-quality, $0.25/million tokens, but subject to $5/year minimum. Best if you are using your OpenAI token for other things so the minimum doesn\'t matter',
+    description: 'From OpenAI. Good-quality, $0.25/million tokens, but subject to $5/year minimum. Roughly 800 text generations per dollar with default settings. Best if you are using your OpenAI token for other things so the minimum doesn\'t matter',
+  },
+  [TextModels.Claude_5_sonnet]: {
+    name: 'Claude Sonnet 5',
+    provider: ModelProvider.Anthropic,
+    modelId: 'claude-sonnet-5',
+    description: 'From Anthropic. High-quality, $2/million tokens, but subject to $5/year minimum. Roughly 100 text generations per dollar with default settings.  Best if you are using your Anthropic token for other things so the minimum doesn\'t matter',
+  },
+  [TextModels.Claude_45_haiku]: {
+    name: 'Claude Haiku 4.5',
+    provider: ModelProvider.Anthropic,
+    modelId: 'claude-haiku-4-5-20251001',
+    description: 'From Anthropic. Fast, $1/million tokens, but subject to $5/year minimum. Roughly 200 text generations per dollar with default settings.  Best if you are using your Anthropic token for other things so the minimum doesn\'t matter',
   },
   [TextModels.Claude_3_haiku]: {
-    name: 'Claude 3 Haiku',
+    name: 'Claude Haiku 3',
     provider: ModelProvider.Anthropic,
-    modelId: 'claude-3-haiku-20240307',
-    description: 'From Anthropic. High-quality, $0.25/million tokens, but subject to $5/year minimum. Best if you are using your Anthropic token for other things so the minimum doesn\'t matter',
+    modelId: 'claude-haiku-4-5-20251001',
+    description: 'From Anthropic. Older, but fast and cheap, $0.25/million tokens, but subject to $5/year minimum. Roughly 800 text generations per dollar with default settings.  Best if you are using your Anthropic token for other things so the minimum doesn\'t matter',
   },
 };
 
