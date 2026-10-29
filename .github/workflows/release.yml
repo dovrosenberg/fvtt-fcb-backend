@@ -81,8 +81,9 @@ jobs:
       - name: Build and Push Docker Image to Docker Hub
         run: |
           IMAGE_NAME=docker.io/drosenberg62/fvtt-fcb-backend:${{ env.IMAGE_TAG }}
-          docker build --no-cache -t $IMAGE_NAME .
-          docker push $IMAGE_NAME
+          # Push a single-platform Docker v2 manifest; Cloud Run's mirror.gcr.io pull fails on the OCI index + attestation format
+          docker buildx build --no-cache --provenance=false --sbom=false \
+            --output type=image,name=$IMAGE_NAME,push=true,oci-mediatypes=false .
 
       - name: Replace Image Tag in Deploy Script
         run: |
