@@ -7,6 +7,7 @@ jest.mock('googleapis', () => ({
     auth: {
       OAuth2: jest.fn().mockImplementation(() => ({
         setCredentials: jest.fn(),
+        getAccessToken: jest.fn().mockResolvedValue({ token: 'test-access-token' }),
       })),
     },
     gmail: jest.fn(),
