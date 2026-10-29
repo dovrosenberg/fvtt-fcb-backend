@@ -4,3 +4,4 @@ dist
 .env
 coverage
 /files
+gcp-service-key.json
