@@ -1,5 +1,9 @@
 # Change Log
 
+## v1.8.2 - AI model updates
+
+- Updated to current AI models (some had been discontinued).  Fixed issue with Anthropic models not working properly.
+
 ## v1.8.1 - Bug fix
 
 - Fixed an error when using the name preview endpoint with gpt-5-mini.
