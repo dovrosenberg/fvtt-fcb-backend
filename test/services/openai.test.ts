@@ -18,7 +18,7 @@ jest.mock('openai', () => {
 describe('OpenAI Service', () => {
   beforeEach(() => {
     // Reset the mock before each test
-    mockCreate.mockClear();
+    mockCreate.mockReset();
     (OpenAI as unknown as jest.Mock).mockClear();
     process.env.OPENAI_API_KEY = 'test-api-key';
   });
@@ -52,64 +52,50 @@ describe('OpenAI Service', () => {
       await openaiModule.loadOpenAI();
     });
 
-    it('should return a parsed JSON response on the first try', async () => {
-      const mockResponse = { choices: [{ message: { content: '{"key":"value"}' } }] };
-      mockCreate.mockResolvedValue(mockResponse);
+    it('should return the trimmed message content', async () => {
+      mockCreate.mockResolvedValue({ choices: [{ message: { content: '  {"key":"value"}\n' } }] });
 
-      const result = await getCompletion('system-prompt', 'user-prompt', 1.0);
+      const result = await getCompletion('system-prompt', 'user-prompt', 1.0, 'gpt-6-luna');
 
-      expect(result).toEqual({ key: 'value' });
+      expect(result).toBe('{"key":"value"}');
       expect(mockCreate).toHaveBeenCalledTimes(1);
     });
 
-    it('should step down temperature if the first response is invalid JSON', async () => {
-      const invalidResponse = { choices: [{ message: { content: 'invalid-json' } }] };
-      const validResponse = { choices: [{ message: { content: '{"key":"value"}' } }] };
-      mockCreate.mockResolvedValueOnce(invalidResponse).mockResolvedValueOnce(validResponse);
+    it('should send the model and prompts with reasoning turned off', async () => {
+      mockCreate.mockResolvedValue({ choices: [{ message: { content: 'ok' } }] });
 
-      const result = await getCompletion('system-prompt', 'user-prompt', 1.0);
+      await getCompletion('system-prompt', 'user-prompt', 0.5, 'gpt-5.6-terra');
 
-      expect(result).toEqual({ key: 'value' });
-      expect(mockCreate).toHaveBeenCalledTimes(2);
+      expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({
+        model: 'gpt-5.6-terra',
+        messages: [{ role: 'system', content: 'system-prompt' }, { role: 'user', content: 'user-prompt' }],
+        reasoning_effort: 'none',
+      }));
     });
 
-    it('should throw an error if all temperature step-downs fail', async () => {
-      const invalidResponse = { choices: [{ message: { content: 'invalid-json' } }] };
-      mockCreate.mockResolvedValue(invalidResponse);
+    it('should return null if the response has no content', async () => {
+      mockCreate.mockResolvedValue({ choices: [{ message: { content: '' } }] });
 
-      await expect(getCompletion('system-prompt', 'user-prompt', 0.5)).rejects.toThrow();
-    });
-  });
+      const result = await getCompletion('system-prompt', 'user-prompt', 1.0, 'gpt-6-luna');
 
-  describe('getPreviewCompletion', () => {
-    let getPreviewCompletion: typeof import('@/services/openai').getPreviewCompletion;
-
-    beforeEach(async () => {
-      const openaiModule = await import('@/services/openai');
-      getPreviewCompletion = openaiModule.getPreviewCompletion;
-      await openaiModule.loadOpenAI();
+      expect(result).toBeNull();
     });
 
-    it('should return a parsed JSON response for a preview', async () => {
-      const mockResponse = { choices: [{ message: { content: '[{"people":[],"locations":[]}]' } }] };
-      mockCreate.mockResolvedValue(mockResponse);
+    it('should throw an error if the API call fails', async () => {
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      mockCreate.mockRejectedValue(new Error('API error'));
 
-      const result = await getPreviewCompletion(['style1'], 'prompt', 1.0);
-
-      expect(result).toEqual([{ people: [], locations: [] }]);
-      expect(mockCreate).toHaveBeenCalledTimes(1);
+      await expect(getCompletion('system-prompt', 'user-prompt', 1.0, 'gpt-6-luna')).rejects.toThrow('API error');
+      consoleErrorSpy.mockRestore();
     });
   });
 
   describe('when OpenAI is not loaded', () => {
     it('getCompletion should throw an error', async () => {
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       const { getCompletion } = await import('@/services/openai');
-      await expect(getCompletion('system-prompt', 'user-prompt', 1.0)).rejects.toThrow();
-    });
-
-    it('getPreviewCompletion should throw an error', async () => {
-      const { getPreviewCompletion } = await import('@/services/openai');
-      await expect(getPreviewCompletion(['style'], 'prompt', 1.0)).rejects.toThrow();
+      await expect(getCompletion('system-prompt', 'user-prompt', 1.0, 'gpt-6-luna')).rejects.toThrow();
+      consoleErrorSpy.mockRestore();
     });
   });
 });

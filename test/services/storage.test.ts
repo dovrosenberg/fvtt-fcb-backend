@@ -85,7 +85,7 @@ describe('Storage Service', () => {
       process.env.GCP_CERT = GCS_CERT;
       await storage.loadStorage();
 
-      const url = await storage.storageProvider.saveFile('test.txt', Buffer.from('test'), 'text/plain');
+      const url = await storage.getStorageProvider().saveFile('test.txt', Buffer.from('test'), 'text/plain');
       expect(url).toBe('https://storage.googleapis.com/test-gcs-bucket/test.txt');
     });
 
@@ -99,7 +99,7 @@ describe('Storage Service', () => {
         await storage.loadStorage();
   
         const { Upload } = await import('@aws-sdk/lib-storage');
-        const url = await storage.storageProvider.saveFile('test.txt', Buffer.from('test'), 'text/plain');
+        const url = await storage.getStorageProvider().saveFile('test.txt', Buffer.from('test'), 'text/plain');
         expect(Upload).toHaveBeenCalled();
         expect(url).toBe('https://test-aws-bucket.s3.us-east-1.amazonaws.com/test.txt');
       });
