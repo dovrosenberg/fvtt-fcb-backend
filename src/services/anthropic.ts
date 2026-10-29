@@ -16,18 +16,24 @@ export const loadAnthropic = async function(): Promise<void> {
   }
 };
 
-// temperature not supported in modern models, so we always set to 1 now
+// temperature is rejected by the API (version 2026-10-21+), so the parameter is only used for logging
 export const getCompletion = async(system: string, prompt: string, temperature: number, model: string): Promise<string | null> => {
   try {
     const response = await anthropic.messages.create({
       model: model,
       system: system,
-      max_tokens: 4096,
+      max_tokens: 16000,
+      thinking: { type: 'disabled' }, // Haiku 5.5 thinks by default; only allowed at effort high or below (default is medium)
       messages: [{ role: 'user', content: prompt }],
-      temperature: 1, // temperature not supported in modern models, so we always set to 1 now
     });
 
-    const resultText = response.content[0].type === 'text' ? response.content[0].text.trim() : null;
+    // modern models think by default, so the first block may be a thinking block rather than the text
+    const textBlock = response.content.find((block) => block.type === 'text');
+    const resultText = textBlock ? textBlock.text.trim() : null;
+
+    if (!resultText) {
+      console.error(`Anthropic returned no text. stop_reason: ${response.stop_reason}`);
+    }
 
     if (process.env.DEBUG) {
       console.log(`DEBUG: Ran completion.\nSystem: ${system}\nPrompt: ${prompt}\nTemperature: ${temperature}\nresult: ${resultText}`);

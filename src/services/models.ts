@@ -5,6 +5,11 @@ export enum ModelProvider {
 }
 
 export enum TextModels {
+  GPT_6_luna = 'GPT_6_luna',
+  GPT_5_6_terra = 'GPT_5_6_terra',
+  Claude_haiku_5_5 = 'Claude_haiku_5_5',
+
+  // retired models; still accepted so saved settings keep working, but mapped to replacements and not listed
   GPT_5_mini = 'GPT_5_mini',
   GPT_4o_mini = 'GPT_4o_mini',
   Claude_3_haiku = 'Claude_3_haiku',
@@ -17,29 +22,36 @@ export enum ImageModels {
   Flux_Schnell_Lora = 'Flux_Schnell_Lora',
 }
 
-export const DEFAULT_TEXT_MODEL_ID = TextModels.GPT_5_mini;
+export const DEFAULT_TEXT_MODEL_ID = TextModels.Claude_haiku_5_5;
 export const DEFAULT_IMAGE_MODEL_ID = ImageModels.Minimax_Image;
 
 
+const gpt6Luna = {
+  name: 'GPT-6 Luna',
+  provider: ModelProvider.OpenAI,
+  modelId: 'gpt-6-luna',
+  description: 'From OpenAI. High-quality, $0.50/million output tokens, but subject to $5/year minimum. Best if you are using your OpenAI token for other things so the minimum doesn\'t matter',
+};
+
+const claudeHaiku55 = {
+  name: 'Claude Haiku 5.5',
+  provider: ModelProvider.Anthropic,
+  modelId: 'claude-haiku-5-5',
+  description: 'From Anthropic. High-quality, $0.50/million output tokens, but subject to $5/year minimum. Best if you are using your Anthropic token for other things so the minimum doesn\'t matter',
+};
+
 export const textModels = {
-  [TextModels.GPT_4o_mini]: {
-    name: 'GPT-4o Mini',
+  [TextModels.GPT_6_luna]: gpt6Luna,
+  [TextModels.GPT_5_6_terra]: {
+    name: 'GPT-5.6 Terra',
     provider: ModelProvider.OpenAI,
-    modelId: 'gpt-4o-mini',
-    description: 'From OpenAI. High-quality, $0.15/million tokens, but subject to $5/year minimum. Best if you are using your OpenAI token for other things so the minimum doesn\'t matter',
+    modelId: 'gpt-5.6-terra',
+    description: 'From OpenAI. Higher quality, but $12/million output tokens (24x GPT-6 Luna), and subject to $5/year minimum',
   },
-  [TextModels.GPT_5_mini]: {
-    name: 'GPT-5 Mini',
-    provider: ModelProvider.OpenAI,
-    modelId: 'gpt-5-mini',
-    description: 'From OpenAI. High-quality, $0.25/million tokens, but subject to $5/year minimum. Best if you are using your OpenAI token for other things so the minimum doesn\'t matter',
-  },
-  [TextModels.Claude_3_haiku]: {
-    name: 'Claude 3 Haiku',
-    provider: ModelProvider.Anthropic,
-    modelId: 'claude-3-haiku-20240307',
-    description: 'From Anthropic. High-quality, $0.25/million tokens, but subject to $5/year minimum. Best if you are using your Anthropic token for other things so the minimum doesn\'t matter',
-  },
+  [TextModels.Claude_haiku_5_5]: claudeHaiku55,
+  [TextModels.GPT_5_mini]: { ...gpt6Luna, legacy: true },
+  [TextModels.GPT_4o_mini]: { ...gpt6Luna, legacy: true },
+  [TextModels.Claude_3_haiku]: { ...claudeHaiku55, legacy: true },
 };
 
 export const imageModels = {
@@ -73,6 +85,9 @@ export const imageModels = {
 export const getTextModels = () => {
   return Object.entries(textModels)
     .filter(([, model]) => {
+      if ('legacy' in model && model.legacy) {
+        return false;
+      }
       if (model.provider === ModelProvider.OpenAI) {
         return !!process.env.OPENAI_API_KEY;
       }

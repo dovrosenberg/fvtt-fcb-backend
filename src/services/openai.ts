@@ -23,6 +23,7 @@ export const getCompletion = async(system: string, prompt: string, temperature: 
       model: model,
       messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
       temperature: 1, // temperature not supported in modern models, so we always set to 1 now
+      reasoning_effort: 'none' as unknown as OpenAI.ReasoningEffort, // SDK 4.x types lack 'none' but the API accepts it; blind-scored test showed reasoning didn't improve character output on gpt-6-luna or gpt-5.6-terra
     });
 
     if (process.env.DEBUG) {
